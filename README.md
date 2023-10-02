@@ -1,6 +1,7 @@
 # LI3
 
-<!-- Insert project description here -->
+Project for our LI3 class. See [Requirements.pdf](Requirements.pdf) (in Portuguese) to see the
+project's requirements.
 
 ## Building
 
