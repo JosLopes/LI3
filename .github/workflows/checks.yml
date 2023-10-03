@@ -7,8 +7,8 @@ jobs:
             - uses: actions/checkout@v4
 
             # Don't fail on empty include (not tracked by git)
-            - run: if ! [ -d include ]; then mkdir include; fi
-            - run: make
+            - run: if ! [ -d trabalho-pratico/include ]; then mkdir trabalho-pratico/include; fi
+            - run: cd trabalho-pratico && make
     format:
         runs-on: ubuntu-latest
         steps:
@@ -19,5 +19,5 @@ jobs:
             - run: if [ -n "$ACT" ]; then apt update && apt -y install clang-format; fi
 
             # Don't fail on empty include (not tracked by git)
-            - run: if ! [ -d include ]; then mkdir include; fi
-            - run: ./scripts/format.sh --check
+            - run: if ! [ -d trabalho-pratico/include ]; then mkdir trabalho-pratico/include; fi
+            - run: ./trabalho-pratico/scripts/format.sh --check
