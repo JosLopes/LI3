@@ -18,6 +18,7 @@ not officially supported.
 This project can be built with:
 
 ```console
+$ cd trabalho-pratico
 $ make
 ```
 
