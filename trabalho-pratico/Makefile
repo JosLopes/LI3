@@ -115,13 +115,13 @@ $(BUILDDIR)/$(MAIN_EXENAME) $(BUILDDIR)/$(MAIN_EXENAME)_type: $(MAIN_OBJECTS)
 	@mkdir -p $(BUILDDIR)
 	@echo $(BUILD_TYPE) > $@_type
 	$(CC) -o $@ $^ $(LIBS)
-	@ln -s $@ .
+	@ln -s $@ . 2> /dev/null ; true
 
 $(BUILDDIR)/$(TEST_EXENAME) $(BUILDDIR)/$(TEST_EXENAME)_type: $(TEST_OBJECTS)
 	@mkdir -p $(BUILDDIR)
 	@echo $(BUILD_TYPE) > $@_type
 	$(CC) -o $@ $^ $(LIBS)
-	@ln -s $@ .
+	@ln -s $@ . 2> /dev/null ; true
 
 define Doxyfile
 	INPUT                  = include src ../README.md ../DEVELOPERS.md
