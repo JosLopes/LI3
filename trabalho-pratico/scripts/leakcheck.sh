@@ -22,15 +22,22 @@
 assert_installed_command valgrind
 
 MAKEFILE_BUILDDIR="$(get_makefile_const BUILDDIR)"
-MAKEFILE_EXENAME="$(get_makefile_const EXENAME)"
-EXE_PATH="$MAKEFILE_BUILDDIR/$MAKEFILE_EXENAME"
+if ! [ -d "$MAKEFILE_BUILDDIR" ]; then
+	echo "Executables not yet built! Build them and try again. Leaving ..." >&2
+	exit 1
+fi
 
-if ! [ -f "$EXE_PATH" ] || ! [ -f "${EXE_PATH}_type" ]; then
-	echo "Executable not built! Build it and try again. Leaving ..." >&2
+echo "Choose a program:"
+choose "Executable: " EXE_PATH \
+	"$(find "$MAKEFILE_BUILDDIR" -type f -executable)"
+
+if ! [ -f "${EXE_PATH}_type" ]; then
+	echo "Executable build type (${EXE_PATH}_test) not found! Leaving ..." >&2
 	exit 1
 elif [ "$(cat "${EXE_PATH}_type")" != "DEBUG" ]; then
-	printf "Executable not built in DEBUG mode. Valgrind won't be "
-	printf "able to know which lines of code cause a leak.\n"
+	printf "Executable not built in DEBUG mode ($(cat "${EXE_PATH}_type") "
+	printf "used instead). Valgrind won't be able to know which lines of code"
+	printf "cause a leak.\n"
 
 	if ! yesno "Proceed? [Y/n]: "; then
 		echo "User cancelled action. Leaving ..."
