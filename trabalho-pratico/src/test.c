@@ -21,11 +21,11 @@
 #include <stdio.h>
 
 /**
- * @brief The entry point to the main program.
+ * @brief The entry point to the test program.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    puts("Welcome to the main program!");
+    puts("Welcome to the test program!");
     return 0;
 }
