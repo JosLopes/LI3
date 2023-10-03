@@ -109,13 +109,13 @@ $(BUILDDIR)/$(EXENAME) $(BUILDDIR)/$(EXENAME)_type: $(OBJECTS)
 	$(CC) -o $@ $^ $(LIBS)
 
 define Doxyfile
-	INPUT                  = include src README.md
+	INPUT                  = include src ../README.md ../DEVELOPERS.md
 	RECURSIVE              = YES
 	EXTRACT_ALL            = YES
 	FILE_PATTERNS          = *.h *.c
 
 	PROJECT_NAME           = LI3
-	USE_MDFILE_AS_MAINPAGE = README.md
+	USE_MDFILE_AS_MAINPAGE = ../README.md
 
 	OUTPUT_DIRECTORY       = $(DOCSDIR)
 	GENERATE_HTML          = YES
@@ -130,6 +130,7 @@ export Doxyfile
 $(DOCSDIR): $(SOURCES) $(HEADERS) $(THEMES)
 	echo "$$Doxyfile" | doxygen -
 	@touch $(DOCSDIR) # Update "last updated" time to now
+	@cp ../Requirements.pdf $(DOCSDIR)/html
 
 %.pdf: reports/%.tex
 	$(eval TMP_LATEX = $(shell mktemp -d))
@@ -150,4 +151,4 @@ install: $(BUILDDIR)/$(EXENAME)
 
 .PHONY: uninstall
 uninstall:
-	rm $(PREFIX)/bin/LI3
+	rm $(PREFIX)/bin/$(EXENAME)
