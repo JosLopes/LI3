@@ -27,6 +27,7 @@ HEADERS = $(shell find "include" -name '*.h' -type f)
 THEMES  = $(wildcard theme/*)
 OBJECTS = $(patsubst src/%.c, $(OBJDIR)/%.o, $(SOURCES))
 DEPENDS = $(patsubst src/%.c, $(DEPDIR)/%.d, $(SOURCES))
+REPORTS = $(patsubst reports/%.tex, %.pdf, $(shell find reports -name '*.tex' -type f))
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += $(DEBUG_CFLAGS)
@@ -55,7 +56,8 @@ else
 endif
 
 default: $(BUILDDIR)/$(EXENAME)
-all: $(BUILDDIR)/$(EXENAME) $(DOCSDIR)
+report: $(REPORTS)
+all: $(BUILDDIR)/$(EXENAME) $(DOCSDIR) $(REPORTS)
 
 ifeq (Y, $(INCLUDE_DEPENDS))
 include $(DEPENDS)
@@ -129,9 +131,19 @@ $(DOCSDIR): $(SOURCES) $(HEADERS) $(THEMES)
 	echo "$$Doxyfile" | doxygen -
 	@touch $(DOCSDIR) # Update "last updated" time to now
 
+%.pdf: reports/%.tex
+	$(eval TMP_LATEX = $(shell mktemp -d))
+
+	@mkdir -p $(BUILDDIR)
+	pdflatex -halt-on-error -output-directory $(TMP_LATEX) $<
+	@cp $(TMP_LATEX)/$@ $(BUILDDIR)/$@
+	@ln -s $(BUILDDIR)/$@ $@
+	@rm -r $(TMP_LATEX)
+
 .PHONY: clean
 clean:
-	rm -r $(BUILDDIR) $(DEPDIR) $(DOCSDIR) $(OBJDIR) 2> /dev/null ; true
+	@# Reports must be removed from the "clean" rule when they're made permanent
+	rm -r $(BUILDDIR) $(DEPDIR) $(DOCSDIR) $(OBJDIR) $(REPORTS) 2> /dev/null ; true
 
 install: $(BUILDDIR)/$(EXENAME)
 	install -Dm 755 $(BUILDDIR)/$(EXENAME) $(PREFIX)/bin
