@@ -18,8 +18,8 @@
  * @file main.c
  * @brief Contains the entry point to the program.
  */
-#include <stdio.h>
 #include <glib-2.0/glib.h>
+#include <stdio.h>
 
 /**
  * @brief A `GHFunc` for iterating through `HashTable` entries.
@@ -27,9 +27,9 @@
  * @param value Dictionary object.
  */
 void iter(gpointer key, gpointer value, gpointer user_data) {
-	(void) user_data;
+    (void) user_data;
 
-	printf("%s é capital da %s\n", (const char *) value, (const char *) key);
+    printf("%s é capital da %s\n", (const char *) value, (const char *) key);
 }
 
 /**
@@ -38,14 +38,14 @@ void iter(gpointer key, gpointer value, gpointer user_data) {
  * @retval 1 Insuccess
  */
 int main(void) {
-	GHashTable *dict = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *dict = g_hash_table_new(g_str_hash, g_str_equal);
 
-	g_hash_table_insert(dict, "Portugal", "Lisboa");
-	g_hash_table_insert(dict, "Espanha", "Madrid");
-	g_hash_table_insert(dict, "França", "Paris");
+    g_hash_table_insert(dict, "Portugal", "Lisboa");
+    g_hash_table_insert(dict, "Espanha", "Madrid");
+    g_hash_table_insert(dict, "França", "Paris");
 
-	g_hash_table_foreach(dict, iter, NULL);
+    g_hash_table_foreach(dict, iter, NULL);
 
-	g_hash_table_destroy(dict);
+    g_hash_table_destroy(dict);
     return 0;
 }
