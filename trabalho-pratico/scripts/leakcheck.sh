@@ -45,12 +45,54 @@ elif [ "$(cat "${EXE_PATH}_type")" != "DEBUG" ]; then
 	fi
 fi
 
+SUPPRESSIONS_FILE="$(mktemp)"
+
+# Generates two valgrind suppressions for static variable allocations, one for
+# glibc and another one for musl.
+# $1 - function name called
+# stdout - suppression output
+libc_gen_suppressions() {
+	for lib in "glibc" "musl"; do
+		if [ "$lib" = "glibc" ]; then
+			init_fn="do_init_fini"
+		else
+			init_fn="call_init"
+		fi
+
+		printf "{\n"
+		printf "\tignore_glib_tree_leaks_$lib\n"
+		printf "\tMemcheck:Leak\n"
+		printf "\tmatch-leak-kinds:reachable\n"
+		printf "\n"
+		printf "\t...\n"
+		printf "\tfun:$1\n"
+		printf "\t...\n"
+		printf "\tfun:$init_fn\n"
+		printf "}\n\n"
+	done
+}
+
+{
+	libc_gen_suppressions "g_hash_table_new_full"
+	libc_gen_suppressions "g_malloc"
+
+	printf "{\n"
+	printf "\tignore_dynamic_linker_leaks_musl\n"
+	printf "\tMemcheck:Leak\n"
+	printf "\tmatch-leak-kinds:reachable\n"
+	printf "\n"
+	printf "\t...\n"
+	printf "\tfun:load_deps\n"
+	printf "}\n"
+} > "$SUPPRESSIONS_FILE"
+
 LOG_FILE="$(mktemp)"
 valgrind --leak-check=full \
          --show-leak-kinds=all \
          --leak-resolution=high \
          --log-file="$LOG_FILE" \
+         --suppressions="$SUPPRESSIONS_FILE" \
          "$EXE_PATH" "$@"
 
 less "$LOG_FILE"
-rm "$LOG_FILE"
+rm "$LOG_FILE" "$SUPPRESSIONS_FILE"
