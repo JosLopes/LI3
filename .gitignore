@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# vscode
+.vscode
+
 # Build directories
 trabalho-pratico/build
 trabalho-pratico/deps
