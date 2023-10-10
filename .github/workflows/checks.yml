@@ -5,6 +5,7 @@ on:
             - '.github/workflows/**'
             - 'trabalho-pratico/src/**'
             - 'trabalho-pratico/include/**'
+            - 'trabalho-pratico/Makefile'
 jobs:
     build:
         runs-on: ubuntu-latest
