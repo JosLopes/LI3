@@ -1,5 +1,7 @@
 # Development guide
 
+Note that any command described here assumes that your `PWD` is `trabalho-pratico`.
+
 ## Extra dependencies
 
 Some programs, not listed in [README.md](README.md), are not required to build the project
@@ -7,6 +9,7 @@ Some programs, not listed in [README.md](README.md), are not required to build t
 
 - [clang-format](https://clang.llvm.org) (code formatting);
 - [Doxygen](https://www.doxygen.nl/) (documentation generation);
+- [TeX Live](https://www.tug.org/texlive/) (`pdflatex` in specific, for report generation);
 - [Valgrind](https://valgrind.org/) (profiling and leak checking);
 - [Kcachegrind](https://invent.kde.org/sdk/kcachegrind) (seeing profiling results);
 - [act](https://nektosact.com) (running GitHub actions locally).
@@ -32,6 +35,12 @@ $ make docs
 ```
 
 HTML documentation should be outputted to `docs/html/index.html`.
+
+Developer-written reports can be compiled with:
+
+```console
+$ make report
+```
 
 ## Profiling
 
