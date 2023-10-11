@@ -38,7 +38,7 @@ if ! [ -f "${EXE_PATH}_type" ]; then
 	echo "Executable build type (${EXE_PATH}_test) not found! Leaving ..." >&2
 	exit 1
 elif [ "$(cat "${EXE_PATH}_type")" != "PROFILE" ]; then
-	printf "Executable not built in PROFILE mode ($(cat "${EXE_PATH}_type") "
+	printf "Executable not built in PROFILE mode %s" "($(cat "${EXE_PATH}_type") "
 	printf "used instead). Callgrind's results won't be the best possible.\n"
 
 	if ! yesno "Proceed? [Y/n]: "; then
