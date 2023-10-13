@@ -12,6 +12,7 @@ Some programs, not listed in [README.md](README.md), are not required to build t
 - [TeX Live](https://www.tug.org/texlive/) (`pdflatex` in specific, for report generation);
 - [Valgrind](https://valgrind.org/) (profiling and leak checking);
 - [Kcachegrind](https://invent.kde.org/sdk/kcachegrind) (seeing profiling results);
+- [ShellCheck](https://www.shellcheck.net/) (static analysis of scripts);
 - [act](https://nektosact.com) (running GitHub actions locally).
 
 ## Other build types
@@ -101,7 +102,8 @@ double quotes (`#include "internal_header.h"`).
 # GitHub Actions
 
 The CI pipeline is very simple: it checks if the code is correctly formatted, and it builds the
-project. These can be run locally, without any containerization.
+project. `shellcheck` verification of scripts is also present. All of these can be run locally,
+without any containerization.
 
 However, you may want to run the CI actions in a environment similar to the one in a GitHub runner,
 for example, to use the same version of `clang-format`. Our actions are compatible with
