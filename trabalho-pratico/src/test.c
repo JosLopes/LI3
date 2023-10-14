@@ -18,34 +18,50 @@
  * @file main.c
  * @brief Contains the entry point to the program.
  */
-#include <glib-2.0/glib.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "utils/string_utils.h"
 
 /**
- * @brief A `GHFunc` for iterating through `HashTable` entries.
- * @param key Dictionary key.
- * @param value Dictionary object.
+ * Example data to be tokenized and parsed.
  */
-void iter(gpointer key, gpointer value, gpointer user_data) {
-    (void) user_data;
+#define STUDENT_HEIGHTS "160,170,182,165"
 
-    printf("%s é capital da %s\n", (const char *) value, (const char *) key);
+/**
+ * @brief A @ref tokenize_iter_callback_t to sum heights and count students.
+ * @param user_data An array with two integers, the accumulated height and the number of students,
+ *                  respectively.
+ * @param token Token read by @ref string_const_tokenize
+ */
+int iter(void *user_data, char *token) {
+    int *sum_count = (int *) user_data;
+
+    int height = atoi(token);
+    if (height <= 0) {
+        fprintf(stderr, "Invalid height: \"%s\"\n", token);
+        return 1;
+    } else {
+        sum_count[0] += height; /* sum += height; */
+        sum_count[1]++;         /* count++; */
+    }
+
+    return 0;
 }
 
 /**
  * @brief The entry point to the test program.
+ * @details Calculates average height of a list of students.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    GHashTable *dict = g_hash_table_new(g_str_hash, g_str_equal);
+    int sum_count[2] = {0, 0};
 
-    g_hash_table_insert(dict, "Portugal", "Lisboa");
-    g_hash_table_insert(dict, "Espanha", "Madrid");
-    g_hash_table_insert(dict, "França", "Paris");
-
-    g_hash_table_foreach(dict, iter, NULL);
-
-    g_hash_table_destroy(dict);
-    return 0;
+    if (string_const_tokenize(STUDENT_HEIGHTS, ',', iter, sum_count)) {
+        return 1;
+    } else {
+        printf("Average height is: %.2fcm\n", (double) sum_count[0] / sum_count[1]);
+        return 0;
+    }
 }
