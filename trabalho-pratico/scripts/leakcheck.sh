@@ -35,7 +35,7 @@ if ! [ -f "${EXE_PATH}_type" ]; then
 	echo "Executable build type (${EXE_PATH}_test) not found! Leaving ..." >&2
 	exit 1
 elif [ "$(cat "${EXE_PATH}_type")" != "DEBUG" ]; then
-	printf "Executable not built in DEBUG mode ($(cat "${EXE_PATH}_type") "
+	printf "Executable not built in DEBUG mode %s" "($(cat "${EXE_PATH}_type") "
 	printf "used instead). Valgrind won't be able to know which lines of code"
 	printf "cause a leak.\n"
 
@@ -60,14 +60,14 @@ libc_gen_suppressions() {
 		fi
 
 		printf "{\n"
-		printf "\tignore_glib_tree_leaks_$lib\n"
+		printf "\tignore_glib_tree_leaks_%s\n" "$lib"
 		printf "\tMemcheck:Leak\n"
 		printf "\tmatch-leak-kinds:reachable\n"
 		printf "\n"
 		printf "\t...\n"
-		printf "\tfun:$1\n"
+		printf "\tfun:%s\n" "$1"
 		printf "\t...\n"
-		printf "\tfun:$init_fn\n"
+		printf "\tfun:%s\n" "$init_fn"
 		printf "}\n\n"
 	done
 }
