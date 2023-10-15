@@ -20,13 +20,19 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "utils/string_utils.h"
+#include "utils/fixed_n_delimiter_parser.h"
 
 /**
- * Example data to be tokenized and parsed.
+ * Example data to be tokenized and parsed (name, age, height).
  */
-#define STUDENT_HEIGHTS "160,170,182,165"
+#define PERSON_DATA "José Silva,60,176"
+
+typedef struct {
+    char *name;
+    int   age, height;
+} person_t;
 
 /**
  * @brief A @ref tokenize_iter_callback_t to sum heights and count students.
@@ -34,34 +40,58 @@
  *                  respectively.
  * @param token Token read by @ref string_const_tokenize
  */
-int iter(void *user_data, char *token) {
-    int *sum_count = (int *) user_data;
+int parse_name(void *user_data, char *token, size_t ntoken) {
+    (void) ntoken;
 
-    int height = atoi(token);
-    if (height <= 0) {
-        fprintf(stderr, "Invalid height: \"%s\"\n", token);
+    size_t len       = strlen(token);
+    char  *name_copy = malloc(len + 1);
+    memcpy(name_copy, token, len + 1);
+
+    ((person_t *) user_data)->name = name_copy;
+    return 0;
+}
+
+int parse_int(void *user_data, char *token, size_t ntoken) {
+    int value = atoi(token);
+
+    if (value <= 0) {
+        fputs("Integer parsing failure!\n", stderr);
         return 1;
-    } else {
-        sum_count[0] += height; /* sum += height; */
-        sum_count[1]++;         /* count++; */
     }
 
+    if (ntoken == 1) {
+        ((person_t *) user_data)->age = value;
+    } else if (ntoken == 2) {
+        ((person_t *) user_data)->height = value;
+    }
     return 0;
 }
 
 /**
  * @brief The entry point to the test program.
- * @details Calculates average height of a list of students.
+ * @details Parses information about a person.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    int sum_count[2] = {0, 0};
+    fixed_n_delimiter_parser_iter_callback_t grammar_callbacks[3] = {parse_name,
+                                                                     parse_int,
+                                                                     parse_int};
 
-    if (string_const_tokenize(STUDENT_HEIGHTS, ',', iter, sum_count)) {
-        return 1;
+    fixed_n_delimiter_parser_grammar_t *grammar =
+        fixed_n_delimiter_parser_grammar_new(',', 3, grammar_callbacks);
+
+    person_t person = {0};
+    int status = fixed_n_delimiter_parser_parse_string_const(PERSON_DATA, grammar, &person);
+    if (status) {
+        fprintf(stderr, "Parsing failure! (%d)\n", status);
     } else {
-        printf("Average height is: %.2fcm\n", (double) sum_count[0] / sum_count[1]);
-        return 0;
+        printf("%s is %d and %dcm tall\n", person.name, person.age, person.height);
     }
+
+    if (person.name)
+        free(person.name);
+
+    fixed_n_delimiter_parser_grammar_free(grammar);
+    return status;
 }
