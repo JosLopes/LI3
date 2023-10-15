@@ -34,12 +34,6 @@ typedef struct {
     int   age, height;
 } person_t;
 
-/**
- * @brief A @ref tokenize_iter_callback_t to sum heights and count students.
- * @param user_data An array with two integers, the accumulated height and the number of students,
- *                  respectively.
- * @param token Token read by @ref string_const_tokenize
- */
 int parse_name(void *user_data, char *token, size_t ntoken) {
     (void) ntoken;
 
@@ -82,7 +76,7 @@ int main(void) {
         fixed_n_delimiter_parser_grammar_new(',', 3, grammar_callbacks);
 
     person_t person = {0};
-    int status = fixed_n_delimiter_parser_parse_string_const(PERSON_DATA, grammar, &person);
+    int      status = fixed_n_delimiter_parser_parse_string_const(PERSON_DATA, grammar, &person);
     if (status) {
         fprintf(stderr, "Parsing failure! (%d)\n", status);
     } else {

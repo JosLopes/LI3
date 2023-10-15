@@ -80,6 +80,9 @@
  * returned).
  */
 
+#ifndef STRING_UTILS_H
+#define STRING_UTILS_H
+
 /**
  * @brief Callback method for ::string_tokenize, called for every token read.
  *
@@ -140,3 +143,5 @@ int string_const_tokenize(const char              *input,
                           char                     delimiter,
                           tokenize_iter_callback_t callback,
                           void                    *user_data);
+
+#endif

@@ -122,6 +122,9 @@
  * not all data may have been initialized, hence the if statement relating to `person.name`.
  */
 
+#ifndef FIXED_N_DELIMITER_PARSER_H
+#define FIXED_N_DELIMITER_PARSER_H
+
 #include <stddef.h>
 
 /**
@@ -245,3 +248,5 @@ int fixed_n_delimiter_parser_parse_string(char                               *in
 int fixed_n_delimiter_parser_parse_string_const(const char                         *input,
                                                 fixed_n_delimiter_parser_grammar_t *grammar,
                                                 void                               *user_data);
+
+#endif
