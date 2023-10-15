@@ -87,7 +87,9 @@
  *                  callback can modify the program's state.
  * @param token     The token that was read.
  *
- * @return `0` on success, other value for immediate termination of tokenization.
+ * @return `0` on success, other value for immediate termination of tokenization. It's recommended
+ *         that this value is positive, not to risk being confused with
+ *         ::STRING_CONST_TOKENIZE_FAILED_MALLOC.
  */
 typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
 
@@ -99,8 +101,8 @@ typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
  * @param callback  Function called for every token read.
  * @param user_data Pointer passed to every call of `callback`, so that it can edit program state.
  *
- * @return `0` on success, the return value from @p callback in case it ordered the tokenization to
- *         stop.
+ * @return `0` on success, otherwise, the return value from @p callback in case it ordered the
+ *         tokenization to stop.
  *
  * #### Examples
  * See [the header file's documentation](@ref string_utils_examples).
@@ -109,6 +111,11 @@ int string_tokenize(char                    *input,
                     char                     delimiter,
                     tokenize_iter_callback_t callback,
                     void                    *user_data);
+
+/**
+ * @brief Value returned by ::string_const_tokenize when `malloc` fails.
+ */
+#define STRING_CONST_TOKENIZE_FAILED_MALLOC -1
 
 /**
  * @brief See ::string_tokenize, but this method applies to `const` strings.
@@ -122,9 +129,9 @@ int string_tokenize(char                    *input,
  * @param callback  Function called for every token read.
  * @param user_data Pointer passed to every call of `callback`, so that it can edit program state.
  *
- * @return `0` on success, the return value from @p callback in case it ordered the tokenization to
- *         stop. `1` may also be returned on failure to allocate a writeable buffer the size of
- *         @p input.
+ * @return `0` on success, otherwise, the return value from @p callback in case it ordered the
+ *         tokenization to stop. ::STRING_CONST_TOKENIZE_FAILED_MALLOC is returned on failure to
+ *         allocate a writeable buffer the size of @p input.
  *
  * #### Examples
  * See [the header file's documentation](@ref string_utils_examples).

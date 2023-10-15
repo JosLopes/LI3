@@ -57,7 +57,7 @@ int string_const_tokenize(const char              *input,
     size_t buffer_size = strlen(input) + 1;
     char  *buffer      = malloc(buffer_size);
     if (!buffer)
-        return 1;
+        return STRING_CONST_TOKENIZE_FAILED_MALLOC;
     (void) memcpy(buffer, input, buffer_size);
 
     int retval = string_tokenize(buffer, delimiter, callback, user_data);
