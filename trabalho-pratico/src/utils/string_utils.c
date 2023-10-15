@@ -16,7 +16,7 @@
 
 /**
  * @file string_utils.c
- * @brief Implementation of modules in include/utils/string_utils.h
+ * @brief Implementation of methods in include/utils/string_utils.h
  *
  * ### Examples
  * See [the header file's documentation](@ref string_utils_examples).
