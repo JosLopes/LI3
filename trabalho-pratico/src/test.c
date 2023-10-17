@@ -20,72 +20,55 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "utils/fixed_n_delimiter_parser.h"
-
-/**
- * Example data to be tokenized and parsed (name, age, height).
- */
-#define PERSON_DATA "José Silva,60,176"
-
-typedef struct {
-    char *name;
-    int   age, height;
-} person_t;
-
-int parse_name(void *user_data, char *token, size_t ntoken) {
-    (void) ntoken;
-
-    size_t len       = strlen(token);
-    char  *name_copy = malloc(len + 1);
-    memcpy(name_copy, token, len + 1);
-
-    ((person_t *) user_data)->name = name_copy;
-    return 0;
-}
-
-int parse_int(void *user_data, char *token, size_t ntoken) {
-    int value = atoi(token);
-
-    if (value <= 0) {
-        fputs("Integer parsing failure!\n", stderr);
-        return 1;
-    }
-
-    if (ntoken == 1) {
-        ((person_t *) user_data)->age = value;
-    } else if (ntoken == 2) {
-        ((person_t *) user_data)->height = value;
-    }
-    return 0;
-}
+#include "utils/date.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Parses information about a person.
+ * @details Test for dates.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    fixed_n_delimiter_parser_iter_callback_t grammar_callbacks[3] = {parse_name,
-                                                                     parse_int,
-                                                                     parse_int};
+    const char *birthdays[12] = {
+        "2004/10/16", /* Valid date */
 
-    fixed_n_delimiter_parser_grammar_t *grammar =
-        fixed_n_delimiter_parser_grammar_new(',', 3, grammar_callbacks);
+        "2002/7/12",   /* One digit missing */
+        "13000/04/12", /* One extra digit */
+        "-203/06/01",  /* Invalid digit */
+        "-203/1-/01",  /* Invalid digit */
 
-    person_t person = {0};
-    int      status = fixed_n_delimiter_parser_parse_string_const(PERSON_DATA, grammar, &person);
-    if (status) {
-        fprintf(stderr, "Parsing failure! (%d)\n", status);
-    } else {
-        printf("%s is %d and %dcm tall\n", person.name, person.age, person.height);
+        "2022/04/31", /* Valid date */
+        "2022/05/32", /* Out-of-range day */
+        "1333/00/12", /* Out-of-range month */
+        "1333/13/12", /* Out-of-range month */
+
+        "2023/11/21/11", /* Too many data points */
+        "2023/11",       /* Too few data points */
+
+        "9990/01/01" /* Valid but will overflow */
+    };
+
+    for (int i = 0; i < 12; ++i) {
+        date_t date;
+        int    success = date_from_string_const(&date, birthdays[i]);
+
+        if (success) {
+            fprintf(stderr, "Failed to parse date \"%s\".\n", birthdays[i]);
+        } else {
+            /* This may fail for large years (max year is 9999) */
+            int set_result = date_set_year(&date, date_get_year(date) + 10);
+
+            char str[DATE_SPRINTF_MIN_BUFFER_SIZE];
+            date_sprintf(str, date);
+
+            if (set_result) {
+                fprintf(stderr, "Date overflow for %s!\n", str);
+            } else {
+                printf("Your 10th birthday was / will be in %s\n", str);
+            }
+        }
     }
 
-    if (person.name)
-        free(person.name);
-
-    fixed_n_delimiter_parser_grammar_free(grammar);
-    return status;
+    return 0;
 }
