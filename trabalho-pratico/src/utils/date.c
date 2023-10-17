@@ -173,6 +173,18 @@ int date_sprintf(char *output, date_t date) {
                    date_union.fields.day);
 }
 
+uint64_t date_diff(date_t a, date_t b) {
+    date_union_helper_t a_union = {.date = a};
+    date_union_helper_t b_union = {.date = b};
+
+    uint64_t a_days =
+        (uint64_t) a_union.fields.year * 12 * 31 + a_union.fields.month * 31 + a_union.fields.day;
+    uint64_t b_days =
+        (uint64_t) b_union.fields.year * 12 * 31 + b_union.fields.month * 31 + b_union.fields.day;
+
+    return a_days - b_days;
+}
+
 /**
  * @brief Helper macro for defining getters.
  * @param property Property to get in ::date_union_helper_t.fields.
@@ -220,16 +232,4 @@ uint8_t date_get_day(date_t date) {
 
 int date_set_day(date_t *date, uint8_t day) {
     DATE_SETTER_FUNCTION_BODY(day, DATE_DAY_MIN, DATE_DAY_MAX);
-}
-
-uint64_t date_diff(date_t a, date_t b) {
-    date_union_helper_t a_union = {.date = a};
-    date_union_helper_t b_union = {.date = b};
-
-    uint64_t a_days =
-        (uint64_t) a_union.fields.year * 12 * 31 + a_union.fields.month * 31 + a_union.fields.day;
-    uint64_t b_days =
-        (uint64_t) b_union.fields.year * 12 * 31 + b_union.fields.month * 31 + b_union.fields.day;
-
-    return a_days - b_days;
 }

@@ -133,7 +133,6 @@ int date_from_string_const(date_t *output, const char *input);
  * | Y | Y | Y | Y | / | M | M | / | D | D  | \0 |
  * | - | - | - | - | - | - | - | - | - | -- | -- |
  * | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
- *
  */
 #define DATE_SPRINTF_MIN_BUFFER_SIZE 11
 
@@ -149,6 +148,19 @@ int date_from_string_const(date_t *output, const char *input);
  * See [the header file's documentation](@ref date_examples).
  */
 int date_sprintf(char *output, date_t date);
+
+/**
+ * @brief Calculates the difference (in days) between two dates.
+ * @details This formula assumes all months have `31` days, and all years `12 * 31` days. This
+ *          shouldn't matter anyway, as project requirements specify that datasets contain only
+ *          dates from the same month.
+ *
+ * @param a Date from which @p b is subtracted from.
+ * @param b Date subtracted from @p a.
+ *
+ * @return The difference `a - b` in days.
+ */
+uint64_t date_diff(date_t a, date_t b);
 
 /**
  * @brief Gets the year from a date.
@@ -203,18 +215,5 @@ uint8_t date_get_day(date_t date);
  * @retval 1 Failure due to out of range valuey.
  */
 int date_set_day(date_t *date, uint8_t day);
-
-/**
- * @brief Calculates the difference (in days) between two dates.
- * @details This formula assumes all months have `31` days, and all years `12 * 31` days. This
- *          shouldn't matter anyway, as project requirements specify that datasets contain only
- *          dates from the same month.
- *
- * @param a Date from which @p b is subtracted from.
- * @param b Date subtracted from @p a.
- *
- * @return The difference `a - b` in days.
- */
-uint64_t date_diff(date_t a, date_t b);
 
 #endif
