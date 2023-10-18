@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-/* TODO - add to date and hour link to docs when those are developed */
-
 /**
  * @file    fixed_n_delimiter_parser.h
  * @brief   A parser for strings with a known number of data points, separated by a
  *          single-character delimiter.
  * @details Useful for structures such as lines of CSV tables. In practice, this is used for
- *          dates, hours, and input datasets.
+ *          dates (::date_from_string), hours (::daytime_from_string), and input datasets.
  *
  * @anchor fixed_n_delimiter_parser_examples
  * ### Examples

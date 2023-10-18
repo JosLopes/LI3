@@ -59,7 +59,7 @@
  *
  * Setters of `daytime_t` can fail! For example, `daytime_set_seconds(&time, 60)` will do nothing
  * and return `1`, because `60` is not an accepted value for seconds. The same applies to
- * `daytime_from_values`.
+ * ::daytime_from_values.
  */
 
 #ifndef DAYTIME_H

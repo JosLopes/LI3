@@ -68,6 +68,9 @@
  *    return 0;
  * }
  * ```
+ * Setters of `date_t` can fail! For example, `date_set_month(&date, 13)` will do nothing
+ * and return `1`, because `13` is not an accepted value for a month. The same applies to
+ * ::date_from_values.
  */
 
 #ifndef DATE_H
