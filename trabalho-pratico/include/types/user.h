@@ -24,6 +24,8 @@
 
 #include <stdbool.h>
 
+enum sex {F, M};
+
 typedef struct user user;
 
 user* create_user (void);
@@ -40,16 +42,18 @@ void set_user_account_status (user* user, bool active_status);
 
 void set_user_account_creation_date (user* user, int parsed_date);
 
-const char* get_user_name (user* user);
+const char* get_const_user_name (user* user);
 
-const char* get_user_passport (user* user);
+const char* get_const_user_passport (user* user);
 
-const char* get_user_country_code (user* user);
+const char* get_const_user_country_code (user* user);
 
-char get_user_sex (user* user);
+enum sex get_user_sex (user* user);
 
 bool get_user_account_status (user* user);
 
 int get_user_account_creation_date (user* user);
+
+void free_user (user* user);
 
 #endif
