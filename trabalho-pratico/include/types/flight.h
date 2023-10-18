@@ -29,9 +29,9 @@ void set_flight_origin (flight* flight, char* parsed_origin);
 
 void set_flight_destination (flight* flight, char* parsed_destination);
 
-void set_flight_schedule_departure_data (flight* flight, int parsed_schedule_data);
+void set_flight_schedule_departure_date (flight* flight, int parsed_schedule_date);
 
-void set_flight_schedule_arrival_data (flight* flight, int parsed_schedule_arrival_data);
+void set_flight_schedule_arrival_date (flight* flight, int parsed_schedule_arrival_date);
 
 void increment_flight_number_of_passengers (flight* flight, int increment_factor);
 
@@ -45,9 +45,9 @@ const char* get_const_flight_origin (flight* flight);
 
 const char* get_const_flight_destination (flight* flight);
 
-int get_flight_schedule_departure_data (flight* flight);
+int get_flight_schedule_departure_date (flight* flight);
 
-int get_flight_schedule_arrival_data (flight* flight);
+int get_flight_schedule_arrival_date (flight* flight);
 
 int get_flight_number_of_passengers (flight* flight);
 
