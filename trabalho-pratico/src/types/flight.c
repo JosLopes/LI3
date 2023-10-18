@@ -23,8 +23,8 @@ struct flight {
     char* plane_model;
     char* origin;
     char* destination;
-    int   schedule_departure_data;
-    int   schedule_arrival_data;
+    int   schedule_departure_date;
+    int   schedule_arrival_date;
     int   number_of_passengers;
     int   real_departure_time;
 };
@@ -52,11 +52,11 @@ void set_flight_origin (flight* flight, char* parsed_origin)
 void set_flight_destination (flight* flight, char* parsed_destination)
     {flight -> destination = strdup (parsed_destination);}
 
-void set_flight_schedule_departure_data (flight* flight, int parsed_schedule_data)
-    {flight -> schedule_departure_data = parsed_schedule_data;}
+void set_flight_schedule_departure_date (flight* flight, int parsed_schedule_date)
+    {flight -> schedule_departure_date = parsed_schedule_date;}
 
-void set_flight_schedule_arrival_data (flight* flight, int parsed_schedule_arrival_data)
-    {flight -> schedule_arrival_data = parsed_schedule_arrival_data;}
+void set_flight_schedule_arrival_date (flight* flight, int parsed_schedule_arrival_date)
+    {flight -> schedule_arrival_date = parsed_schedule_arrival_date;}
 
 void increment_flight_number_of_passengers (flight* flight, int increment_factor)
     {flight -> number_of_passengers += increment_factor;}
@@ -72,9 +72,9 @@ const char* get_const_flight_origin (flight* flight) {return flight -> origin;}
 
 const char* get_const_flight_destination (flight* flight) {return flight -> destination;}
 
-int get_flight_schedule_departure_data (flight* flight) {return flight -> schedule_departure_data;}
+int get_flight_schedule_departure_date (flight* flight) {return flight -> schedule_departure_date;}
 
-int get_flight_schedule_arrival_data (flight* flight) {return flight -> schedule_arrival_data;}
+int get_flight_schedule_arrival_date (flight* flight) {return flight -> schedule_arrival_date;}
 
 int get_flight_number_of_passengers (flight* flight) {return flight -> number_of_passengers;}
 
