@@ -140,14 +140,14 @@ int daytime_from_string_const(daytime_t *output, const char *input) {
     return retval;
 }
 
-int daytime_sprintf(char *output, daytime_t daytime) {
+void daytime_sprintf(char *output, daytime_t daytime) {
     daytime_union_helper_t daytime_union = {.daytime = daytime};
 
-    return sprintf(output,
-                   "%02d:%02d:%02d",
-                   daytime_union.fields.hours,
-                   daytime_union.fields.minutes,
-                   daytime_union.fields.seconds);
+    sprintf(output,
+            "%02d:%02d:%02d",
+            daytime_union.fields.hours,
+            daytime_union.fields.minutes,
+            daytime_union.fields.seconds);
 }
 
 uint32_t daytime_diff(daytime_t a, daytime_t b) {

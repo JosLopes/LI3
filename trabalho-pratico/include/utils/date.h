@@ -145,12 +145,10 @@ int date_from_string_const(date_t *output, const char *input);
  * @param output Where to print the date to. Must be at least ::DATE_SPRINTF_MIN_BUFFER_SIZE long.
  * @param date   Date to be printed.
  *
- * @return The return value of `sprintf`
- *
  * #### Examples
  * See [the header file's documentation](@ref date_examples).
  */
-int date_sprintf(char *output, date_t date);
+void date_sprintf(char *output, date_t date);
 
 /**
  * @brief Calculates the difference (in days) between two dates.

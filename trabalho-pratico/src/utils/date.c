@@ -162,14 +162,14 @@ int date_from_string_const(date_t *output, const char *input) {
     return retval;
 }
 
-int date_sprintf(char *output, date_t date) {
+void date_sprintf(char *output, date_t date) {
     date_union_helper_t date_union = {.date = date};
 
-    return sprintf(output,
-                   "%04d/%02d/%02d",
-                   date_union.fields.year,
-                   date_union.fields.month,
-                   date_union.fields.day);
+    sprintf(output,
+            "%04d/%02d/%02d",
+            date_union.fields.year,
+            date_union.fields.month,
+            date_union.fields.day);
 }
 
 uint64_t date_diff(date_t a, date_t b) {
