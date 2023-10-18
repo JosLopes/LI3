@@ -23,4 +23,47 @@ typedef struct reservation reservation;
 
 reservation* create_reservation (void);
 
+void set_reservation_user_id (reservation* reservation, char* parsed_user_id);
+
+void set_reservation_user_hotel_id (reservation* reservation, char* parsed_hotel_id);
+
+void set_reservation_user_hotel_name (reservation* reservation, char* parsed_hotel_name);
+
+void set_reservation_rating (reservation* reservation, int* parsed_rating);
+
+void set_reservation_includes_breakfast (reservation* reservation,
+                                         char* parsed_includes_breakfast);
+
+void set_reservation_hotel_stars (reservation* reservation, int parsed_hotel_stars);
+
+void set_reservation_begin_date (reservation* reservation, int parsed_begin_date);
+
+void set_reservation_end_date (reservation* reservation, int parsed_end_date);
+
+void set_reservation_city_tax (reservation* reservation, int parsed_city_tax);
+
+void set_reservation_price_per_night (reservation* reservation, int parsed_price_per_night);
+
+const char* get_const_reservation_user_id (reservation* reservation);
+
+const char* get_const_reservation_hotel_id (reservation* reservation);
+
+const char* get_const_reservation_hotel_name (reservation* reservation);
+
+const int* get_const_reservation_rating (reservation* reservation);
+
+enum includes_breakfast get_reservation_includes_breakfast (reservation* reservation);
+
+int get_reservation_hotel_stars (reservation* reservation);
+
+int get_reservation_begin_date (reservation* reservation);
+
+int get_reservation_end_date (reservation* reservation);
+
+int get_reservation_city_tax (reservation* reservation);
+
+int get_reservation_price_per_night (reservation* reservation);
+
+void free_reservation (reservation* reservation);
+
 #endif
