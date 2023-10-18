@@ -29,6 +29,7 @@
 #include "utils/date.h"
 #include "utils/fixed_n_delimiter_parser.h"
 #include "utils/int_utils.h"
+#include "utils/string_utils.h"
 
 /**
  * @brief Grammar for parsing dates.
@@ -151,11 +152,9 @@ int date_from_string(date_t *output, char *input) {
 }
 
 int date_from_string_const(date_t *output, const char *input) {
-    size_t buffer_size = strlen(input) + 1;
-    char  *buffer      = malloc(buffer_size);
+    char *buffer = string_duplicate(input);
     if (!buffer)
         return 1;
-    (void) memcpy(buffer, input, buffer_size);
 
     int retval = date_from_string(output, buffer);
 

@@ -151,11 +151,9 @@ int fixed_n_delimiter_parser_parse_string(char                               *in
 int fixed_n_delimiter_parser_parse_string_const(const char                         *input,
                                                 fixed_n_delimiter_parser_grammar_t *grammar,
                                                 void                               *user_data) {
-    size_t buffer_size = strlen(input) + 1;
-    char  *buffer      = malloc(buffer_size);
+    char *buffer = string_duplicate(input);
     if (!buffer)
         return FIXED_N_DELIMITER_PARSER_PARSE_STRING_CONST_RET_MALLOC_FAILURE;
-    (void) memcpy(buffer, input, buffer_size);
 
     int retval = fixed_n_delimiter_parser_parse_string(buffer, grammar, user_data);
 

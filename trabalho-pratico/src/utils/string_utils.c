@@ -32,6 +32,16 @@
 
 #include "utils/string_utils.h"
 
+char *string_duplicate(const char *input) {
+    size_t buffer_size = strlen(input) + 1;
+    char  *buffer      = malloc(buffer_size);
+    if (!buffer)
+        return NULL;
+
+    (void) memcpy(buffer, input, buffer_size);
+    return buffer;
+}
+
 int string_tokenize(char                    *input,
                     char                     delimiter,
                     tokenize_iter_callback_t callback,
@@ -54,11 +64,9 @@ int string_const_tokenize(const char              *input,
                           tokenize_iter_callback_t callback,
                           void                    *user_data) {
 
-    size_t buffer_size = strlen(input) + 1;
-    char  *buffer      = malloc(buffer_size);
+    char *buffer = string_duplicate(input);
     if (!buffer)
         return STRING_CONST_TOKENIZE_FAILED_MALLOC;
-    (void) memcpy(buffer, input, buffer_size);
 
     int retval = string_tokenize(buffer, delimiter, callback, user_data);
 

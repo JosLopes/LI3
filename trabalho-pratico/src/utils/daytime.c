@@ -29,6 +29,7 @@
 #include "utils/daytime.h"
 #include "utils/fixed_n_delimiter_parser.h"
 #include "utils/int_utils.h"
+#include "utils/string_utils.h"
 
 /**
  * @brief Grammar for parsing times.
@@ -129,11 +130,9 @@ int daytime_from_string(daytime_t *output, char *input) {
 }
 
 int daytime_from_string_const(daytime_t *output, const char *input) {
-    size_t buffer_size = strlen(input) + 1;
-    char  *buffer      = malloc(buffer_size);
+    char *buffer = string_duplicate(input);
     if (!buffer)
         return 1;
-    (void) memcpy(buffer, input, buffer_size);
 
     int retval = daytime_from_string(output, buffer);
 
