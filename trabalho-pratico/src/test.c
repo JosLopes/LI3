@@ -21,52 +21,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/date.h"
+#include "utils/daytime.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Test for dates.
+ * @details Test for hours.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    const char *birthdays[12] = {
-        "2004/10/16", /* Valid date */
+    const char *times[11] = {
+        "00:44:24", /* Date during a sleepless programming session */
 
-        "2002/7/12",   /* One digit missing */
-        "13000/04/12", /* One extra digit */
-        "-203/06/01",  /* Invalid digit */
-        "-203/1-/01",  /* Invalid digit */
+        "0:12:45",  /* One digit missing */
+        "00:-1:12", /* Invalid digit */
 
-        "2022/04/31", /* Valid date */
-        "2022/05/32", /* Out-of-range day */
-        "1333/00/12", /* Out-of-range month */
-        "1333/13/12", /* Out-of-range month */
+        "00:00:00", /* Valid time */
+        "23:59:59", /* Valid time */
+        "24:59:59", /* Out of range hour */
+        "23:60:59", /* Out of range minute */
+        "23:59:60", /* Out of range second */
 
-        "2023/11/21/11", /* Too many data points */
-        "2023/11",       /* Too few data points */
-
-        "9990/01/01" /* Valid but will overflow */
+        "00:00:00:00", /* Too many data points */
+        "00:00",       /* Too few data points */
+        "",            /* What? */
     };
 
-    for (int i = 0; i < 12; ++i) {
-        date_t date;
-        int    success = date_from_string_const(&date, birthdays[i]);
+    for (int i = 0; i < 11; ++i) {
+        daytime_t time;
+        int       success = daytime_from_string_const(&time, times[i]);
 
         if (success) {
-            fprintf(stderr, "Failed to parse date \"%s\".\n", birthdays[i]);
+            fprintf(stderr, "Failed to parse time \"%s\".\n", times[i]);
         } else {
-            /* This may fail for large years (max year is 9999) */
-            int set_result = date_set_year(&date, date_get_year(date) + 10);
+            char str[DAYTIME_SPRINTF_MIN_BUFFER_SIZE];
+            daytime_sprintf(str, time);
 
-            char str[DATE_SPRINTF_MIN_BUFFER_SIZE];
-            date_sprintf(str, date);
-
-            if (set_result) {
-                fprintf(stderr, "Date overflow for %s!\n", str);
-            } else {
-                printf("Your 10th birthday was / will be in %s\n", str);
-            }
+            printf("%s was parsed successfully.\n", str);
         }
     }
 
