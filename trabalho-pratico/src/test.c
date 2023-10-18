@@ -20,46 +20,38 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "utils/daytime.h"
+#include "utils/stream_utils.h"
 
-/**
- * @brief The entry point to the test program.
- * @details Test for hours.
- * @retval 0 Success
- * @retval 1 Insuccess
- */
-int main(void) {
-    const char *times[11] = {
-        "00:44:24", /* Date during a sleepless programming session */
+int iter(void *user_data, char *token) {
+    int *sum_count = (int *) user_data;
 
-        "0:12:45",  /* One digit missing */
-        "00:-1:12", /* Invalid digit */
-
-        "00:00:00", /* Valid time */
-        "23:59:59", /* Valid time */
-        "24:59:59", /* Out of range hour */
-        "23:60:59", /* Out of range minute */
-        "23:59:60", /* Out of range second */
-
-        "00:00:00:00", /* Too many data points */
-        "00:00",       /* Too few data points */
-        "",            /* What? */
-    };
-
-    for (int i = 0; i < 11; ++i) {
-        daytime_t time;
-        int       success = daytime_from_string_const(&time, times[i]);
-
-        if (success) {
-            fprintf(stderr, "Failed to parse time \"%s\".\n", times[i]);
-        } else {
-            char str[DAYTIME_SPRINTF_MIN_BUFFER_SIZE];
-            daytime_sprintf(str, time);
-
-            printf("%s was parsed successfully.\n", str);
-        }
+    int height = atoi(token);
+    if (height <= 0) {
+        fprintf(stderr, "Invalid height: \"%s\"\n", token);
+        return 1;
+    } else {
+        sum_count[0] += height;
+        sum_count[1]++;
     }
-
+    
     return 0;
 }
+
+int main(void) {
+    FILE *fp;
+    fp = fopen("files/testfile", "r");
+
+    int sum_count[2] = {0, 0};
+
+    if (stream_tokenize(fp, ';', iter, sum_count))
+    {
+        return 1;
+    } else {
+        printf("Average height is: %.2fcm\n", (double) sum_count[0] / sum_count[1]);
+        return 0;
+    }
+}
+
+// TODO: Documentar o teste realizado
