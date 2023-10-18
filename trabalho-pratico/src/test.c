@@ -21,41 +21,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/daytime.h"
+#include "utils/date_and_time.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Test for hours.
+ * @details Test for timed dates.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    const char *times[11] = {
-        "00:44:24", /* Date during a sleepless programming session */
-
-        "0:12:45",  /* One digit missing */
-        "00:-1:12", /* Invalid digit */
-
-        "00:00:00", /* Valid time */
-        "23:59:59", /* Valid time */
-        "24:59:59", /* Out of range hour */
-        "23:60:59", /* Out of range minute */
-        "23:59:60", /* Out of range second */
-
-        "00:00:00:00", /* Too many data points */
-        "00:00",       /* Too few data points */
-        "",            /* What? */
+    const char *date_and_times[2] = {
+        "2023/11/11 23:59:59",  /* Due date for this project (we're screwed) */
+        "2023/11/11 23:59:59 ", /* Too many spaces */
     };
 
-    for (int i = 0; i < 11; ++i) {
-        daytime_t time;
-        int       success = daytime_from_string_const(&time, times[i]);
+    for (int i = 0; i < 2; ++i) {
+        date_and_time_t date_and_time;
+        int success = date_and_time_from_string_const(&date_and_time, date_and_times[i]);
 
         if (success) {
-            fprintf(stderr, "Failed to parse time \"%s\".\n", times[i]);
+            fprintf(stderr, "Failed to parse timed date \"%s\".\n", date_and_times[i]);
         } else {
-            char str[DAYTIME_SPRINTF_MIN_BUFFER_SIZE];
-            daytime_sprintf(str, time);
+            char str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+            date_and_time_sprintf(str, date_and_time);
 
             printf("%s was parsed successfully.\n", str);
         }
