@@ -96,7 +96,7 @@ double quotes (`#include "internal_header.h"`).
 
 - `todo.sh` - looks for the `TODO` string in all C sources and headers.
 - `contributors.sh` - counts how many lines of code each contributor committed. This replaces my
-                      need for GitHub Pro, needed to perform this action on private repos.
+  need for GitHub Pro, needed to perform this action on private repos.
 
 # GitHub Actions
 
