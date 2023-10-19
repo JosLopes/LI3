@@ -24,6 +24,7 @@ struct reservation {
     char* hotel_name;
     int*  rating;    //if Null the rating doesn't exist;
     enum  includes_breakfast includes_breakfast;
+    int   id; // + BOOK behind;
     int   hotel_stars;
     int   begin_date;
     int   end_date;
