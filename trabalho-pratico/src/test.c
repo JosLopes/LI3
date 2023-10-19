@@ -18,34 +18,36 @@
  * @file main.c
  * @brief Contains the entry point to the program.
  */
-#include <glib-2.0/glib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-/**
- * @brief A `GHFunc` for iterating through `HashTable` entries.
- * @param key Dictionary key.
- * @param value Dictionary object.
- */
-void iter(gpointer key, gpointer value, gpointer user_data) {
-    (void) user_data;
-
-    printf("%s é capital da %s\n", (const char *) value, (const char *) key);
-}
+#include "utils/date_and_time.h"
 
 /**
  * @brief The entry point to the test program.
+ * @details Test for timed dates.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    GHashTable *dict = g_hash_table_new(g_str_hash, g_str_equal);
+    const char *date_and_times[2] = {
+        "2023/11/11 23:59:59",  /* Due date for this project (we're screwed) */
+        "2023/11/11 23:59:59 ", /* Too many spaces */
+    };
 
-    g_hash_table_insert(dict, "Portugal", "Lisboa");
-    g_hash_table_insert(dict, "Espanha", "Madrid");
-    g_hash_table_insert(dict, "França", "Paris");
+    for (int i = 0; i < 2; ++i) {
+        date_and_time_t date_and_time;
+        int success = date_and_time_from_string_const(&date_and_time, date_and_times[i]);
 
-    g_hash_table_foreach(dict, iter, NULL);
+        if (success) {
+            fprintf(stderr, "Failed to parse timed date \"%s\".\n", date_and_times[i]);
+        } else {
+            char str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+            date_and_time_sprintf(str, date_and_time);
 
-    g_hash_table_destroy(dict);
+            printf("%s was parsed successfully.\n", str);
+        }
+    }
+
     return 0;
 }
