@@ -135,12 +135,10 @@ int daytime_from_string_const(daytime_t *output, const char *input);
  *               long.
  * @param time   Time to be printed.
  *
- * @return The return value of `sprintf`.
- *
  * #### Examples
  * See [the header file's documentation](@ref daytime_examples).
  */
-int daytime_sprintf(char *output, daytime_t time);
+void daytime_sprintf(char *output, daytime_t time);
 
 /**
  * @brief Calculates the difference (in seconds) between two times.

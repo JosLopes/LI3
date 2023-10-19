@@ -43,10 +43,7 @@
  *     (void) ntoken;
  *
  *     // Copy string to another buffer
- *     size_t len       = strlen(token);
- *     char  *name_copy = malloc(len + 1);
- *     memcpy(name_copy, token, len + 1);
- *
+ *     char *name_copy = string_duplicate(token); // No failure check in this example
  *     ((person_t *) user_data)->name = name_copy;
  *     return 0;
  * }
