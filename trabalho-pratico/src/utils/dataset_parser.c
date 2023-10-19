@@ -15,14 +15,10 @@
  */
 
 /**
- * @file main.c
- * @brief Contains the entry point to the program.
+ * @file  dataset_parser.c
+ * @brief Implementation of methods in include/utils/dataset_parser.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref dataset_parser_examples).
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-int main(void) {
-    
-    return 0;
-}

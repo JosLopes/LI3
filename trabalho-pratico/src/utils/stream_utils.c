@@ -19,7 +19,7 @@
  * @brief Implementation of methods in include/utils/stream_utils.h
  *
  * ### Examples
- * See [the header file's documentation](@ref string_utils_examples).
+ * See [the header file's documentation](@ref stream_utils_examples).
  */
 
 #include <stdio.h>
@@ -32,28 +32,17 @@ int stream_tokenize(FILE                    *file,
                     tokenize_iter_callback_t callback,
                     void                    *user_data) {
 
-    // char *token = NULL;
-    // size_t len = 0;
-
-    // ssize_t read;
-    // while ((read = getdelim(&token, &len, delimiter, file)) != -1) {
-    //     if (token[strlen(token)-1] == delimiter) { token[strlen(token)-1] = '\0'; }
-
-    //     int cb_result = callback(user_data, token);
-    //     if (cb_result)
-    //         return cb_result;
-    // }
-
-    char *line = NULL;
+    char *token = NULL;
     size_t len = 0;
 
     ssize_t read;
-    while ((read = getline(&line, &len, file)) != -1) {
-        // Perguntar berto se pode usar string_tokenize
-        string_tokenize(line, delimiter, callback, user_data);
+    while ((read = getdelim(&token, &len, delimiter, file)) != -1) {
+        if (token[strlen(token)-1] == delimiter) { token[strlen(token)-1] = '\0'; }
+        
+        int cb_result = callback(user_data, token);
+        if (cb_result)
+            return cb_result;
     }
 
     return 0;
 }
-
-// TODO: Documentation
