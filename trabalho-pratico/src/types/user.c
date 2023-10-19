@@ -20,16 +20,17 @@
 #include <string.h>
 
 struct user {
+    char* id;
     char* name;
     char* passport;
     char* country_code;
-    enum sex sex;
+    enum  sex sex;
     bool  active_status;
     int   account_creation_date;
 };
 
-user* create_user (void) {
-    user* new_user = malloc (sizeof (user));
+user_t* create_user (void) {
+    user_t* new_user = malloc (sizeof (user_t));
     new_user -> name = NULL;
     new_user -> passport = NULL;
     new_user -> country_code = NULL;
@@ -37,18 +38,20 @@ user* create_user (void) {
     return new_user;
 }
 
-void set_user_name (user* user, char* parsed_name) {user -> name = strdup (parsed_name);} 
+void set_user_id (user_t* user, char* id) {user -> id = strdup (id);}
 
-void set_user_passport (user* user, char* parsed_passport)
-    {user -> passport = strdup (parsed_passport);}
+void set_user_name (user_t* user, char* name) {user -> name = strdup (name);} 
 
-void set_user_country_code (user* user, char* parsed_country_code)
-    {user -> country_code = strdup (parsed_country_code);}
+void set_user_passport (user_t* user, char* passport)
+    {user -> passport = strdup (passport);}
 
-void set_user_sex (user* user, char* parsed_sex_string) {
+void set_user_country_code (user_t* user, char* country_code)
+    {user -> country_code = strdup (country_code);}
+
+void set_user_sex (user_t* user, char* sex_string) {
   enum sex sex;
 
-  if (!strcmp(parsed_sex_string, "M")) {
+  if (!strcmp(sex_string, "M")) {
     sex = M;
   } else {
     sex = F;
@@ -57,26 +60,28 @@ void set_user_sex (user* user, char* parsed_sex_string) {
   user -> sex = sex;
 }
 
-void set_user_account_status (user* user, bool active_status)
+void set_user_account_status (user_t* user, bool active_status)
     {user -> active_status = active_status;}
 
-void set_user_account_creation_date (user* user, int parsed_date)
-    {user -> account_creation_date = parsed_date;}
+void set_user_account_creation_date (user_t* user, int date)
+    {user -> account_creation_date = date;}
 
-const char* get_const_user_name (user* user) {return user -> name;}
+const char* get_const_user_id (user_t* user) {return user -> id;}
 
-const char* get_const_user_passport (user* user) {return user -> country_code;}
+const char* get_const_user_name (user_t* user) {return user -> name;}
 
-const char* get_const_user_country_code (user* user) {return user -> country_code;}
+const char* get_const_user_passport (user_t* user) {return user -> country_code;}
 
-enum sex get_user_sex (user* user) {return user -> sex;}
+const char* get_const_user_country_code (user_t* user) {return user -> country_code;}
 
-bool get_user_account_status (user* user) {return user -> active_status;}
+enum sex get_user_sex (user_t* user) {return user -> sex;}
 
-int get_user_account_creation_date (user* user)
+bool get_user_account_status (user_t* user) {return user -> active_status;}
+
+int get_user_account_creation_date (user_t* user)
     {return user -> account_creation_date;}
 
-void free_user (user* user) {
+void free_user (user_t* user) {
     free (user -> name);
     free (user -> passport);
     free (user -> country_code);

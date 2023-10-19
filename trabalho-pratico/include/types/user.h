@@ -14,46 +14,160 @@
  * limitations under the License.
  */
 
- /**
-  * @file   user.h
-  * @brief  Contains data structures and functions that apply to the type @typedef struct user. 
-  */
+/**
+ * @file     user.h
+ * @brief    Declaration of type `user_t`.
+ *
+ * @details  In this module you can find a declaration of the type `user_t` as a struct user,
+ *           as well as get and set functions, which allow's the developer access to any
+ *           previously created user, or gives them the ability to create a new user.
+ *           User parameters available for the developer:
+ *
+ * @param id                    The id of a given user, of type `char*`.
+ * @param name                  The name of a given user, of type `char*`.
+ * @param passport              The passport of a given user, of type `char*`.
+ * @param country_code          The code of the country of a given user, of type `char*`.
+ * @param sex                   Defines the sex of a given user, of type `enum sex`. 
+ * @param active_status         Defines the status of an account (active/inactive), of type `int`.
+ * @param account_creation_date Defines the date of account creation, of type `int`.
+ */
 
 #ifndef USER_H
 #define USER_H
 
 #include <stdbool.h>
 
+/**
+ * @brief Enum sex, F for female, M for male.
+ */
 enum sex {F, M};
 
-typedef struct user user;
+/**
+ * @brief Type `user_t` defined as a struct user,
+ *        stores valuable information of a given person (Opaque type).
+ */
+typedef struct user user_t;
 
-user* create_user (void);
+/**
+ * @brief Creates a new user.
+ *
+ * @return new_user, the new user created of type `user_t*`.
+ */
+user_t* create_user (void);
 
-void set_user_name (user* user, char* parsed_name);
+/**
+ * @brief Sets the user's id, allocating the necessary space.
+ *        Be sure to free it when no longer necessary (using the function free_user).
+ *
+ * @param user        User of type `user_t*`.
+ * @param id The id of a given user, of type `char*`.
+ */
+void set_user_id (user_t* user, char* id);
 
-void set_user_passport (user* user, char* parsed_passport);
+/**
+ * @brief Sets the user's name, allocating the necessary space.
+ *        Be sure to free it when no longer necessary (using the function free_user).
+ *
+ * @param user        User of type `user_t*`.
+ * @param name The name of a given user, of type `char*`.
+ */
+void set_user_name (user_t* user, char* name);
 
-void set_user_country_code (user* user, char* parsed_country_code);
+/**
+ * @brief Sets the user's passport, allocating the necessary space.
+ *        Be sure to free it when no longer necessary (using the function free_user).
+ *
+ * @param user            User of type `user_t*`.
+ * @param passport The passport of a given user, of type `char*`.
+ */
+void set_user_passport (user_t* user, char* passport);
 
-void set_user_sex (user* user, char* parsed_sex_string);
+/**
+ * @brief Sets the user's country code, allocating the necessary space.
+ *        Be sure to free it when no longer necessary (using the function free_user).
+ *
+ * @param user                User of type `user_t*`.
+ * @param country_code  The country code of a given user, of type `char*`.
+ */
+void set_user_country_code (user_t* user, char* country_code);
 
-void set_user_account_status (user* user, bool active_status);
+/**
+ * @brief Sets the user sex (Male of Female).
+ *
+ * @param user              User of type `user_t*`.
+ * @param sex_string  The sex of a given user, of type `char*`. 
+ */
+void set_user_sex (user_t* user, char* sex_string);
 
-void set_user_account_creation_date (user* user, int parsed_date);
 
-const char* get_const_user_name (user* user);
+/** Sets the user account status.
+ *
+ * @param user          User of type `user_t*`.
+ * @param active_status True if account_status is active, False if it isn't, of type `bool`.
+ */
+void set_user_account_status (user_t* user, bool active_status);
 
-const char* get_const_user_passport (user* user);
+/**
+ * @brief Sets the user account creation date.
+ *
+ * @param user        User of type `user_t*`.
+ * @param date  The account creation date of a given user, of type `int`.
+ */
+void set_user_account_creation_date (user_t* user, int date);
 
-const char* get_const_user_country_code (user* user);
+/**
+ * @brief Gets the user id.
+ * @param  user User of type `user_t*`.
+ * @return The user's id of type `const char*`. 
+ */
+const char* get_const_user_id (user_t* user);
 
-enum sex get_user_sex (user* user);
+/**
+ * @brief Gets the user name.
+ * @param  user User of type `user_t*`.
+ * @return The user's name of type `const char*`. 
+ */
+const char* get_const_user_name (user_t* user);
 
-bool get_user_account_status (user* user);
+/**
+ * @brief Gets the user passport.
+ * @param  user User of type `user_t*`.
+ * @return The user's passport of type `const char*`. 
+ */
+const char* get_const_user_passport (user_t* user);
 
-int get_user_account_creation_date (user* user);
+/**
+ * @brief Gets the user country code.
+ * @param  user User of type `user_t*`.
+ * @return The user's country code of type `const char*`. 
+ */
+const char* get_const_user_country_code (user_t* user);
 
-void free_user (user* user);
+/**
+ * @brief Gets the user sex.
+ * @param  user User of type `user_t*`.
+ * @return The user's sex of type `enum sex`. 
+ */
+enum sex get_user_sex (user_t* user);
+
+/**
+ * @brief Gets the user account_status, True if the account is active.
+ * @param  user User of type `user_t*`.
+ * @return The user's account_status of type `bool`. 
+ */
+bool get_user_account_status (user_t* user);
+
+/**
+ * @brief Gets the user account creation date.
+ * @param user User of type `user_t*`.
+ * @return The user's account_creation_date of type int.
+ */
+int get_user_account_creation_date (user_t* user);
+
+/**
+ * @brief Function that free's the memory used for a given user, effectively deleting the user.
+ * @param user User of type `user_t*`.
+ */
+void free_user (user_t* user);
 
 #endif
