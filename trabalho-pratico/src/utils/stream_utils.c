@@ -32,8 +32,8 @@ int stream_tokenize(FILE                    *file,
                     tokenize_iter_callback_t callback,
                     void                    *user_data) {
 
-    char *token = NULL;
-    size_t len = 0;
+    char  *token = NULL;
+    size_t len   = 0;
 
     ssize_t read;
     while ((read = getdelim(&token, &len, delimiter, file)) != -1) {

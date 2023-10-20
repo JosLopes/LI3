@@ -31,7 +31,7 @@
 
 struct stream_iter_data {
     fixed_n_delimiter_parser_grammar_t *grammar;
-    void *user_data;
+    void                               *user_data;
 };
 
 stream_iter_data *
@@ -39,7 +39,8 @@ stream_iter_data *
                          void                               *user_data) {
     
     stream_iter_data *data = malloc(sizeof(stream_iter_data));
-    data->grammar = grammar;
+
+    data->grammar   = grammar;
     data->user_data = user_data;
 
     return data;
@@ -49,9 +50,19 @@ void stream_iter_data_free(stream_iter_data *data) {
     free(data);
 }
 
+/**
+ * @brief   Callback for every token parsed.
+ * @details Auxiliary function for ::parse_dataset, responsible for calling
+ *          ::fixed_n_delimiter_parser_parse_string with the correct data.
+ *
+ * @param user_data A pointer to a ::stream_iter_data.
+ * @param token     The token to be parsed.
+ */
 int __parse_stream_iter(void *user_data, char* token) {
     stream_iter_data *data = (stream_iter_data *)user_data;
+
     int retval = fixed_n_delimiter_parser_parse_string(token, data->grammar, data->user_data);
+
     return retval;
 }
 

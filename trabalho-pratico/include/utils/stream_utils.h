@@ -55,7 +55,7 @@
 typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
 
 /**
- * @brief Splits a **MODIFIABLE** string into tokens, separated by `delimiter`.
+ * @brief Splits a file into tokens, separated by `delimiter`.
  *
  * @param file      File to tokenize. The file is not changed while being tokenized.
  * @param delimiter Character to separate tokens. It won't be part of those tokens.
