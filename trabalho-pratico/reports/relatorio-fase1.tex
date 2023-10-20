@@ -4,8 +4,14 @@
 \usepackage{setspace}
 \usepackage[portuguese]{babel}
 
-\title{\textbf{LI3 - Fase 1}}
-\author{Humberto Gomes, José Lopes, José Matos}
+\chardef\_=`_
+
+\title{\textbf{LI3 - Relatório da Fase I - Grupo 12}}
+\author{
+	Humberto Gomes (A104348) \\
+	José Lopes     (A104541) \\
+	José Matos     (A100612) \\
+}
 \date{novembro de 2023}
 
 \begin{document}
@@ -15,9 +21,72 @@
 \setlength{\parindent}{0pt}
 
 \begin{abstract}
-	Exemplo de abstrato
+    Este relatório tem como intuito explicar a estrutura do nosso trabalho prático para a UC de LI3.
+    Como o foco principal desta UC é a modularização e o encapsulamento do código, este documento
+    descreve como tal for conseguido, justificando as nossas decisões a este nível. O objetivo do
+    projeto para a 1.ª fase é o \emph{parsing} e validação de um \emph{dataset} contendo
+    utilizadores, voos, passageiros em voos e reservas de hotéis, sobre o qual serão executadas
+    \emph{queries}, das quais implementámos seis, fornecendo informação sobre a base de dados. O
+    modo de organização e processamento destes dados também é descrito.
 \end{abstract}
 
-Exemplo de texto
+\section{Estrutura do trabalho}
+
+TODO
+
+\section{Otimização do uso de memória}
+
+Dado que os \emph{datasets} da 2.ª fase serão de maior dimensão, preocupámo-nos desde já com a
+quantidade de memória utilizada, de modo não sermos futuramente obrigados a reescrever partes
+significativas do nosso código.
+
+\subsection{Observação do \emph{dataset}}
+
+TODO - como usámos tipos que não strings nas entidades por observação do \emph{dataset}.
+
+\subsection{Tipos opacos}
+
+Um dos nossos obstáculos principais foi a forma como tipos opacos são implementados em C, que,
+devido à sua natureza de apontador, exigem uma alocação por cada instanciamento. Esta secção
+descreve como, mantendo o encapsulamento dos tipos, conseguimos definir tipos de dados opacos sem
+estas limitações.
+
+\subsubsection{Datas e horas}
+
+De modo à \texttt{struct} de uma entidade (como um utilizador) poder conter, no seu interior, uma
+data ou uma hora, sem alocações, estas são representadas como inteiros. Para modificar estes
+inteiros, o módulo do tipo de dados usa uma \texttt{union}, como é visível abaixo no exemplo das
+datas:
+
+
+\begin{spacing}{1}
+\begin{center}
+    \begin{tabular}{ |l|l| }
+        \hline
+        \emph{include/utils/date.h}: & \emph{src/utils/date.c}: \\
+		& \\
+		\texttt{typedef int32\_t date\_t;} & \texttt{typedef union \{} \\
+										   & \texttt{\hspace{0.5cm}date\_t date;} \\
+                                           & \texttt{} \\
+                                           & \texttt{\hspace{0.5cm}struct \{} \\
+                                           & \texttt{\hspace{1cm}uint16\_t year;} \\
+                                           & \texttt{\hspace{1cm}uint8\_t month, day;} \\
+                                           & \texttt{\hspace{0.5cm}\} fields;} \\
+                                           & \texttt{\} date\_union\_helper\_t;} \\
+        \hline
+    \end{tabular}
+\end{center}
+\end{spacing}
+
+\subsubsection{Alocação de entidades em \emph{pools}}
+
+Para evitar uma chamada de \texttt{malloc} por cada entidade no \emph{dataset}, procurámos alocar
+grandes blocos contíguos de memória de uma vez (\emph{pools}), cada um contendo várias entidades.
+No entanto, como o único aspeto de um tipo opaco exposto no \emph{header file} é um apontador, não
+se sabe o tamanho da estrutura inerente a que o apontador se refere, impossibilitando a existência
+destas \emph{pools}. Para endereçar este problema, adicionámos um método \texttt{\_sizeof} a cada
+entidade que pretendíamos colocar em \emph{pools} (ex: \texttt{user\_sizeof}). A implementação
+deste método, no ficheiro C, tem acesso à \texttt{struct} interna, podendo simplesmente ser
+implementado como \texttt{return sizeof(user\_t);}.
 
 \end{document}
