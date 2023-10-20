@@ -37,8 +37,10 @@ int stream_tokenize(FILE                    *file,
 
     ssize_t read;
     while ((read = getdelim(&token, &len, delimiter, file)) != -1) {
-        if (token[strlen(token)-1] == delimiter) { token[strlen(token)-1] = '\0'; }
-        
+        if (token[strlen(token) - 1] == delimiter) {
+            token[strlen(token) - 1] = '\0';
+        }
+
         int cb_result = callback(user_data, token);
         if (cb_result)
             return cb_result;

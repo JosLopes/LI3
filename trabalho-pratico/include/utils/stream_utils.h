@@ -68,9 +68,6 @@ typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
  * #### Examples
  * See [the header file's documentation](@ref stream_utils_examples).
  */
-int stream_tokenize(FILE                    *file,
-                    char                     delimiter,
-                    tokenize_iter_callback_t callback,
-                    void                    *user_data);
+int stream_tokenize(FILE *file, char delimiter, tokenize_iter_callback_t callback, void *user_data);
 
 #endif

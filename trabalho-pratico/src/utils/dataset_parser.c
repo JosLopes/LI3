@@ -34,10 +34,9 @@ struct stream_iter_data {
     void                               *user_data;
 };
 
-stream_iter_data *
-    stream_iter_data_new(fixed_n_delimiter_parser_grammar_t *grammar,
-                         void                               *user_data) {
-    
+stream_iter_data *stream_iter_data_new(fixed_n_delimiter_parser_grammar_t *grammar,
+                                       void                               *user_data) {
+
     stream_iter_data *data = malloc(sizeof(stream_iter_data));
 
     data->grammar   = grammar;
@@ -58,8 +57,8 @@ void stream_iter_data_free(stream_iter_data *data) {
  * @param user_data A pointer to a ::stream_iter_data.
  * @param token     The token to be parsed.
  */
-int __parse_stream_iter(void *user_data, char* token) {
-    stream_iter_data *data = (stream_iter_data *)user_data;
+int __parse_stream_iter(void *user_data, char *token) {
+    stream_iter_data *data = (stream_iter_data *) user_data;
 
     int retval = fixed_n_delimiter_parser_parse_string(token, data->grammar, data->user_data);
 
