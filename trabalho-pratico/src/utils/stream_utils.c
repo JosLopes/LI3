@@ -23,7 +23,7 @@
  */
 
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
 
 #include "utils/stream_utils.h"
 
@@ -37,14 +37,19 @@ int stream_tokenize(FILE                    *file,
 
     ssize_t read;
     while ((read = getdelim(&token, &len, delimiter, file)) != -1) {
-        if (token[strlen(token) - 1] == delimiter) {
-            token[strlen(token) - 1] = '\0';
+        if (read > 1) {
+            token[read - 1] = '\0';
         }
 
         int cb_result = callback(user_data, token);
-        if (cb_result)
+        if (cb_result) {
+            free(token);
             return cb_result;
+        }
     }
+
+    if (token)
+        free(token);
 
     return 0;
 }
