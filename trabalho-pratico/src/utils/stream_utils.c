@@ -22,6 +22,7 @@
  * See [the header file's documentation](@ref stream_utils_examples).
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -48,8 +49,13 @@ int stream_tokenize(FILE                    *file,
         }
     }
 
+    if (errno == ENOMEM) {
+        if (token)
+            free(token);
+        return STREAM_TOKENIZE_RET_ALLOCATION_FAILURE;
+    }
+
     if (token)
         free(token);
-
     return 0;
 }

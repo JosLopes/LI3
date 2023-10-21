@@ -55,9 +55,16 @@
  *                  callback can modify the program's state.
  * @param token     The token that was read.
  *
- * @return `0` on success, other value for immediate termination of tokenization.
+ * @return `0` on success, other value for immediate termination of tokenization. It's recommeneded
+ *         that these values are positive, as negative values have special meanings (see
+ *         ::STREAM_TOKENIZE_RET_ALLOCATION_FAILURE).
  */
 typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
+
+/**
+ * @brief Value returned by ::stream_tokenize when allocations from `getdelim` fail.
+ */
+#define STREAM_TOKENIZE_RET_ALLOCATION_FAILURE -1
 
 /**
  * @brief Splits a file into tokens, separated by @p delimiter.
@@ -68,7 +75,8 @@ typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
  * @param user_data Pointer passed to every call of @p callback, so that it can edit program state.
  *
  * @return `0` on success, otherwise, the return value from @p callback in case it ordered the
- *         tokenization to stop.
+ *         tokenization to stop. ::STREAM_TOKENIZE_RET_ALLOCATION_FAILURE may also be returned on
+ *         allocation failures.
  *
  * #### Examples
  * See [the header file's documentation](@ref stream_utils_examples).
