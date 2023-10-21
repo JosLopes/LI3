@@ -23,15 +23,15 @@
  *           previously created flight, or gives them the ability to create a new flight.
  *           Flight parameters available for the developer:
  *
- * @param airline                 The airline of a given flight, of type `char*`.
- * @param plane_model             The plane_model of a given flight, of type `char*`.
- * @param origin                  The origin of a given flight, of type `char*`.
- * @param destination             The destination of a given flight, of type `char*`.
- * @param id                      The id of a given flight, of type `int`. 
- * @param schedule_departure_date The scheduled departure date of a given flight, of type `int`.
- * @param real_departure_date     The real departure date of a given flight, of type `int`.
- * @param schedule_arrival_date   The scheduled arrival date of a given flight, of type `int`.
- * @param number_of_passengers    The number of passengers in a flight, of type `int`. 
+ * @param airline                 Airline of a given flight, of type `char*`.
+ * @param plane_model             Plane_model of a given flight, of type `char*`.
+ * @param origin                  Origin of a given flight, of type `char*`.
+ * @param destination             Destination of a given flight, of type `char*`.
+ * @param id                      Id of a given flight, of type `int`. 
+ * @param schedule_departure_date Scheduled departure date of a given flight, of type `int`.
+ * @param real_departure_date     Real departure date of a given flight, of type `int`.
+ * @param schedule_arrival_date   Scheduled arrival date of a given flight, of type `int`.
+ * @param number_of_passengers    Number of passengers in a flight, of type `int`. 
  */
 
 #ifndef FLIGHT_H
@@ -48,161 +48,160 @@ typedef struct flight flight_t;
  *
  * @return new_flight, the new flight created of type `flight_t*`.
  */
-flight_t* create_flight (void);
+flight_t *create_flight(void);
 
 /**
  * @brief Sets the flight's airline, allocating the necessary space.
  *        Be sure to free it when no longer necessary (using the function free_flight).
  *
- * @param flight         Flight of type `flight_t*`.
- * @param airline        The airline of a given flight, of type `char*`.
+ * @param flight  Flight of type `flight_t*`.
+ * @param airline Airline of a given flight, of type `char*`.
  */
-void set_flight_airline (flight_t* flight, char* airline);
-
+void set_flight_airline(flight_t *flight, char *airline);
 
 /**
  * @brief Sets the flight's plane model, allocating the necessary space.
  *        Be sure to free it when no longer necessary (using the function free_flight).
  *
- * @param flight             Flight of type `flight_t*`.
- * @param plane_model        The plane model of a given flight, of type `char*`.
+ * @param flight      Flight of type `flight_t*`.
+ * @param plane_model Plane model of a given flight, of type `char*`.
  */
-void set_flight_plane_model (flight_t* flight, char* plane_model);
+void set_flight_plane_model(flight_t *flight, char *plane_model);
 
 /**
  * @brief Sets the flight's origin, allocating the necessary space.
  *        Be sure to free it when no longer necessary (using the function free_flight).
  *
- * @param flight        Flight of type `flight_t*`.
- * @param origin        The origin of a given flight, of type `char*`.
+ * @param flight Flight of type `flight_t*`.
+ * @param origin Origin of a given flight, of type `char*`.
  */
-void set_flight_origin (flight_t* flight, char* origin);
+void set_flight_origin(flight_t *flight, char *origin);
 
 /**
  * @brief Sets the flight's destination, allocating the necessary space.
  *        Be sure to free it when no longer necessary (using the function free_flight).
  *
- * @param flight             Flight of type `flight_t*`.
- * @param destination The plane destination of a given flight, of type `char*`.
+ * @param flight      Flight of type `flight_t*`.
+ * @param destination Plane destination of a given flight, of type `char*`.
  */
-void set_flight_destination (flight_t* flight, char* destination);
+void set_flight_destination(flight_t *flight, char *destination);
 
 /**
  * @brief Sets the flight's id.
  *
- * @param flight    Flight of type `flight_t*`.
- * @param id        The id of a given flight, of type `int`. 
+ * @param flight Flight of type `flight_t*`.
+ * @param id     Id of a given flight, of type `int`. 
  */
-void set_flight_id (flight_t* flight, int id);
+void set_flight_id(flight_t *flight, int id);
 
 /**
  * @brief Sets the flight's departure date.
  *
- * @param flight                    Flight of type `flight_t*`.
- * @param schedule_departure_date   The scheduled departure date of a given flight, of type `int`. 
+ * @param flight                  Flight of type `flight_t*`.
+ * @param schedule_departure_date Scheduled departure date of a given flight, of type `int`. 
  */
-void set_flight_schedule_departure_date (flight_t* flight, int schedule_departure_date);
+void set_flight_schedule_departure_date(flight_t *flight, int schedule_departure_date);
 
 /**
  * @brief Sets the flight's schedule_arrival_date.
  *
- * @param flight                    Flight of type `flight_t*`.
- * @param schedule_arrival_date   The scheduled arrival date of a given flight, of type `int`. 
+ * @param flight                Flight of type `flight_t*`.
+ * @param schedule_arrival_date Scheduled arrival date of a given flight, of type `int`. 
  */
-void set_flight_schedule_arrival_date (flight_t* flight, int schedule_arrival_date);
+void set_flight_schedule_arrival_date(flight_t *flight, int schedule_arrival_date);
 
 /**
  * @brief Increments the flight's number_of_passengers.
  *
- * @param flight                    Flight of type `flight_t*`.
+ * @param flight            Flight of type `flight_t*`.
  * @param increment_factor  The factor by which the number of passengers in a flight will
  *                          be incremented, of type `int`. 
  */
-void increment_flight_number_of_passengers (flight_t* flight, int increment_factor);
+void increment_flight_number_of_passengers(flight_t *flight, int increment_factor);
 
 /**
  * @brief Sets the flight's number of passengers.
  *
- * @param flight Flight of type `flight_t`.
- * @param number_of_passengers The number of passengers of a given flight, of type `int`.
+ * @param flight               Flight of type `flight_t`.
+ * @param number_of_passengers Number of passengers of a given flight, of type `int`.
  */
-void set_flight_number_of_passengers (flight_t* flight, int number_of_passengers);
+void set_flight_number_of_passengers(flight_t *flight, int number_of_passengers);
 
 /**
  * @brief Sets the flight's real_departure_time.
  *
- * @param flight                    Flight of type `flight_t*`.
- * @param real_departure_date  The real departure date of a given flight, of type `int`. 
+ * @param flight              Flight of type `flight_t*`.
+ * @param real_departure_date Real departure date of a given flight, of type `int`. 
  */
-void set_flight_real_departure_date (flight_t* flight, int real_departure_date);
+void set_flight_real_departure_date(flight_t *flight, int real_departure_date);
 
 /**
  * @brief Gets the flight's airline.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's airline of type `const char*`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's airline, of type `const char*`. 
  */
-const char* get_const_flight_airline (flight_t* flight);
+const char *get_const_flight_airline(flight_t *flight);
 
 /**
- * @brief Gets the flight's plane_model.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's plane model of type `const char*`. 
+ * @brief Gets the flight's plane model.
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's plane_model, of type `const char*`. 
  */
-const char* get_const_flight_plane_model (flight_t* flight);
+const char *get_const_flight_plane_model(flight_t *flight);
 
 /**
  * @brief Gets the flight's origin.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's origin of type `const char*`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's origin, of type `const char*`. 
  */
-const char* get_const_flight_origin (flight_t* flight);
+const char *get_const_flight_origin(flight_t *flight);
 
 /**
  * @brief Gets the flight's destination.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's destination of type `const char*`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's destination, of type `const char*`. 
  */
-const char* get_const_flight_destination (flight_t* flight);
+const char *get_const_flight_destination(flight_t *flight);
 
 /**
  * @brief Gets the flight's id.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's id of type `int`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's id, of type `int`. 
  */
-int get_flight_id (flight_t* flight);
+int get_flight_id(flight_t *flight);
 
 /**
  * @brief Gets the flight's departure date.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's departure date of type `int`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's departure_date, of type `int`. 
  */
-int get_flight_schedule_departure_date (flight_t* flight);
+int get_flight_schedule_departure_date(flight_t *flight);
 
 /**
- * @brief Gets the flight's arrival_date.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's arrival date of type `int`. 
+ * @brief Gets the flight's arrival date.
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's arrival_date, of type `int`. 
  */
-int get_flight_schedule_arrival_date (flight_t* flight);
+int get_flight_schedule_arrival_date(flight_t *flight);
 
 /**
  * @brief Gets the flight's passengers.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's airline of type `int`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's airline, of type `int`. 
  */
-int get_flight_number_of_passengers (flight_t* flight);
+int get_flight_number_of_passengers(flight_t *flight);
 
 /**
  * @brief Gets the flight's real departure date.
- * @param  flight Flight of type `flight_t*`.
- * @return The flight's real departure date of type `int`. 
+ * @param flight Flight of type `flight_t*`.
+ * @return The flight's real departure_date, of type `int`. 
  */
-int get_flight_real_departure_time (flight_t* flight);
+int get_flight_real_departure_time(flight_t *flight);
 
 /**
- * @brief Function that free's the memory used for a given flight, effectively deleting the flight.
+ * @brief Function that frees the memory used for a given flight, effectively deleting the flight.
  * @param flight Flight of type `flight_t*`.
  */
-void free_flight (flight_t* flight);
+void free_flight(flight_t *flight);
 
 #endif
