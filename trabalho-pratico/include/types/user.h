@@ -29,13 +29,14 @@
  * @param country_code          Code of the country of a given user, of type `char*`.
  * @param sex                   Defines the sex of a given user, of type `enum sex`. 
  * @param active_status         Defines the status of an account (active/inactive), of type `bool`.
- * @param account_creation_date Defines the date of account creation, of type `int`.
+ * @param account_creation_date Defines the date of account creation, of type `date_and_time_t`.
  */
 
 #ifndef USER_H
 #define USER_H
 
 #include <stdbool.h>
+#include "utils/date_and_time.h"
 
 /**
  * @brief Enum sex, F for female, M for male.
@@ -114,9 +115,9 @@ void set_user_account_status(user_t *user, bool active_status);
  * @brief Sets the user account creation date.
  *
  * @param user User of type `user_t*`.
- * @param date Account creation date of a given user, of type `int`.
+ * @param date Account creation date of a given user, of type `date_and_time_t`.
  */
-void set_user_account_creation_date(user_t *user, int date);
+void set_user_account_creation_date(user_t *user, date_and_time_t date);
 
 /**
  * @brief Gets the user id.
@@ -165,7 +166,7 @@ bool get_user_account_status(user_t *user);
  * @param user User of type `user_t*`.
  * @return The user's account_creation_date, of type int.
  */
-int get_user_account_creation_date(user_t *user);
+date_and_time_t get_user_account_creation_date(user_t *user);
 
 /**
  * @brief Function that frees the memory used for a given user, effectively deleting the user.

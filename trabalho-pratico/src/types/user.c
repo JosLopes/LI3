@@ -19,14 +19,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/date_and_time.h"
+
 struct user {
-    char    *id;
-    char    *name;
-    char    *passport;
-    char    *country_code;
-    enum sex sex;
-    bool     active_status;
-    int      account_creation_date;
+    char           *id;
+    char           *name;
+    char           *passport;
+    char           *country_code;
+    enum sex        sex;
+    bool            active_status;
+    date_and_time_t account_creation_date;
 };
 
 user_t *create_user(void) {
@@ -70,7 +72,7 @@ void set_user_account_status(user_t *user, bool active_status) {
     user->active_status = active_status;
 }
 
-void set_user_account_creation_date(user_t *user, int date) {
+void set_user_account_creation_date(user_t *user, date_and_time_t date) {
     user->account_creation_date = date;
 }
 
@@ -98,11 +100,12 @@ bool get_user_account_status(user_t *user) {
     return user->active_status;
 }
 
-int get_user_account_creation_date(user_t *user) {
+date_and_time_t get_user_account_creation_date(user_t *user) {
     return user->account_creation_date;
 }
 
 void free_user(user_t *user) {
+    free(user->id);
     free(user->name);
     free(user->passport);
     free(user->country_code);
