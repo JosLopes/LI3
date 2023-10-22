@@ -20,14 +20,14 @@
 
 struct reservation {
     char                   *user_id;
-    char                   *hotel_id;
     char                   *hotel_name;
     int                    *rating;
     enum includes_breakfast includes_breakfast;
-    int                     id;
+    date_t                  begin_date;
+    date_t                  end_date;
+    size_t                  id;
+    int                     hotel_id;
     int                     hotel_stars;
-    int                     begin_date;
-    int                     end_date;
     int                     city_tax;
     int                     price_per_night;
 };
@@ -36,7 +36,6 @@ reservation_t *create_reservation(void) {
     reservation_t *new_reservation = malloc(sizeof(reservation_t));
 
     new_reservation->user_id    = NULL;
-    new_reservation->hotel_id   = NULL;
     new_reservation->hotel_name = NULL;
     new_reservation->rating     = NULL;
 
@@ -47,8 +46,8 @@ void set_reservation_user_id(reservation_t *reservation, char *user_id) {
     reservation->user_id = strdup(user_id);
 }
 
-void set_reservation_hotel_id(reservation_t *reservation, char *hotel_id) {
-    reservation->hotel_id = strdup(hotel_id);
+void set_reservation_hotel_id(reservation_t *reservation, int hotel_id) {
+    reservation->hotel_id = hotel_id;
 }
 
 void set_reservation_hotel_name(reservation_t *reservation, char *hotel_name) {
@@ -71,15 +70,15 @@ void set_reservation_includes_breakfast(reservation_t *reservation,
                 if (strlen(includes_breakfast_string) == 1)
                     includes_breakfast = f;
                 else
-                    includes_breakfast = false;
+                    includes_breakfast = _false;
                 break;
             case 't':
                 if (strlen(includes_breakfast_string) == 1)
                     includes_breakfast = t;
                 else
-                    includes_breakfast = true;
+                    includes_breakfast = _true;
                 break;
-            case 1:
+            case '1':
                 includes_breakfast = one;
                 break;
             default:
@@ -95,11 +94,15 @@ void set_reservation_hotel_stars(reservation_t *reservation, int hotel_stars) {
     reservation->hotel_stars = hotel_stars;
 }
 
-void set_reservation_begin_date(reservation_t *reservation, int begin_date) {
+void set_reservation_id (reservation_t *reservation, size_t id) {
+    reservation -> id = id;
+}
+
+void set_reservation_begin_date(reservation_t *reservation, date_t begin_date) {
     reservation->begin_date = begin_date;
 }
 
-void set_reservation_end_date(reservation_t *reservation, int end_date) {
+void set_reservation_end_date(reservation_t *reservation, date_t end_date) {
     reservation->end_date = end_date;
 }
 
@@ -115,7 +118,7 @@ const char *get_const_reservation_user_id(reservation_t *reservation) {
     return reservation->user_id;
 }
 
-const char *get_const_reservation_hotel_id(reservation_t *reservation) {
+int get_const_reservation_hotel_id(reservation_t *reservation) {
     return reservation->hotel_id;
 }
 
@@ -131,15 +134,19 @@ enum includes_breakfast get_reservation_includes_breakfast(reservation_t *reserv
     return reservation->includes_breakfast;
 }
 
+size_t get_reservation_id (reservation_t *reservation){
+    return reservation->id;
+}
+
 int get_reservation_hotel_stars(reservation_t *reservation) {
     return reservation->hotel_stars;
 }
 
-int get_reservation_begin_date(reservation_t *reservation) {
+date_t get_reservation_begin_date(reservation_t *reservation) {
     return reservation->begin_date;
 }
 
-int get_reservation_end_date(reservation_t *reservation) {
+date_t get_reservation_end_date(reservation_t *reservation) {
     return reservation->end_date;
 }
 
@@ -153,7 +160,6 @@ int get_reservation_price_per_night(reservation_t *reservation) {
 
 void free_reservation(reservation_t *reservation) {
     free(reservation->user_id);
-    free(reservation->hotel_id);
     free(reservation->hotel_name);
     free(reservation->rating);
 
