@@ -41,8 +41,9 @@
 #ifndef FLIGHT_H
 #define FLIGHT_H
 
-#include "utils/date.h"
 #include <stddef.h>
+
+#include "utils/date.h"
 
 /**
  * @brief Enum includes_breakfast, if the value is
@@ -124,7 +125,7 @@ void set_reservation_includes_breakfast(reservation_t *reservation,
  * @param reservation Reservation of type `reservation_t*`.
  * @param id          Id of a given reservation, of type `size_t`.
  */
-void set_reservation_id (reservation_t *reservation, size_t id);
+void set_reservation_id(reservation_t *reservation, size_t id);
 
 /**
  * @brief Sets the reservation's hotel stars.
@@ -206,7 +207,7 @@ enum includes_breakfast get_reservation_includes_breakfast(reservation_t *reserv
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's id, of type `size_t`. 
  */
-size_t get_reservation_id (reservation_t *reservation);
+size_t get_reservation_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel stars.

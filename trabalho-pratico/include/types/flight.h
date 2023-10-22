@@ -39,8 +39,9 @@
 #ifndef FLIGHT_H
 #define FLIGHT_H
 
-#include "utils/date_and_time.h"
 #include <stddef.h>
+
+#include "utils/date_and_time.h"
 
 /**
  * @brief Type `flight_t` defined as a struct flight,

@@ -15,11 +15,11 @@
  */
 
 #include "types/flight.h"
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "utils/date_and_time.h"
-#include <stddef.h>
 
 struct flight {
     char           *airline;

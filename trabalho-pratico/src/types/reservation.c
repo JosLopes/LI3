@@ -94,8 +94,8 @@ void set_reservation_hotel_stars(reservation_t *reservation, int hotel_stars) {
     reservation->hotel_stars = hotel_stars;
 }
 
-void set_reservation_id (reservation_t *reservation, size_t id) {
-    reservation -> id = id;
+void set_reservation_id(reservation_t *reservation, size_t id) {
+    reservation->id = id;
 }
 
 void set_reservation_begin_date(reservation_t *reservation, date_t begin_date) {
@@ -134,7 +134,7 @@ enum includes_breakfast get_reservation_includes_breakfast(reservation_t *reserv
     return reservation->includes_breakfast;
 }
 
-size_t get_reservation_id (reservation_t *reservation){
+size_t get_reservation_id(reservation_t *reservation) {
     return reservation->id;
 }
 

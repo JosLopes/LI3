@@ -36,6 +36,7 @@
 #define USER_H
 
 #include <stdbool.h>
+
 #include "utils/date_and_time.h"
 
 /**
