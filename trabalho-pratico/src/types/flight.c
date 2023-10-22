@@ -18,16 +18,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils/date_and_time.h"
+#include <stddef.h>
+
 struct flight {
-    char *airline;
-    char *plane_model;
-    char *origin;
-    char *destination;
-    int   id;
-    int   schedule_departure_date;
-    int   real_departure_time;
-    int   schedule_arrival_date;
-    int   number_of_passengers;
+    char           *airline;
+    char           *plane_model;
+    char           *origin;
+    char           *destination;
+    size_t          id;
+    date_and_time_t schedule_departure_date;
+    date_and_time_t real_departure_date;
+    date_and_time_t schedule_arrival_date;
+    int             number_of_passengers;
 };
 
 flight_t *create_flight(void) {
@@ -57,15 +60,16 @@ void set_flight_destination(flight_t *flight, char *destination) {
     flight->destination = strdup(destination);
 }
 
-void set_flight_id(flight_t *flight, int id) {
+void set_flight_id(flight_t *flight, size_t id) {
     flight->id = id;
 }
 
-void set_flight_schedule_departure_date(flight_t *flight, int scheduled_departure_date) {
+void set_flight_schedule_departure_date(flight_t       *flight,
+                                        date_and_time_t scheduled_departure_date) {
     flight->schedule_departure_date = scheduled_departure_date;
 }
 
-void set_flight_schedule_arrival_date(flight_t *flight, int schedule_arrival_date) {
+void set_flight_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date) {
     flight->schedule_arrival_date = schedule_arrival_date;
 }
 
@@ -77,8 +81,8 @@ void set_flight_number_of_passengers(flight_t *flight, int number_of_passengers)
     flight->number_of_passengers = number_of_passengers;
 }
 
-void set_flight_real_departure_date(flight_t *flight, int real_departure_time) {
-    flight->real_departure_time = real_departure_time;
+void set_flight_real_departure_date(flight_t *flight, date_and_time_t real_departure_date) {
+    flight->real_departure_date = real_departure_date;
 }
 
 const char *get_const_flight_airline(flight_t *flight) {
@@ -97,15 +101,15 @@ const char *get_const_flight_destination(flight_t *flight) {
     return flight->destination;
 }
 
-int get_flight_id(flight_t *flight) {
+size_t get_flight_id(flight_t *flight) {
     return flight->id;
 }
 
-int get_flight_schedule_departure_date(flight_t *flight) {
+date_and_time_t get_flight_schedule_departure_date(flight_t *flight) {
     return flight->schedule_departure_date;
 }
 
-int get_flight_schedule_arrival_date(flight_t *flight) {
+date_and_time_t get_flight_schedule_arrival_date(flight_t *flight) {
     return flight->schedule_arrival_date;
 }
 
@@ -113,8 +117,8 @@ int get_flight_number_of_passengers(flight_t *flight) {
     return flight->number_of_passengers;
 }
 
-int get_flight_real_departure_time(flight_t *flight) {
-    return flight->real_departure_time;
+date_and_time_t get_flight_real_departure_date(flight_t *flight) {
+    return flight->real_departure_date;
 }
 
 void free_flight(flight_t *flight) {
