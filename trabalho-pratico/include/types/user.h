@@ -27,7 +27,7 @@
  * @param name                  Name of a given user, of type `char*`.
  * @param passport              Passport of a given user, of type `char*`.
  * @param country_code          Code of the country of a given user, of type `char*`.
- * @param sex                   Defines the sex of a given user, of type `enum sex`. 
+ * @param sex                   Defines the sex of a given user, of type `enum sex`.
  * @param active_status         Defines the status of an account (active/inactive), of type `bool`.
  * @param account_creation_date Defines the date of account creation, of type `date_and_time_t`.
  */
@@ -100,7 +100,7 @@ void user_set_country_code(user_t *user, char *country_code);
  * @brief Sets the user sex (Male of Female).
  *
  * @param user       User of type `user_t*`.
- * @param sex_string Sex of a given user, of type `char*`. 
+ * @param sex_string Sex of a given user, of type `char*`.
  */
 void user_set_sex(user_t *user, char *sex_string);
 
@@ -123,42 +123,42 @@ void user_set_account_creation_date(user_t *user, date_and_time_t date);
 /**
  * @brief Gets the user id.
  * @param user User of type `user_t*`.
- * @return The user's id, of type `const char*`. 
+ * @return The user's id, of type `const char*`.
  */
 const char *user_const_get_id(user_t *user);
 
 /**
  * @brief Gets the user name.
  * @param user User of type `user_t*`.
- * @return The user's name, of type `const char*`. 
+ * @return The user's name, of type `const char*`.
  */
 const char *user_const_get_name(user_t *user);
 
 /**
  * @brief Gets the user passport.
  * @param user User of type `user_t*`.
- * @return The user's passport, of type `const char*`. 
+ * @return The user's passport, of type `const char*`.
  */
 const char *user_const_get_passport(user_t *user);
 
 /**
  * @brief Gets the user country code.
  * @param user User of type `user_t*`.
- * @return The user's country_code, of type `const char*`. 
+ * @return The user's country_code, of type `const char*`.
  */
 const char *user_const_get_country_code(user_t *user);
 
 /**
  * @brief Gets the user sex.
  * @param user User of type `user_t*`.
- * @return The user's sex, of type `enum sex`. 
+ * @return The user's sex, of type `enum sex`.
  */
 enum sex user_get_sex(user_t *user);
 
 /**
  * @brief Gets the user account_status, True if the account is active.
  * @param user User of type `user_t*`.
- * @return The user's account_status, of type `bool`. 
+ * @return The user's account_status, of type `bool`.
  */
 bool user_get_account_status(user_t *user);
 

@@ -170,77 +170,77 @@ void reservation_set_price_per_night(reservation_t *reservation, int price_per_n
 /**
  * @brief Gets the reservation's user id.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's user_id, of type `const char*`. 
+ * @return The reservation's user_id, of type `const char*`.
  */
 const char *reservation_get_const_user_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel id.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's hotel_id, of type `int`. 
+ * @return The reservation's hotel_id, of type `int`.
  */
 int reservation_get_const_hotel_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel name.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation' hotel_name, of type `const char*`. 
+ * @return The reservation' hotel_name, of type `const char*`.
  */
 const char *reservation_get_const_hotel_name(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's rating.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's rating, of type `const int*`. 
+ * @return The reservation's rating, of type `const int*`.
  */
 const int *reservation_get_const_rating(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's flag includes_breakfast.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's flag include_breakfast, of type `enum includes_breakfast`. 
+ * @return The reservation's flag include_breakfast, of type `enum includes_breakfast`.
  */
 enum includes_breakfast reservation_get_includes_breakfast(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's id.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's id, of type `size_t`. 
+ * @return The reservation's id, of type `size_t`.
  */
 size_t reservation_get_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel stars.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's hotel_stars, of type `int`. 
+ * @return The reservation's hotel_stars, of type `int`.
  */
 int reservation_get_hotel_stars(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's begin date.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's begin_date, of type `date_t`. 
+ * @return The reservation's begin_date, of type `date_t`.
  */
 date_t reservation_get_begin_date(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's end date.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's end_date, of type `date_t`. 
+ * @return The reservation's end_date, of type `date_t`.
  */
 date_t reservation_get_end_date(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's city tax.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's city_tax, of type `int`. 
+ * @return The reservation's city_tax, of type `int`.
  */
 int reservation_get_city_tax(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's price per night.
  * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's price_per_night, of type `int`. 
+ * @return The reservation's price_per_night, of type `int`.
  */
 int reservation_get_price_per_night(reservation_t *reservation);
 

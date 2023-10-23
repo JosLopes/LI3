@@ -27,13 +27,13 @@
  * @param plane_model             Plane_model of a given flight, of type `char*`.
  * @param origin                  Origin of a given flight, of type `char*`.
  * @param destination             Destination of a given flight, of type `char*`.
- * @param id                      Id of a given flight, of type `size_t`. 
+ * @param id                      Id of a given flight, of type `size_t`.
  * @param schedule_departure_date Scheduled departure date of a given flight,
  *                                of type `date_and_time_t`.
  * @param real_departure_date     Real departure date of a given flight, of type `date_and_time_t`.
  * @param schedule_arrival_date   Scheduled arrival date of a given flight,
  *                                of type `date_and_time_t`.
- * @param number_of_passengers    Number of passengers in a flight, of type `int`. 
+ * @param number_of_passengers    Number of passengers in a flight, of type `int`.
  */
 
 #ifndef FLIGHT_H
