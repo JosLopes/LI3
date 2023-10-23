@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include "types/user.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils/date_and_time.h"
+#include "types/user.h"
 
 struct user {
     char           *id;
@@ -31,7 +30,7 @@ struct user {
     date_and_time_t account_creation_date;
 };
 
-user_t *create_user(void) {
+user_t *user_create(void) {
     user_t *new_user       = malloc(sizeof(user_t));
     new_user->name         = NULL;
     new_user->passport     = NULL;
@@ -40,23 +39,23 @@ user_t *create_user(void) {
     return new_user;
 }
 
-void set_user_id(user_t *user, char *id) {
+void user_set_id(user_t *user, char *id) {
     user->id = strdup(id);
 }
 
-void set_user_name(user_t *user, char *name) {
+void user_set_name(user_t *user, char *name) {
     user->name = strdup(name);
 }
 
-void set_user_passport(user_t *user, char *passport) {
+void user_set_passport(user_t *user, char *passport) {
     user->passport = strdup(passport);
 }
 
-void set_user_country_code(user_t *user, char *country_code) {
+void user_set_country_code(user_t *user, char *country_code) {
     user->country_code = strdup(country_code);
 }
 
-void set_user_sex(user_t *user, char *sex_string) {
+void user_set_sex(user_t *user, char *sex_string) {
     enum sex sex;
 
     if (!strcmp(sex_string, "M")) {
@@ -68,43 +67,43 @@ void set_user_sex(user_t *user, char *sex_string) {
     user->sex = sex;
 }
 
-void set_user_account_status(user_t *user, bool active_status) {
+void user_set_account_status(user_t *user, bool active_status) {
     user->active_status = active_status;
 }
 
-void set_user_account_creation_date(user_t *user, date_and_time_t date) {
+void user_set_account_creation_date(user_t *user, date_and_time_t date) {
     user->account_creation_date = date;
 }
 
-const char *get_const_user_id(user_t *user) {
+const char *user_get_const_id(user_t *user) {
     return user->id;
 }
 
-const char *get_const_user_name(user_t *user) {
+const char *user_get_const_name(user_t *user) {
     return user->name;
 }
 
-const char *get_const_user_passport(user_t *user) {
+const char *user_get_const_passport(user_t *user) {
     return user->country_code;
 }
 
-const char *get_const_user_country_code(user_t *user) {
+const char *user_get_const_country_code(user_t *user) {
     return user->country_code;
 }
 
-enum sex get_user_sex(user_t *user) {
+enum sex user_get_sex(user_t *user) {
     return user->sex;
 }
 
-bool get_user_account_status(user_t *user) {
+bool user_get_account_status(user_t *user) {
     return user->active_status;
 }
 
-date_and_time_t get_user_account_creation_date(user_t *user) {
+date_and_time_t user_get_account_creation_date(user_t *user) {
     return user->account_creation_date;
 }
 
-void free_user(user_t *user) {
+void user_free(user_t *user) {
     free(user->id);
     free(user->name);
     free(user->passport);

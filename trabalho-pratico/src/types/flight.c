@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include "types/flight.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils/date_and_time.h"
+#include "types/flight.h"
 
 struct flight {
     char           *airline;
@@ -33,7 +32,7 @@ struct flight {
     int             number_of_passengers;
 };
 
-flight_t *create_flight(void) {
+flight_t *flight_create(void) {
     flight_t *new_flight             = malloc(sizeof(flight_t));
     new_flight->airline              = NULL;
     new_flight->plane_model          = NULL;
@@ -44,32 +43,32 @@ flight_t *create_flight(void) {
     return new_flight;
 }
 
-void set_flight_airline(flight_t *flight, char *airline) {
+void flight_set_airline(flight_t *flight, char *airline) {
     flight->airline = strdup(airline);
 }
 
-void set_flight_plane_model(flight_t *flight, char *plane_model) {
+void flight_set_plane_model(flight_t *flight, char *plane_model) {
     flight->plane_model = strdup(plane_model);
 }
 
-void set_flight_origin(flight_t *flight, char *origin) {
+void flight_set_origin(flight_t *flight, char *origin) {
     flight->origin = strdup(origin);
 }
 
-void set_flight_destination(flight_t *flight, char *destination) {
+void flight_set_destination(flight_t *flight, char *destination) {
     flight->destination = strdup(destination);
 }
 
-void set_flight_id(flight_t *flight, size_t id) {
+void flight_set_id(flight_t *flight, size_t id) {
     flight->id = id;
 }
 
-void set_flight_schedule_departure_date(flight_t       *flight,
+void flight_set_schedule_departure_date(flight_t       *flight,
                                         date_and_time_t scheduled_departure_date) {
     flight->schedule_departure_date = scheduled_departure_date;
 }
 
-void set_flight_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date) {
+void flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date) {
     flight->schedule_arrival_date = schedule_arrival_date;
 }
 
@@ -77,51 +76,51 @@ void increment_flight_number_of_passengers(flight_t *flight, int increment_facto
     flight->number_of_passengers += increment_factor;
 }
 
-void set_flight_number_of_passengers(flight_t *flight, int number_of_passengers) {
+void flight_set_number_of_passengers(flight_t *flight, int number_of_passengers) {
     flight->number_of_passengers = number_of_passengers;
 }
 
-void set_flight_real_departure_date(flight_t *flight, date_and_time_t real_departure_date) {
+void flight_set_real_departure_date(flight_t *flight, date_and_time_t real_departure_date) {
     flight->real_departure_date = real_departure_date;
 }
 
-const char *get_const_flight_airline(flight_t *flight) {
+const char *flight_get_const_airline(flight_t *flight) {
     return flight->airline;
 }
 
-const char *get_const_flight_plane_model(flight_t *flight) {
+const char *flight_get_const_plane_model(flight_t *flight) {
     return flight->plane_model;
 }
 
-const char *get_const_flight_origin(flight_t *flight) {
+const char *flight_get_const_origin(flight_t *flight) {
     return flight->origin;
 }
 
-const char *get_const_flight_destination(flight_t *flight) {
+const char *flight_get_const_destination(flight_t *flight) {
     return flight->destination;
 }
 
-size_t get_flight_id(flight_t *flight) {
+size_t flight_get_id(flight_t *flight) {
     return flight->id;
 }
 
-date_and_time_t get_flight_schedule_departure_date(flight_t *flight) {
+date_and_time_t flight_get_schedule_departure_date(flight_t *flight) {
     return flight->schedule_departure_date;
 }
 
-date_and_time_t get_flight_schedule_arrival_date(flight_t *flight) {
+date_and_time_t flight_get_schedule_arrival_date(flight_t *flight) {
     return flight->schedule_arrival_date;
 }
 
-int get_flight_number_of_passengers(flight_t *flight) {
+int flight_get_number_of_passengers(flight_t *flight) {
     return flight->number_of_passengers;
 }
 
-date_and_time_t get_flight_real_departure_date(flight_t *flight) {
+date_and_time_t flight_get_real_departure_date(flight_t *flight) {
     return flight->real_departure_date;
 }
 
-void free_flight(flight_t *flight) {
+void flight_free(flight_t *flight) {
     free(flight->airline);
     free(flight->plane_model);
     free(flight->origin);

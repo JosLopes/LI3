@@ -71,7 +71,7 @@ typedef struct reservation reservation_t;
  *
  * @return new_reservation, the new reservation created of type `reservation_t*`.
  */
-reservation_t *create_reservation(void);
+reservation_t *reservation_create(void);
 
 /**
  * @brief Sets the reservation's user_id, allocating the necessary space.
@@ -80,7 +80,7 @@ reservation_t *create_reservation(void);
  * @param reservation Reservation of type `reservation_t*`.
  * @param user_id     User id of a given reservation, of type `char*`.
  */
-void set_reservation_user_id(reservation_t *reservation, char *user_id);
+void reservation_set_user_id(reservation_t *reservation, char *user_id);
 
 /**
  * @brief Sets the reservation's hotel_id, allocating the necessary space.
@@ -89,7 +89,7 @@ void set_reservation_user_id(reservation_t *reservation, char *user_id);
  * @param reservation Reservation of type `reservation_t*`.
  * @param hotel_id    Hotel id of a given reservation, of type `int`.
  */
-void set_reservation_hotel_id(reservation_t *reservation, int hotel_id);
+void reservation_set_hotel_id(reservation_t *reservation, int hotel_id);
 
 /**
  * @brief Sets the reservation's hotel_name, allocating the necessary space.
@@ -98,7 +98,7 @@ void set_reservation_hotel_id(reservation_t *reservation, int hotel_id);
  * @param reservation Reservation of type `reservation_t*`.
  * @param hotel_name  Hotel name of a given reservation, of type `char*`.
  */
-void set_reservation_hotel_name(reservation_t *reservation, char *hotel_name);
+void reservation_set_hotel_name(reservation_t *reservation, char *hotel_name);
 
 /**
  * @brief Sets the reservation's rating. Be sure to free this previously allocated memory
@@ -107,7 +107,7 @@ void set_reservation_hotel_name(reservation_t *reservation, char *hotel_name);
  * @param reservation Reservation of type `reservation_t*`.
  * @param rating      Rating of a given reservation, of type `int*`.
  */
-void set_reservation_rating(reservation_t *reservation, int *rating);
+void reservation_set_rating(reservation_t *reservation, int *rating);
 
 /**
  * @brief Sets the reservation's flag includes_breakfast.
@@ -116,7 +116,7 @@ void set_reservation_rating(reservation_t *reservation, int *rating);
  * @param includes_breakfast Flag that indicates if a given reservation includes
  *                           breakfast, of type `char*`.
  */
-void set_reservation_includes_breakfast(reservation_t *reservation,
+void reservation_set_includes_breakfast(reservation_t *reservation,
                                         char          *includes_breakfast_string);
 
 /**
@@ -125,7 +125,7 @@ void set_reservation_includes_breakfast(reservation_t *reservation,
  * @param reservation Reservation of type `reservation_t*`.
  * @param id          Id of a given reservation, of type `size_t`.
  */
-void set_reservation_id(reservation_t *reservation, size_t id);
+void reservation_set_id(reservation_t *reservation, size_t id);
 
 /**
  * @brief Sets the reservation's hotel stars.
@@ -133,7 +133,7 @@ void set_reservation_id(reservation_t *reservation, size_t id);
  * @param reservation Reservation of type `reservation_t*`.
  * @param hotel_stars Stars assigned the reservation's hotel, of type `int*`.
  */
-void set_reservation_hotel_stars(reservation_t *reservation, int hotel_stars);
+void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars);
 
 /**
  * @brief Sets the reservation's begin date.
@@ -141,7 +141,7 @@ void set_reservation_hotel_stars(reservation_t *reservation, int hotel_stars);
  * @param reservation Reservation of type `reservation_t*`.
  * @param begin_date  Begin date of a given reservation, of type `date_t`.
  */
-void set_reservation_begin_date(reservation_t *reservation, date_t begin_date);
+void reservation_set_begin_date(reservation_t *reservation, date_t begin_date);
 
 /**
  * @brief Sets the reservation's end date.
@@ -149,7 +149,7 @@ void set_reservation_begin_date(reservation_t *reservation, date_t begin_date);
  * @param reservation Reservation of type `reservation_t*`.
  * @param end_date    End date of a given reservation, of type `date_t`.
  */
-void set_reservation_end_date(reservation_t *reservation, date_t end_date);
+void reservation_set_end_date(reservation_t *reservation, date_t end_date);
 
 /**
  * @brief Sets the reservation's city tax.
@@ -157,7 +157,7 @@ void set_reservation_end_date(reservation_t *reservation, date_t end_date);
  * @param reservation Reservation of type `reservation_t*`.
  * @param city_tax    Percentage of city tax (over total amount), of type `int`.
  */
-void set_reservation_city_tax(reservation_t *reservation, int city_tax);
+void reservation_set_city_tax(reservation_t *reservation, int city_tax);
 
 /**
  * @brief Sets the reservation' price per night.
@@ -165,90 +165,90 @@ void set_reservation_city_tax(reservation_t *reservation, int city_tax);
  * @param reservation     Reservation of type `reservation_t*`.
  * @param price_per_night Price per night of a given reservation, of type `int`.
  */
-void set_reservation_price_per_night(reservation_t *reservation, int price_per_night);
+void reservation_set_price_per_night(reservation_t *reservation, int price_per_night);
 
 /**
  * @brief Gets the reservation's user id.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's user_id, of type `const char*`. 
  */
-const char *get_const_reservation_user_id(reservation_t *reservation);
+const char *reservation_get_const_user_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel id.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's hotel_id, of type `int`. 
  */
-int get_const_reservation_hotel_id(reservation_t *reservation);
+int reservation_get_const_hotel_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel name.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation' hotel_name, of type `const char*`. 
  */
-const char *get_const_reservation_hotel_name(reservation_t *reservation);
+const char *reservation_get_const_hotel_name(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's rating.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's rating, of type `const int*`. 
  */
-const int *get_const_reservation_rating(reservation_t *reservation);
+const int *reservation_get_const_rating(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's flag includes_breakfast.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's flag include_breakfast, of type `enum includes_breakfast`. 
  */
-enum includes_breakfast get_reservation_includes_breakfast(reservation_t *reservation);
+enum includes_breakfast reservation_get_includes_breakfast(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's id.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's id, of type `size_t`. 
  */
-size_t get_reservation_id(reservation_t *reservation);
+size_t reservation_get_id(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's hotel stars.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's hotel_stars, of type `int`. 
  */
-int get_reservation_hotel_stars(reservation_t *reservation);
+int reservation_get_hotel_stars(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's begin date.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's begin_date, of type `date_t`. 
  */
-date_t get_reservation_begin_date(reservation_t *reservation);
+date_t reservation_get_begin_date(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's end date.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's end_date, of type `date_t`. 
  */
-date_t get_reservation_end_date(reservation_t *reservation);
+date_t reservation_get_end_date(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's city tax.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's city_tax, of type `int`. 
  */
-int get_reservation_city_tax(reservation_t *reservation);
+int reservation_get_city_tax(reservation_t *reservation);
 
 /**
  * @brief Gets the reservation's price per night.
  * @param reservation Reservation of type `reservation_t*`.
  * @return The reservation's price_per_night, of type `int`. 
  */
-int get_reservation_price_per_night(reservation_t *reservation);
+int reservation_get_price_per_night(reservation_t *reservation);
 
 /**
  * @brief Function that frees the memory used for a given reservation,
  *        effectively deleting the reservation.
  * @param reservation Reservation of type `reservation_t*`.
  */
-void free_reservation(reservation_t *reservation);
+void reservation_free(reservation_t *reservation);
 
 #endif
