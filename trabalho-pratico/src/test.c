@@ -19,35 +19,38 @@
  * @brief Contains the entry point to the program.
  */
 #include <stdio.h>
-#include <stdlib.h>
 
-#include "utils/date_and_time.h"
+#include "utils/pool.h"
+
+/** @brief Number of items in a pool block */
+#define TEST_POOL_BLOCK_SIZE 1000
+
+/** @brief Number of pool items to be allocated */
+#define TEST_NUM_ITEMS 100000
 
 /**
  * @brief The entry point to the test program.
- * @details Test for timed dates.
+ * @details Tests for pools.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    const char *date_and_times[2] = {
-        "2023/11/11 23:59:59",  /* Due date for this project (we're screwed) */
-        "2023/11/11 23:59:59 ", /* Too many spaces */
-    };
+    pool_t *pool = pool_create(int, TEST_POOL_BLOCK_SIZE);
 
-    for (int i = 0; i < 2; ++i) {
-        date_and_time_t date_and_time;
-        int success = date_and_time_from_string_const(&date_and_time, date_and_times[i]);
-
-        if (success) {
-            fprintf(stderr, "Failed to parse timed date \"%s\".\n", date_and_times[i]);
-        } else {
-            char str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
-            date_and_time_sprintf(str, date_and_time);
-
-            printf("%s was parsed successfully.\n", str);
+    int *allocated[TEST_NUM_ITEMS] = {0};
+    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
+        allocated[i] = pool_put_item(int, pool, &i);
+        if (!allocated[i]) {
+            fputs("Allocation error!\n", stderr);
+            pool_free(pool);
+            return 1;
         }
     }
 
+    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
+        printf("%d\n", *allocated[i]);
+    }
+
+    pool_free(pool);
     return 0;
 }
