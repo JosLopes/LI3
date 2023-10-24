@@ -39,14 +39,13 @@ typedef struct database database_t;
 typedef struct dataset_loader dataset_loader_t;
 
 /**
- * @brief Parses a dataset in @p path and stores the date in @p database.
+ * @brief Parses a dataset in @p path and stores the data in @p database.
  *
  * @param database Database where to store the dataset data in.
  * @param path     Path to the directory containing the dataset
  *
  * @retval 0 Success
- * @retval 1 Fatal failure (failure to open a critical file, for example, as this loader tries
- *           to recover from errors).
+ * @retval 1 Fatal failure (this loader only fatally fails on IO errors).
  */
 int dataset_loader_load(database_t *database, const char *path);
 
@@ -59,24 +58,28 @@ database_t *dataset_loader_get_database(const dataset_loader_t *loader);
 
 /**
  * @brief Writes a line to the `users_errors.csv` file.
+ * @param loader Dataset loader that opened the errors file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_loader_report_users_error(dataset_loader_t *loader, const char *error_line);
 
 /**
  * @brief Writes a line to the `flights_errors.csv` file.
+ * @param loader Dataset loader that opened the errors file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_loader_report_flights_error(dataset_loader_t *loader, const char *error_line);
 
 /**
  * @brief Writes a line to the `passengers_errors.csv` file.
+ * @param loader Dataset loader that opened the errors file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_loader_report_passengers_error(dataset_loader_t *loader, const char *error_line);
 
 /**
  * @brief Writes a line to the `reservations_errors.csv` file.
+ * @param loader Dataset loader that opened the errors file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_loader_report_reservations_error(dataset_loader_t *loader, const char *error_line);
