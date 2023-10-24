@@ -43,7 +43,7 @@
  *     (void) ntoken;
  *
  *     // Copy string to another buffer
- *     char *name_copy = string_duplicate(token); // No failure check in this example
+ *     char *name_copy = strdup(token); // No failure check in this example
  *     ((person_t *) user_data)->name = name_copy;
  *     return 0;
  * }
@@ -201,7 +201,8 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
 /**
  * @brief Parses a **MODIFIABLE** string using a parser defined by @p grammar.
  *
- * @param input     String to parse, that that will be modified for this function to work.
+ * @param input     String to parse, that that will be modified for this function to work, but then
+ *                  restored to its original form.
  * @param grammar   Grammar that defines the parser to be used.
  * @param user_data Pointer passed to every callback in @p grammar, so that they can edit the
  *                  program's state.
