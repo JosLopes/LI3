@@ -69,7 +69,7 @@
  *     person_dataset_t *dataset = (person_dataset_t *) user_data;
  *
  *     // Copy string to another buffer, as it will be destroyed when the next line is parsed
- *     char *name_copy              = string_duplicate(token);
+ *     char *name_copy              = strdup(token);
  *     dataset->current_person.name = name_copy;
  *     return 0;
  * }
@@ -89,6 +89,13 @@
  *     } else if (ntoken == 2) {
  *         dataset->current_person.height = value;
  *     }
+ *     return 0;
+ * }
+ *
+ * // Print line before parsing (debug purposes)
+ * int before_parse_token(void *user_data, char *token) {
+ *     (void) user_data;
+ *     printf("Parsing line: %s\n", token);
  *     return 0;
  * }
  *
@@ -127,7 +134,10 @@
  *     fixed_n_delimiter_parser_grammar_t      *token_grammar =
  *         fixed_n_delimiter_parser_grammar_new(';', 3, token_grammar_callbacks);
  *     dataset_parser_grammar_t *grammar =
- *         dataset_parser_grammar_new('\n', token_grammar, add_to_reject_from_database);
+ *         dataset_parser_grammar_new('\n',
+ *                                    token_grammar,
+ *                                    before_parse_token,
+ *                                    add_to_reject_from_database);
  *
  *     person_dataset_t dataset = {0};
  *     int parse_result = dataset_parser_parse(file, grammar, &dataset);
@@ -187,6 +197,21 @@ typedef struct dataset_parser_grammar_t dataset_parser_grammar_t;
 /**
  * @brief   Callback for each token delimited by the first-order delimiter in a dataset parser
  *          (e.g.: CSV line).
+ * @details This is called before each token is parsed by ::fixed_n_delimiter_parser_parse_string.
+ *
+ * @param user_data Pointer provided to ::dataset_parser_parse, so that this callback can modify
+ *                  the program's state.
+ * @param unparsed  Token to be parsed.
+ *
+ * @return `0` on success, other value for immediate termination of parsing. It's recommeneded that
+ *         these values are positive, as negative values have special meanings (see
+ *         ::DATASET_PARSER_PARSE_RET_ALLOCATION_FAILURE).
+ */
+typedef int (*dataset_parser_token_before_parse_callback)(void *user_data, char *unparsed);
+
+/**
+ * @brief   Callback for each token delimited by the first-order delimiter in a dataset parser
+ *          (e.g.: CSV line).
  * @details This is called after each token is parsed by ::fixed_n_delimiter_parser_parse_string.
  *          Its purpose is generally to determine what should be done upon success / failure of the
  *          parsed token.
@@ -208,6 +233,7 @@ typedef int (*dataset_parser_token_callback)(void *user_data, int retcode);
  * @param token_grammar         Grammar for ::fixed_n_delimiter_parser_parse_string, used to parse
  *                              each token delimited by @p first_order_delimiter. Ownership of this
  *                              value will be taken by this function.
+ * @param before_parse_callback Callback called before parsing each token.
  * @param token_callback        Callback called after processing each token with @p token_grammar.
  *
  * @return `malloc`-allocated ::dataset_parser_grammar_t (or `NULL` on allocation failure). This
@@ -218,9 +244,10 @@ typedef int (*dataset_parser_token_callback)(void *user_data, int retcode);
  * See [the header file's documentation](@ref dataset_parser_examples).
  */
 dataset_parser_grammar_t *
-    dataset_parser_grammar_new(char                                first_order_delimiter,
-                               fixed_n_delimiter_parser_grammar_t *token_grammar,
-                               dataset_parser_token_callback       token_callback);
+    dataset_parser_grammar_new(char                                       first_order_delimiter,
+                               fixed_n_delimiter_parser_grammar_t        *token_grammar,
+                               dataset_parser_token_before_parse_callback before_parse_callback,
+                               dataset_parser_token_callback              token_callback);
 
 /**
  * @brief Frees memory allocated by ::dataset_parser_grammar_new.

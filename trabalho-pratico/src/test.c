@@ -19,27 +19,46 @@
  * @brief Contains the entry point to the program.
  */
 
-#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "types/email.h"
+#include "utils/string_pool.h"
 
+/** @brief Number of characters in a pool block. In practice, this should be way larger. */
+#define TEST_POOL_BLOCK_SIZE 32
+
+/** @brief Number of pool items to be allocated */
+#define TEST_NUM_ITEMS 10000
+
+/**
+ * @brief The entry point to the test program.
+ * @details Tests for string pools.
+ * @retval 0 Success
+ * @retval 1 Insuccess
+ */
 int main(void) {
-    const char *emails[8] = {
-        "a104348@gmail.com", /* Valid email */
-        "@email.com",        /* No username */
-        "domain.pt",         /* No at sign */
-        "john.email.pt",     /* No at sign */
-        "john@.pt",          /* No domain */
-        "john@email",        /* No TLD */
-        "john@email.a",      /* Too short of a TLD */
-        "john@email.com"     /* Valid email */
-    };
+    string_pool_t *pool = string_pool_create(TEST_POOL_BLOCK_SIZE);
 
-    for (size_t i = 0; i < 8; ++i) {
-        int valid = email_validate_string_const(emails[i]);
-        printf("\"%s\" is %s email\n", emails[i], valid ? "an invalid" : "a valid");
+    const char *long_string =
+        "This string is longer than a single block, but the pool can still handle it!";
+    const char *short_string = "Hello, world!";
+
+    char *allocated[TEST_NUM_ITEMS] = {0};
+    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
+        int r = rand() % 2 == 1;
+
+        allocated[i] = string_pool_put(pool, r ? short_string : long_string);
+        if (!allocated[i]) {
+            fputs("Allocation error!\n", stderr);
+            string_pool_free(pool);
+            return 1;
+        }
     }
 
+    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
+        printf("%s\n", allocated[i]);
+    }
+
+    string_pool_free(pool);
     return 0;
 }

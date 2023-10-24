@@ -34,8 +34,6 @@
 /**
  * @brief Grammar for parsing dates.
  * @details Shall not be modified apart from its creation.
- *
- * TODO - ask professors if we can use global variables
  */
 fixed_n_delimiter_parser_grammar_t *date_grammar = NULL;
 
@@ -152,7 +150,7 @@ int date_from_string(date_t *output, char *input) {
 }
 
 int date_from_string_const(date_t *output, const char *input) {
-    char *buffer = string_duplicate(input);
+    char *buffer = strdup(input);
     if (!buffer)
         return 1;
 

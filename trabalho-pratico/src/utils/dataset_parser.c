@@ -34,15 +34,18 @@
  *
  * @var dataset_parser_grammar_t::token_grammar
  *     @brief Grammar to use to parse single tokens with ::fixed_n_delimiter_parser_parse_string.
+ * @var dataset_parser_grammar_t::before_parse_callback
+ *     @brief Callback called before parsing each token.
  * @var dataset_parser_grammar_t::token_callback
  *     @brief Callback called after processing each token.
  * @var dataset_parser_grammar_t::delimiter
  *     @brief Separator between first-order tokens (e.g.: ``'\n'`` for CSV files).
  */
 struct dataset_parser_grammar_t {
-    fixed_n_delimiter_parser_grammar_t *token_grammar;
-    dataset_parser_token_callback       token_callback;
-    char                                delimiter;
+    fixed_n_delimiter_parser_grammar_t        *token_grammar;
+    dataset_parser_token_before_parse_callback before_parse_callback;
+    dataset_parser_token_callback              token_callback;
+    char                                       delimiter;
 };
 
 /**
@@ -65,18 +68,20 @@ typedef struct {
 } dataset_parser_t;
 
 dataset_parser_grammar_t *
-    dataset_parser_grammar_new(char                                first_order_delimiter,
-                               fixed_n_delimiter_parser_grammar_t *token_grammar,
-                               dataset_parser_token_callback       token_callback) {
+    dataset_parser_grammar_new(char                                       first_order_delimiter,
+                               fixed_n_delimiter_parser_grammar_t        *token_grammar,
+                               dataset_parser_token_before_parse_callback before_parse_callback,
+                               dataset_parser_token_callback              token_callback) {
 
     dataset_parser_grammar_t *grammar = malloc(sizeof(struct dataset_parser_grammar_t));
     if (!grammar) {
         return NULL;
     }
 
-    grammar->delimiter      = first_order_delimiter;
-    grammar->token_grammar  = token_grammar;
-    grammar->token_callback = token_callback;
+    grammar->delimiter             = first_order_delimiter;
+    grammar->token_grammar         = token_grammar;
+    grammar->before_parse_callback = before_parse_callback;
+    grammar->token_callback        = token_callback;
 
     return grammar;
 }
@@ -101,6 +106,10 @@ int __parse_stream_iter(void *user_data, char *token) {
         parser->first_token_passed = 1;
         return 0;
     }
+
+    int before_parse_ret = parser->grammar->before_parse_callback(parser->user_data, token);
+    if (before_parse_ret)
+        return before_parse_ret;
 
     int parser_ret = fixed_n_delimiter_parser_parse_string(token,
                                                            parser->grammar->token_grammar,
