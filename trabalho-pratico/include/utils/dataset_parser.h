@@ -69,7 +69,7 @@
  *     person_dataset_t *dataset = (person_dataset_t *) user_data;
  *
  *     // Copy string to another buffer, as it will be destroyed when the next line is parsed
- *     char *name_copy              = string_duplicate(token);
+ *     char *name_copy              = strdup(token);
  *     dataset->current_person.name = name_copy;
  *     return 0;
  * }

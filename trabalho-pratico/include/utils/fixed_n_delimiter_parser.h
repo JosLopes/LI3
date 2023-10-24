@@ -43,7 +43,7 @@
  *     (void) ntoken;
  *
  *     // Copy string to another buffer
- *     char *name_copy = string_duplicate(token); // No failure check in this example
+ *     char *name_copy = strdup(token); // No failure check in this example
  *     ((person_t *) user_data)->name = name_copy;
  *     return 0;
  * }

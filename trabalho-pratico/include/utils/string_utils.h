@@ -84,13 +84,6 @@
 #define STRING_UTILS_H
 
 /**
- * @brief Allocates a temporary buffer for @p input and copies @p input there.
- * @param Input to be duplicated.
- * @return A buffer owned by the caller (`NULL` on failure).
- */
-char *string_duplicate(const char *input);
-
-/**
  * @brief Callback method for ::string_tokenize, called for every token read.
  *
  * @param user_data Pointer provided to ::string_tokenize, kept from call to call, so that this

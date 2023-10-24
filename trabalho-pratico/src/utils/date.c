@@ -150,7 +150,7 @@ int date_from_string(date_t *output, char *input) {
 }
 
 int date_from_string_const(date_t *output, const char *input) {
-    char *buffer = string_duplicate(input);
+    char *buffer = strdup(input);
     if (!buffer)
         return 1;
 

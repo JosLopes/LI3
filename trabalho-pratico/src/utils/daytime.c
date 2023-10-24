@@ -128,7 +128,7 @@ int daytime_from_string(daytime_t *output, char *input) {
 }
 
 int daytime_from_string_const(daytime_t *output, const char *input) {
-    char *buffer = string_duplicate(input);
+    char *buffer = strdup(input);
     if (!buffer)
         return 1;
 
