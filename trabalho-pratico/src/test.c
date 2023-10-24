@@ -71,6 +71,12 @@ int parse_int(void *user_data, char *token, size_t ntoken) {
     return 0;
 }
 
+int before_parse_token(void *user_data, char *token) {
+    (void) user_data;
+    printf("Parsing line: %s\n", token);
+    return 0;
+}
+
 int add_to_reject_from_database(void *user_data, int retcode) {
     person_dataset_t *dataset = (person_dataset_t *) user_data;
 
@@ -104,8 +110,10 @@ int main(void) {
                                                                            parse_int};
     fixed_n_delimiter_parser_grammar_t      *token_grammar =
         fixed_n_delimiter_parser_grammar_new(';', 3, token_grammar_callbacks);
-    dataset_parser_grammar_t *grammar =
-        dataset_parser_grammar_new('\n', token_grammar, add_to_reject_from_database);
+    dataset_parser_grammar_t *grammar = dataset_parser_grammar_new('\n',
+                                                                   token_grammar,
+                                                                   before_parse_token,
+                                                                   add_to_reject_from_database);
 
     person_dataset_t dataset      = {0};
     int              parse_result = dataset_parser_parse(file, grammar, &dataset);
