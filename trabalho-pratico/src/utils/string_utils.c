@@ -42,11 +42,12 @@ int string_tokenize(char                    *input,
     char *token;
     while ((token = strsep(&input, strsep_delim))) {
         int cb_result = callback(user_data, token);
-        if (cb_result)
-            return cb_result;
 
         if (input)
             *(input - 1) = delimiter; /* Restore string */
+
+        if (cb_result)
+            return cb_result;
     }
 
     return 0;
