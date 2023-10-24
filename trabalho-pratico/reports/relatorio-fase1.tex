@@ -40,9 +40,14 @@ Dado que os \emph{datasets} da 2.ª fase serão de maior dimensão, preocupámo-
 quantidade de memória utilizada, de modo não sermos futuramente obrigados a reescrever partes
 significativas do nosso código.
 
-\subsection{Observação do \emph{dataset}}
+\subsection{Observação do \emph{dataset} e das \emph{queries}}
 
-TODO - como usámos tipos que não strings nas entidades por observação do \emph{dataset}.
+Pudemos observar que alguns campos do \emph{dataset} nunca precisavam de estar presentes no
+\emph{output} de nenhuma \emph{query} (ex: o \emph{email} de um utilizador), pelo que era escusado
+o seu armazenamento na base de dados, sendo apenas necessária a sua validação durante o
+\emph{parsing}. Ademais, por observação dos \emph{datasets} em si, pudemos concluir que é possível
+armazenar certos campos como estruturas de dados mais compactas (ex: o identificador de um voo
+pode ser armazenado como um inteiro, em vez de uma \emph{string}).
 
 \subsection{Tipos opacos}
 
