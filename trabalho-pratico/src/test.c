@@ -19,38 +19,45 @@
  * @brief Contains the entry point to the program.
  */
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "utils/pool.h"
+#include "utils/string_pool.h"
 
-/** @brief Number of items in a pool block */
-#define TEST_POOL_BLOCK_SIZE 1000
+/** @brief Number of characters in a pool block. In practice, this should be way larger. */
+#define TEST_POOL_BLOCK_SIZE 32
 
 /** @brief Number of pool items to be allocated */
-#define TEST_NUM_ITEMS 100000
+#define TEST_NUM_ITEMS 10000
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for pools.
+ * @details Tests for string pools.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    pool_t *pool = pool_create(int, TEST_POOL_BLOCK_SIZE);
+    string_pool_t *pool = string_pool_create(TEST_POOL_BLOCK_SIZE);
 
-    int *allocated[TEST_NUM_ITEMS] = {0};
+    const char *long_string =
+        "This string is longer than a single block, but the pool can still handle it!";
+    const char *short_string = "Hello, world!";
+
+    char *allocated[TEST_NUM_ITEMS] = {0};
     for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        allocated[i] = pool_put_item(int, pool, &i);
+        int r = rand() % 2 == 1;
+
+        allocated[i] = string_pool_put(pool, r ? short_string : long_string);
         if (!allocated[i]) {
             fputs("Allocation error!\n", stderr);
-            pool_free(pool);
+            string_pool_free(pool);
             return 1;
         }
     }
 
     for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        printf("%d\n", *allocated[i]);
+        printf("%s\n", allocated[i]);
     }
 
-    pool_free(pool);
+    string_pool_free(pool);
     return 0;
 }
