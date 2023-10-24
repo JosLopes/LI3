@@ -87,7 +87,7 @@ fixed_n_delimiter_parser_grammar_t *
      * +---------------------------------+
      */
     fixed_n_delimiter_parser_grammar_t *grammar =
-        malloc(sizeof(fixed_n_delimiter_parser_grammar_t) +
+        malloc(sizeof(struct fixed_n_delimiter_parser_grammar_t) +
                sizeof(fixed_n_delimiter_parser_iter_callback_t) * n);
 
     if (!grammar)
