@@ -99,7 +99,8 @@ typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
 /**
  * @brief Splits a **MODIFIABLE** string into tokens, separated by @p delimiter.
  *
- * @param input     String to tokenize, that that will be modified for this function to work.
+ * @param input     String to tokenize, that that will be modified for this function to work, but
+ *                  later restored to its original form.
  * @param delimiter Character to separate tokens. It won't be part of those tokens.
  * @param callback  Function called for every token read.
  * @param user_data Pointer passed to every call of @p callback, so that it can edit program state.

@@ -201,7 +201,8 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
 /**
  * @brief Parses a **MODIFIABLE** string using a parser defined by @p grammar.
  *
- * @param input     String to parse, that that will be modified for this function to work.
+ * @param input     String to parse, that that will be modified for this function to work, but then
+ *                  restored to its original form.
  * @param grammar   Grammar that defines the parser to be used.
  * @param user_data Pointer passed to every callback in @p grammar, so that they can edit the
  *                  program's state.

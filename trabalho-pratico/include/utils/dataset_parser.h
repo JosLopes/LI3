@@ -198,7 +198,6 @@ typedef struct dataset_parser_grammar_t dataset_parser_grammar_t;
  * @brief   Callback for each token delimited by the first-order delimiter in a dataset parser
  *          (e.g.: CSV line).
  * @details This is called before each token is parsed by ::fixed_n_delimiter_parser_parse_string.
- *          Its purpose is generally to store the token before it is modified by the parser.
  *
  * @param user_data Pointer provided to ::dataset_parser_parse, so that this callback can modify
  *                  the program's state.

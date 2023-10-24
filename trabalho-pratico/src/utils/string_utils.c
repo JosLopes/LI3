@@ -44,6 +44,9 @@ int string_tokenize(char                    *input,
         int cb_result = callback(user_data, token);
         if (cb_result)
             return cb_result;
+
+        if (input)
+            *(input - 1) = delimiter; /* Restore string */
     }
 
     return 0;
