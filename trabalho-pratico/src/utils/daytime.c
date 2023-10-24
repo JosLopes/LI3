@@ -34,8 +34,6 @@
 /**
  * @brief Grammar for parsing times.
  * @details Shall not be modified apart from its creation.
- *
- * TODO - ask professors if we can use global variables
  */
 fixed_n_delimiter_parser_grammar_t *daytime_grammar = NULL;
 

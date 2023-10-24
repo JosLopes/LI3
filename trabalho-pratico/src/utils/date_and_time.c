@@ -35,8 +35,6 @@
 /**
  * @brief Grammar for parsing timed dates.
  * @details Shall not be modified apart from its creation.
- *
- * TODO - ask professors if we can use global variables
  */
 fixed_n_delimiter_parser_grammar_t *date_and_time_grammar = NULL;
 
