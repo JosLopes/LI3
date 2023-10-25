@@ -28,12 +28,13 @@
 #include "utils/date.h"
 #include "utils/date_and_time.h"
 
-/** @brief Table header for user errors */
+/** @brief Table header for `users_errors.csv` */
 #define USER_LOADER_HEADER                                                                         \
     "id;name;email;phone_number;birth_date;sex;passport;country_code;address;account_creation;"    \
     "pay_method;account_status"
 
 /**
+ * @struct users_loader_t
  * @brief Temporary data needed to load a set of users.
  *
  * @var users_loader_t::dataset
@@ -58,6 +59,10 @@ typedef struct {
     size_t id_length, name_length, passport_length;
 } users_loader_t;
 
+/**
+ * @brief Stores the beginning of the current line, in case it needs to be printed to the errors
+ *        file.
+ */
 int __users_loader_before_parse_line(void *loader_data, char *line) {
     ((users_loader_t *) loader_data)->error_line = line;
     return 0;
@@ -65,6 +70,7 @@ int __users_loader_before_parse_line(void *loader_data, char *line) {
 
 /* TODO - write values to a user field in users_loader_t */
 
+/** @brief Parses a user's identifier */
 int __user_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     users_loader_t *loader = (users_loader_t *) loader_data;
@@ -73,6 +79,7 @@ int __user_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     return loader->id_length == 0; /* Fail on empty IDs */
 }
 
+/** @brief Parses a user's name */
 int __user_loader_parse_name(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     users_loader_t *loader = (users_loader_t *) loader_data;
@@ -81,6 +88,7 @@ int __user_loader_parse_name(void *loader_data, char *token, size_t ntoken) {
     return loader->name_length == 0; /* Fail on empty names */
 }
 
+/** @brief Parses a user's email */
 int __user_loader_parse_email(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -88,6 +96,7 @@ int __user_loader_parse_email(void *loader_data, char *token, size_t ntoken) {
     return email_validate_string(token);
 }
 
+/** @brief Parses a user's phone number */
 int __user_loader_parse_phone_number(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -95,6 +104,7 @@ int __user_loader_parse_phone_number(void *loader_data, char *token, size_t ntok
     return (*token == '\0'); /* Fail on empty phone numbers */
 }
 
+/** @brief Parses a user's birth date */
 int __user_loader_parse_birth_date(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -103,6 +113,7 @@ int __user_loader_parse_birth_date(void *loader_data, char *token, size_t ntoken
     return date_from_string(&date, token);
 }
 
+/** @brief Parses a user's sex */
 int __user_loader_parse_sex(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -111,6 +122,7 @@ int __user_loader_parse_sex(void *loader_data, char *token, size_t ntoken) {
     return (*token == 0); /* Fail on empty sexes */
 }
 
+/** @brief Parses a user's passport number */
 int __user_loader_parse_passport(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     users_loader_t *loader = (users_loader_t *) loader_data;
@@ -119,6 +131,7 @@ int __user_loader_parse_passport(void *loader_data, char *token, size_t ntoken) 
     return loader->passport_length == 0; /* Fail on empty names */
 }
 
+/** @brief Parses a user's country code */
 int __user_loader_parse_country_code(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -129,12 +142,14 @@ int __user_loader_parse_country_code(void *loader_data, char *token, size_t ntok
     return 1;
 }
 
+/** @brief Parses a user's address */
 int __user_loader_parse_address(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
     return (*token == 0); /* Fail on empty addresses */
 }
 
+/** @brief Parses a user's account creation date */
 int __user_loader_parse_account_creation_date(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -143,12 +158,14 @@ int __user_loader_parse_account_creation_date(void *loader_data, char *token, si
     return date_and_time_from_string(&date, token);
 }
 
+/** @brief Parses a user's payment method */
 int __user_loader_parse_pay_method(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
     return (*token == 0); /* Fail on empty payment methods */
 }
 
+/** @brief Parses a user's account status */
 int __user_loader_parse_account_status(void *loader_data, char *token, size_t ntoken) {
     /* TODO - use user's account status method when its merged */
 #define ACCOUNT_STATUS_STRLEN_INACTIVE 8
@@ -174,6 +191,7 @@ int __user_loader_parse_account_status(void *loader_data, char *token, size_t nt
     }
 }
 
+/** @brief Places a parsed user in the database and handles errors */
 int __users_loader_after_parse_line(void *loader_data, int retval) {
     if (retval) {
         users_loader_t *loader = (users_loader_t *) loader_data;
