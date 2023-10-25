@@ -29,6 +29,7 @@
 #ifndef FLIGHT_H
 #define FLIGHT_H
 
+#include "types/airport_code.h"
 #include "utils/date_and_time.h"
 
 /**
@@ -69,7 +70,7 @@ void flight_set_plane_model(flight_t *flight, char *plane_model);
  * @param flight Flight to have its origin set.
  * @param origin Origin of the flight.
  */
-void flight_set_origin(flight_t *flight, char *origin);
+void flight_set_origin(flight_t *flight, airport_code_t origin);
 
 /**
  * @brief Sets the flight's destination.
@@ -78,7 +79,7 @@ void flight_set_origin(flight_t *flight, char *origin);
  * @param flight      Flight to have its destination set.
  * @param destination Destination of the flight.
  */
-void flight_set_destination(flight_t *flight, char *destination);
+void flight_set_destination(flight_t *flight, airport_code_t destination);
 
 /**
  * @brief Sets the flight's identifier.
@@ -146,16 +147,16 @@ const char *flight_get_const_plane_model(const flight_t *flight);
 /**
  * @brief  Gets the flight's origin.
  * @param  flight Flight to get the origin from.
- * @return The flight's origin, with modifications not allowed.
+ * @return The flight's origin.
  */
-const char *flight_get_const_origin(const flight_t *flight);
+airport_code_t flight_get_origin(const flight_t *flight);
 
 /**
  * @brief  Gets the flight's destination.
  * @param  flight Flight to get the destination from.
- * @return The flight's destination, with modifications not allowed.
+ * @return The flight's destination.
  */
-const char *flight_get_const_destination(const flight_t *flight);
+airport_code_t flight_get_destination(const flight_t *flight);
 
 /**
  * @brief  Gets the flight's identifier.

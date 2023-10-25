@@ -21,32 +21,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "types/country_code.h"
+#include "types/airport_code.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Test for country codes.
+ * @details Test for airport codes.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    const char *string_codes[4] = {
-        "",    /* Too short */
-        "P",   /* Too short */
-        "PT",  /* Just right */
-        "POR", /* Too long */
+    const char *string_codes[6] = {
+        "",     /* Too short */
+        "O",    /* Too short */
+        "OP",   /* Too short */
+        "OPO",  /* Just right */
+        "oPo",  /* Everything should be converted to upper-case */
+        "OPOR", /* Too long */
     };
 
-    for (int i = 0; i < 4; ++i) {
-        country_code_t parsed;
+    for (int i = 0; i < 6; ++i) {
+        airport_code_t parsed;
 
-        if (!country_code_from_string(&parsed, string_codes[i])) {
-            char back_to_string[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
-            country_code_sprintf(back_to_string, parsed);
+        if (!airport_code_from_string(&parsed, string_codes[i])) {
+            char back_to_string[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
+            airport_code_sprintf(back_to_string, parsed);
             printf("Parsed code: \"%s\"\n", back_to_string);
 
         } else {
-            fprintf(stderr, "Failed to parse country code \"%s\"!\n", string_codes[i]);
+            fprintf(stderr, "Failed to parse airport code \"%s\"!\n", string_codes[i]);
         }
     }
 

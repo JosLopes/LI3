@@ -53,8 +53,8 @@
 struct flight {
     char           *airline;
     char           *plane_model;
-    char           *origin;
-    char           *destination;
+    airport_code_t  origin;
+    airport_code_t  destination;
     size_t          id;
     date_and_time_t schedule_departure_date;
     date_and_time_t real_departure_date;
@@ -75,11 +75,11 @@ void flight_set_plane_model(flight_t *flight, char *plane_model) {
     flight->plane_model = plane_model;
 }
 
-void flight_set_origin(flight_t *flight, char *origin) {
+void flight_set_origin(flight_t *flight, airport_code_t origin) {
     flight->origin = origin;
 }
 
-void flight_set_destination(flight_t *flight, char *destination) {
+void flight_set_destination(flight_t *flight, airport_code_t destination) {
     flight->destination = destination;
 }
 
@@ -120,11 +120,11 @@ const char *flight_get_const_plane_model(const flight_t *flight) {
     return flight->plane_model;
 }
 
-const char *flight_get_const_origin(const flight_t *flight) {
+airport_code_t flight_get_origin(const flight_t *flight) {
     return flight->origin;
 }
 
-const char *flight_get_const_destination(const flight_t *flight) {
+airport_code_t flight_get_destination(const flight_t *flight) {
     return flight->destination;
 }
 
