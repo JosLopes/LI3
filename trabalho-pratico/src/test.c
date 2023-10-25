@@ -22,43 +22,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/string_pool.h"
-
-/** @brief Number of characters in a pool block. In practice, this should be way larger. */
-#define TEST_POOL_BLOCK_SIZE 32
-
-/** @brief Number of pool items to be allocated */
-#define TEST_NUM_ITEMS 10000
+#include "types/airport_code.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for string pools.
+ * @details Test for airport codes.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    string_pool_t *pool = string_pool_create(TEST_POOL_BLOCK_SIZE);
+    const char *string_codes[6] = {
+        "",     /* Too short */
+        "O",    /* Too short */
+        "OP",   /* Too short */
+        "OPO",  /* Just right */
+        "oPo",  /* Everything should be converted to upper-case */
+        "OPOR", /* Too long */
+    };
 
-    const char *long_string =
-        "This string is longer than a single block, but the pool can still handle it!";
-    const char *short_string = "Hello, world!";
+    for (int i = 0; i < 6; ++i) {
+        airport_code_t parsed;
 
-    char *allocated[TEST_NUM_ITEMS] = {0};
-    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        int r = rand() % 2 == 1;
+        if (!airport_code_from_string(&parsed, string_codes[i])) {
+            char back_to_string[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
+            airport_code_sprintf(back_to_string, parsed);
+            printf("Parsed code: \"%s\"\n", back_to_string);
 
-        allocated[i] = string_pool_put(pool, r ? short_string : long_string);
-        if (!allocated[i]) {
-            fputs("Allocation error!\n", stderr);
-            string_pool_free(pool);
-            return 1;
+        } else {
+            fprintf(stderr, "Failed to parse airport code \"%s\"!\n", string_codes[i]);
         }
     }
 
-    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        printf("%s\n", allocated[i]);
-    }
-
-    string_pool_free(pool);
     return 0;
 }
