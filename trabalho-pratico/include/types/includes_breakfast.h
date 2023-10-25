@@ -49,4 +49,24 @@ typedef enum includes_breakfast {
  */
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input);
 
+/**
+ * @brief The minimum number of characters (including null terminator) needed to write an "includes
+ *        breakfast" field to a buffer using ::includes_breakfast_sprintf.
+ * @details
+ *
+ * | F | A | L | S | E | \0 |
+ * | - | - | - | - | - | -- |
+ * | 1 | 2 | 3 | 4 | 5 | 6  |
+ */
+#define INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE 4
+
+/**
+ * @brief Prints an "includes breakfast" field using `sprintf`.
+ *
+ * @param output    Where to print the airport code to. Must be at least
+ *                  ::INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE long.
+ * @param breakfast "Includes breakfast" field.
+ */
+void includes_breakfast_sprintf(char *output, includes_breakfast_t breakfast);
+
 #endif

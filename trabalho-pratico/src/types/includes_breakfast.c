@@ -23,7 +23,7 @@
 #include "types/includes_breakfast.h"
 
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input) {
-    if (input == NULL) {
+    if (*input == '\0') {
         *output = INCLUDES_BREAKFAST_NO_INPUT;
         return 0;
     } else if (strcmp(input, "f") == 0) {
@@ -46,4 +46,34 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
         return 0;
     }
     return 1;
+}
+
+void includes_breakfast_sprintf(char *output, includes_breakfast_t breakfast) {
+    const char *source = "";
+
+    switch (breakfast) {
+        case INCLUDES_BREAKFAST_0:
+            source = "0";
+            break;
+        case INCLUDES_BREAKFAST_1:
+            source = "1";
+            break;
+        case INCLUDES_BREAKFAST_NO_INPUT:
+            source = "";
+            break;
+        case INCLUDES_BREAKFAST_F:
+            source = "f";
+            break;
+        case INCLUDES_BREAKFAST_FALSE:
+            source = "false";
+            break;
+        case INCLUDES_BREAKFAST_T:
+            source = "t";
+            break;
+        case INCLUDES_BREAKFAST_TRUE:
+            source = "true";
+            break;
+    }
+
+    strcpy(output, source);
 }
