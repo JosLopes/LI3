@@ -24,6 +24,7 @@
 
 #include "dataset/dataset_loader.h"
 #include "dataset/flights_loader.h"
+#include "dataset/passengers_loader.h"
 #include "dataset/reservations_loader.h"
 #include "dataset/users_loader.h"
 
@@ -138,10 +139,10 @@ int dataset_loader_load(database_t *database, const char *path) {
         }
     }
 
-    /* TODO - add other loaders here */
     users_loader_load(&loader, loader.users);
     flights_loader_load(&loader, loader.flights);
     reservations_loader_load(&loader, loader.reservations);
+    passengers_loader_load(&loader, loader.reservations);
 
     __dataset_loader_load_close_all_files(&loader);
     return 0;
