@@ -89,7 +89,7 @@ int daytime_from_values(daytime_t *output, uint8_t hours, uint8_t minutes, uint8
  * @brief Parses a **MODIFIABLE** string containing a time.
  *
  * @param output Where the parsed time is placed. Won't be modified on failure.
- * @param input  String to parse, that will be modified. Must be in the format `"HH:MM:SS"`.
+ * @param input  String to parse, that won't be modified. Must be in the format `"HH:MM:SS"`.
  *
  * @retval 0 Parsing success.
  * @retval 1 Parsing failure.

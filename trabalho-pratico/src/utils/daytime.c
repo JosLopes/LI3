@@ -34,8 +34,6 @@
 /**
  * @brief Grammar for parsing times.
  * @details Shall not be modified apart from its creation.
- *
- * TODO - ask professors if we can use global variables
  */
 fixed_n_delimiter_parser_grammar_t *daytime_grammar = NULL;
 
@@ -130,7 +128,7 @@ int daytime_from_string(daytime_t *output, char *input) {
 }
 
 int daytime_from_string_const(daytime_t *output, const char *input) {
-    char *buffer = string_duplicate(input);
+    char *buffer = strdup(input);
     if (!buffer)
         return 1;
 

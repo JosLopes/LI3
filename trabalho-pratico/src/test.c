@@ -15,9 +15,10 @@
  */
 
 /**
- * @file main.c
+ * @file test.c
  * @brief Contains the entry point to the program.
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -35,8 +35,6 @@
 /**
  * @brief Grammar for parsing timed dates.
  * @details Shall not be modified apart from its creation.
- *
- * TODO - ask professors if we can use global variables
  */
 fixed_n_delimiter_parser_grammar_t *date_and_time_grammar = NULL;
 
@@ -115,7 +113,7 @@ int date_and_time_from_string(date_and_time_t *output, char *input) {
 }
 
 int date_and_time_from_string_const(date_and_time_t *output, const char *input) {
-    char *buffer = string_duplicate(input);
+    char *buffer = strdup(input);
     if (!buffer)
         return 1;
 
