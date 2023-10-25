@@ -96,7 +96,7 @@ void flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule
     flight->schedule_arrival_date = schedule_arrival_date;
 }
 
-void increment_flight_number_of_passengers(flight_t *flight, int increment_factor) {
+void flight_increment_number_of_passengers(flight_t *flight, int increment_factor) {
     flight->number_of_passengers += increment_factor;
 }
 
