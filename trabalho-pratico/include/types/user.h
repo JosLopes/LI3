@@ -30,6 +30,7 @@
 #define USER_H
 
 #include "types/account_status.h"
+#include "types/country_code.h"
 #include "types/sex.h"
 #include "utils/date.h"
 #include "utils/date_and_time.h"
@@ -42,7 +43,7 @@
 typedef struct user user_t;
 
 /**
- * @brief Creates a new user with unitialized fields.
+ * @brief Creates a new user with uninitialized fields.
  * @return A `malloc`-allocated user (`NULL` on allocation failure).
  */
 user_t *user_create(void);
@@ -84,12 +85,11 @@ void user_set_passport(user_t *user, char *passport);
 
 /**
  * @brief Sets the user's country code.
- * @details @p country_code will not get owned by @p user, and you should free it later.
  *
  * @param user         User to have its country code set.
  * @param country_code Country code of the user.
  */
-void user_set_country_code(user_t *user, char *country_code);
+void user_set_country_code(user_t *user, country_code_t country_code);
 
 /**
  * @brief Sets the user's sex.
@@ -146,9 +146,8 @@ const char *user_get_const_passport(const user_t *user);
 /**
  * @brief Gets the user's country code.
  * @param user User to get country code from.
- * @return The user's country code, with modifications not allowed.
  */
-const char *user_get_const_country_code(const user_t *user);
+country_code_t user_get_country_code(const user_t *user);
 
 /**
  * @brief Gets the user's sex.

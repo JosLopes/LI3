@@ -52,7 +52,7 @@ struct user {
     char            *name;
     date_t           birth_date;
     char            *passport;
-    char            *country_code;
+    country_code_t   country_code;
     sex_t            sex;
     account_status_t account_status;
     date_and_time_t  account_creation_date;
@@ -78,7 +78,7 @@ void user_set_passport(user_t *user, char *passport) {
     user->passport = passport;
 }
 
-void user_set_country_code(user_t *user, char *country_code) {
+void user_set_country_code(user_t *user, country_code_t country_code) {
     user->country_code = country_code;
 }
 
@@ -107,10 +107,10 @@ date_t user_get_birth_date(const user_t *user) {
 }
 
 const char *user_get_const_passport(const user_t *user) {
-    return user->country_code;
+    return user->passport;
 }
 
-const char *user_get_const_country_code(const user_t *user) {
+country_code_t user_get_country_code(const user_t *user) {
     return user->country_code;
 }
 

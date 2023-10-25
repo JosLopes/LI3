@@ -21,31 +21,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/date_and_time.h"
+#include "types/country_code.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Test for timed dates.
+ * @details Test for country codes.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(void) {
-    const char *date_and_times[2] = {
-        "2023/11/11 23:59:59",  /* Due date for this project (we're screwed) */
-        "2023/11/11 23:59:59 ", /* Too many spaces */
+    const char *string_codes[4] = {
+        "",    /* Too short */
+        "P",   /* Too short */
+        "PT",  /* Just right */
+        "POR", /* Too long */
     };
 
-    for (int i = 0; i < 2; ++i) {
-        date_and_time_t date_and_time;
-        int success = date_and_time_from_string_const(&date_and_time, date_and_times[i]);
+    for (int i = 0; i < 4; ++i) {
+        country_code_t parsed;
 
-        if (success) {
-            fprintf(stderr, "Failed to parse timed date \"%s\".\n", date_and_times[i]);
+        if (!country_code_from_string(&parsed, string_codes[i])) {
+            char back_to_string[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
+            country_code_sprintf(back_to_string, parsed);
+            printf("Parsed code: \"%s\"\n", back_to_string);
+
         } else {
-            char str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
-            date_and_time_sprintf(str, date_and_time);
-
-            printf("%s was parsed successfully.\n", str);
+            fprintf(stderr, "Failed to parse country code \"%s\"!\n", string_codes[i]);
         }
     }
 
