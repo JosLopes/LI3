@@ -13,20 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * @file  reservation.c
+ * @brief Implementation of methods in include/types/reservation.h
+ */
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "types/reservation.h"
 
+/**
+ * @struct reservation
+ * @brief Represents a reservation in the datasets.
+ * @details NOTE: some fields in the project's requirements (such as address, room details and
+ *          comments) aren't put here, as they won't be required by any database query.
+ *
+ * @var reservation::user_id
+ *     @brief User identifier of a given reservation.
+ * @var reservation::hotel_name
+ *     @brief Hotel name of a given reservation.
+ * @var reservation::includes_breakfast
+ *     @brief Flag identifying the inclusion of breakfast of a given reservation.
+ * @var reservation::begin_date
+ *     @brief The beginning date of a given reservation.
+ * @var reservation::end_date
+ *     @brief End date of a given reservation.
+ * @var reservation::id
+ *     @brief Identifier of a given reservation.
+ * @var reservation::rating
+ *     @brief Rating (equals `-1` if it wasn't given) of a given reservation.
+ * @var reservation::hotel_id
+ *     @brief Hotel identifier of a given reservation.
+ * @var reservation::hotel_stars
+ *     @brief Hotel stars of a given reservation.
+ * @var reservation::city_tax
+ *     @brief City tax of a given reservation.
+ * @var reservation::price_per_night
+ *     @brief Price per night of a given reservation.
+ */
 struct reservation {
     char                   *user_id;
     char                   *hotel_name;
-    int                    *rating;
     enum includes_breakfast includes_breakfast;
     date_t                  begin_date;
     date_t                  end_date;
     size_t                  id;
+    int                     rating;
     int                     hotel_id;
     int                     hotel_stars;
     int                     city_tax;
@@ -34,69 +67,20 @@ struct reservation {
 };
 
 reservation_t *reservation_create(void) {
-    reservation_t *new_reservation = malloc(sizeof(reservation_t));
-
-    new_reservation->user_id    = NULL;
-    new_reservation->hotel_name = NULL;
-    new_reservation->rating     = NULL;
-
-    return new_reservation;
+    return malloc(sizeof(struct reservation));
 }
 
 void reservation_set_user_id(reservation_t *reservation, char *user_id) {
-    reservation->user_id = strdup(user_id);
-}
-
-void reservation_set_hotel_id(reservation_t *reservation, int hotel_id) {
-    reservation->hotel_id = hotel_id;
+    reservation->user_id = user_id;
 }
 
 void reservation_set_hotel_name(reservation_t *reservation, char *hotel_name) {
-    reservation->hotel_name = strdup(hotel_name);
+    reservation->hotel_name = hotel_name;
 }
 
-void reservation_set_rating(reservation_t *reservation, int *parsed_rating) {
-    reservation->rating = parsed_rating;
-}
-
-void reservation_set_includes_breakfast(reservation_t *reservation,
-                                        char          *includes_breakfast_string) {
-    enum includes_breakfast includes_breakfast;
-
-    if (includes_breakfast_string == NULL)
-        includes_breakfast = no_input;
-    else {
-        switch (includes_breakfast_string[0]) {
-            case 'f':
-                if (strlen(includes_breakfast_string) == 1)
-                    includes_breakfast = f;
-                else
-                    includes_breakfast = _false;
-                break;
-            case 't':
-                if (strlen(includes_breakfast_string) == 1)
-                    includes_breakfast = t;
-                else
-                    includes_breakfast = _true;
-                break;
-            case '1':
-                includes_breakfast = one;
-                break;
-            default:
-                includes_breakfast = zero;
-                break;
-        }
-    }
-
+void reservation_set_includes_breakfast(reservation_t       *reservation,
+                                        includes_breakfast_t includes_breakfast) {
     reservation->includes_breakfast = includes_breakfast;
-}
-
-void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars) {
-    reservation->hotel_stars = hotel_stars;
-}
-
-void reservation_set_id(reservation_t *reservation, size_t id) {
-    reservation->id = id;
 }
 
 void reservation_set_begin_date(reservation_t *reservation, date_t begin_date) {
@@ -107,6 +91,22 @@ void reservation_set_end_date(reservation_t *reservation, date_t end_date) {
     reservation->end_date = end_date;
 }
 
+void reservation_set_id(reservation_t *reservation, size_t id) {
+    reservation->id = id;
+}
+
+void reservation_set_rating(reservation_t *reservation, int rating) {
+    reservation->rating = rating;
+}
+
+void reservation_set_hotel_id(reservation_t *reservation, int hotel_id) {
+    reservation->hotel_id = hotel_id;
+}
+
+void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars) {
+    reservation->hotel_stars = hotel_stars;
+}
+
 void reservation_set_city_tax(reservation_t *reservation, int city_tax) {
     reservation->city_tax = city_tax;
 }
@@ -115,32 +115,16 @@ void reservation_set_price_per_night(reservation_t *reservation, int price_per_n
     reservation->price_per_night = price_per_night;
 }
 
-const char *reservation_get_const_user_id(reservation_t *reservation) {
+const char *reservation_get_const_user_id(const reservation_t *reservation) {
     return reservation->user_id;
 }
 
-int reservation_get_const_hotel_id(reservation_t *reservation) {
-    return reservation->hotel_id;
-}
-
-const char *reservation_get_const_hotel_name(reservation_t *reservation) {
+const char *reservation_get_const_hotel_name(const reservation_t *reservation) {
     return reservation->hotel_name;
 }
 
-const int *reservation_get_const_rating(reservation_t *reservation) {
-    return reservation->rating;
-}
-
-enum includes_breakfast reservation_get_includes_breakfast(reservation_t *reservation) {
+includes_breakfast_t reservation_get_includes_breakfast(reservation_t *reservation) {
     return reservation->includes_breakfast;
-}
-
-size_t reservation_get_id(reservation_t *reservation) {
-    return reservation->id;
-}
-
-int reservation_get_hotel_stars(reservation_t *reservation) {
-    return reservation->hotel_stars;
 }
 
 date_t reservation_get_begin_date(reservation_t *reservation) {
@@ -149,6 +133,22 @@ date_t reservation_get_begin_date(reservation_t *reservation) {
 
 date_t reservation_get_end_date(reservation_t *reservation) {
     return reservation->end_date;
+}
+
+size_t reservation_get_id(reservation_t *reservation) {
+    return reservation->id;
+}
+
+int reservation_get_const_rating(reservation_t *reservation) {
+    return reservation->rating;
+}
+
+int reservation_get_const_hotel_id(reservation_t *reservation) {
+    return reservation->hotel_id;
+}
+
+int reservation_get_hotel_stars(reservation_t *reservation) {
+    return reservation->hotel_stars;
 }
 
 int reservation_get_city_tax(reservation_t *reservation) {
@@ -160,9 +160,5 @@ int reservation_get_price_per_night(reservation_t *reservation) {
 }
 
 void reservation_free(reservation_t *reservation) {
-    free(reservation->user_id);
-    free(reservation->hotel_name);
-    free(reservation->rating);
-
     free(reservation);
 }

@@ -16,238 +16,200 @@
 
 /**
  * @file     reservation.h
- * @brief    Declaration of type `reservation_t`.
+ * @brief    Declaration of type ::reservation_t.
  *
- * @details  In this module you can find a declaration of the type `reservation_t` as a
- *           struct reservation, as well as get and set functions, which allow's the developer
- *           access to any previously created reservation, or gives them the ability to create
- *           a new one.
- *           Reservation parameters available for the developer:
- *
- * @param user_id            Id of the reservation's user, of type `char*`.
- * @param hotel_id           Id of the reservation's hotel, of type `int` ("HTL" + int).
- * @param hotel_name         Name of the reservation's hotel, of type `char*`.
- * @param rating             Rating attributed by a user, of type `int*`
- *                           (NULL if the user didn't submit a rating).
- * @param includes_breakfast Flag that indicates if a given reservation includes
- *                           breakfast, of type `enum includes_breakfast`.
- * @param id                 Id of a given reservation, of type `size_t`.
- * @param hotel_stars        Stars assigned the reservation's hotel, of type `int`.
- * @param begin_date         Beginning date of a given reservation, of type `date_t`.
- * @param end_date           End date of a given reservation, of type `date_t`.
- * @param city_tax           Percentage of city tax (over total amount), of type `int`.
- * @param price_per_night    Price per night of a giver reservation, of type `int`.
+ * @details  In this module you can find a declaration of the type `reservation_t` as a struct
+ *           reservation, as well as getter and setter functions, which allow's the developer
+ *           access to any previously created reservation, or gives them the ability to create a
+ *           new reservation.
+ *          
+ *           You can see what fields define a reservation (and thus available through getters and
+ *           setters) in the [struct's documentation](@ref reservation).
  */
-#ifndef FLIGHT_H
-#define FLIGHT_H
+#ifndef RESERVATION_H
+#define RESERVATION_H
 
-#include <stddef.h>
-
+#include "types/includes_breakfast.h"
 #include "utils/date.h"
 
 /**
- * @brief Enum includes_breakfast, if the value is
- *        zero (received as an int)/ no_input (no value received)/ f/ _false
- *        the reservation doesn't include breakfast, otherwise it does.
- */
-enum includes_breakfast {
-    zero,
-    one,
-    no_input,
-    f,
-    _false,
-    t,
-    _true
-};
-
-/**
- * @brief Type `reservation_t` defined as a struct reservation,
- *        stores valuable information of a given reservation (Opaque type).
+ * @brief Type `reservation_t` defined as a struct reservation, that stores valuable information of
+ *        a given reservation.
+ * @details It's an opaque type.
  */
 typedef struct reservation reservation_t;
 
 /**
- * @brief Creates a new reservation.
- *
- * @return new_reservation, the new reservation created of type `reservation_t*`.
+ * @brief Creates a new reservation with uninitialized fields.
+ * @return A `malloc`-allocated reservation (`NULL` on allocation failure).
  */
 reservation_t *reservation_create(void);
 
 /**
- * @brief Sets the reservation's user_id, allocating the necessary space.
- *        Be sure to free it when no longer necessary (using the function free_reservation).
+ * @brief Sets the reservation's user identifier.
+ * @details @p user_id will not get owned by @p reservation, and you should free it later.
  *
- * @param reservation Reservation of type `reservation_t*`.
- * @param user_id     User id of a given reservation, of type `char*`.
+ * @param reservation Reservation to have its user identifier set.
+ * @param user_id     User identifier of the reservation.
  */
 void reservation_set_user_id(reservation_t *reservation, char *user_id);
 
 /**
- * @brief Sets the reservation's hotel_id, allocating the necessary space.
- *        Be sure to free it when no longer necessary (using the function free_reservation).
+ * @brief Sets the reservation's hotel name.
+ * @details @p hotel_name will not get owned by @p reservation, and you should free it later.
  *
- * @param reservation Reservation of type `reservation_t*`.
- * @param hotel_id    Hotel id of a given reservation, of type `int`.
- */
-void reservation_set_hotel_id(reservation_t *reservation, int hotel_id);
-
-/**
- * @brief Sets the reservation's hotel_name, allocating the necessary space.
- *        Be sure to free it when no longer necessary (using the function free_reservation).
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param hotel_name  Hotel name of a given reservation, of type `char*`.
+ * @param reservation Reservation to have its hotel name set.
+ * @param hotel_name  Hotel name of the reservation.
  */
 void reservation_set_hotel_name(reservation_t *reservation, char *hotel_name);
 
 /**
- * @brief Sets the reservation's rating. Be sure to free this previously allocated memory
- *        when no longer necessary (using the function free_reservation).
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param rating      Rating of a given reservation, of type `int*`.
+ * @brief Sets the reservation's inclusion of breakfast.
+ * @param reservation        Reservation to have its inclusion of breakfast set.
+ * @param includes_breakfast A flag that gives information on the inclusion of breakfast of
+ *                           a reservation.
  */
-void reservation_set_rating(reservation_t *reservation, int *rating);
+void reservation_set_includes_breakfast(reservation_t       *reservation,
+                                        includes_breakfast_t includes_breakfast);
 
 /**
- * @brief Sets the reservation's flag includes_breakfast.
- *
- * @param reservation        Reservation of type `reservation_t*`.
- * @param includes_breakfast Flag that indicates if a given reservation includes
- *                           breakfast, of type `char*`.
- */
-void reservation_set_includes_breakfast(reservation_t *reservation,
-                                        char          *includes_breakfast_string);
-
-/**
- * @brief Sets the reservation's id.
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param id          Id of a given reservation, of type `size_t`.
- */
-void reservation_set_id(reservation_t *reservation, size_t id);
-
-/**
- * @brief Sets the reservation's hotel stars.
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param hotel_stars Stars assigned the reservation's hotel, of type `int*`.
- */
-void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars);
-
-/**
- * @brief Sets the reservation's begin date.
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param begin_date  Begin date of a given reservation, of type `date_t`.
+ * @brief Sets the reservation's beginning date.
+ * @param reservation Reservation to have its beginning date set.
+ * @param begin_date  Beginning date of the reservation.
  */
 void reservation_set_begin_date(reservation_t *reservation, date_t begin_date);
 
 /**
  * @brief Sets the reservation's end date.
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param end_date    End date of a given reservation, of type `date_t`.
+ * @param reservation Reservation to have its end date set.
+ * @param end_date    End date of the reservation.
  */
 void reservation_set_end_date(reservation_t *reservation, date_t end_date);
 
 /**
+ * @brief Sets the reservation's identifier.
+ * @param reservation Reservation to have its identifier set.
+ * @param id          Identifier of the reservation.
+ */
+void reservation_set_id(reservation_t *reservation, size_t id);
+
+/**
+ * @brief Sets the reservation's rating.
+ * @param reservation Reservation to have its rating set.
+ * @param rating      Rating of the reservation.
+ */
+void reservation_set_rating(reservation_t *reservation, int rating);
+
+/**
+ * @brief Sets the reservation's hotel identifier.
+ * @param reservation Reservation to have its hotel identifier set.
+ * @param hotel_id    Hotel identifier of the reservation.
+ */
+void reservation_set_hotel_id(reservation_t *reservation, int hotel_id);
+
+/**
+ * @brief Sets the reservation's hotel stars.
+ * @param reservation Reservation to have its hotel stars set.
+ * @param hotel_stars Hotel stars of the reservation.
+ */
+void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars);
+
+/**
  * @brief Sets the reservation's city tax.
- *
- * @param reservation Reservation of type `reservation_t*`.
- * @param city_tax    Percentage of city tax (over total amount), of type `int`.
+ * @param reservation Reservation to have its city tax set.
+ * @param city_tax    City tax of the reservation.
  */
 void reservation_set_city_tax(reservation_t *reservation, int city_tax);
 
 /**
- * @brief Sets the reservation' price per night.
- *
- * @param reservation     Reservation of type `reservation_t*`.
- * @param price_per_night Price per night of a given reservation, of type `int`.
+ * @brief Sets the reservation's price per night.
+ * @param reservation     Reservation to have its price per night set.
+ * @param price_per_night Price per night of the reservation.
  */
 void reservation_set_price_per_night(reservation_t *reservation, int price_per_night);
 
 /**
- * @brief Gets the reservation's user id.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's user_id, of type `const char*`.
+ * @brief  Gets the reservation's user identifier.
+ * @param  reservation Reservation to get the user identifier from.
+ * @return The reservation's user identifier, with modifications not allowed.
  */
-const char *reservation_get_const_user_id(reservation_t *reservation);
+const char *reservation_get_const_user_id(const reservation_t *reservation);
 
 /**
- * @brief Gets the reservation's hotel id.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's hotel_id, of type `int`.
+ * @brief  Gets the reservation's hotel name.
+ * @param  reservation Reservation to get the hotel name from.
+ * @return The reservation's hotel name, with modifications not allowed.
  */
-int reservation_get_const_hotel_id(reservation_t *reservation);
+const char *reservation_get_const_hotel_name(const reservation_t *reservation);
 
 /**
- * @brief Gets the reservation's hotel name.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation' hotel_name, of type `const char*`.
+ * @brief  Gets information on the inclusion of breakfast of the reservation.
+ * @param  reservation Reservation to get the `includes_breakfast` flag from.
+ * @return The reservation's flag `includes_breakfast`.
  */
-const char *reservation_get_const_hotel_name(reservation_t *reservation);
+includes_breakfast_t reservation_get_includes_breakfast(reservation_t *reservation);
 
 /**
- * @brief Gets the reservation's rating.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's rating, of type `const int*`.
- */
-const int *reservation_get_const_rating(reservation_t *reservation);
-
-/**
- * @brief Gets the reservation's flag includes_breakfast.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's flag include_breakfast, of type `enum includes_breakfast`.
- */
-enum includes_breakfast reservation_get_includes_breakfast(reservation_t *reservation);
-
-/**
- * @brief Gets the reservation's id.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's id, of type `size_t`.
- */
-size_t reservation_get_id(reservation_t *reservation);
-
-/**
- * @brief Gets the reservation's hotel stars.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's hotel_stars, of type `int`.
- */
-int reservation_get_hotel_stars(reservation_t *reservation);
-
-/**
- * @brief Gets the reservation's begin date.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's begin_date, of type `date_t`.
+ * @brief  Gets the reservation's beginning date.
+ * @param  reservation Reservation to get the beginning date from.
+ * @return The reservation's beginning date.
  */
 date_t reservation_get_begin_date(reservation_t *reservation);
 
 /**
- * @brief Gets the reservation's end date.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's end_date, of type `date_t`.
+ * @brief  Gets the reservation's end date.
+ * @param  reservation Reservation to get the end date from.
+ * @return The reservation's end date.
  */
 date_t reservation_get_end_date(reservation_t *reservation);
 
 /**
- * @brief Gets the reservation's city tax.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's city_tax, of type `int`.
+ * @brief  Gets the reservation's identifier.
+ * @param  reservation Reservation to get the identifier from.
+ * @return The reservation's identifier.
+ */
+size_t reservation_get_id(reservation_t *reservation);
+
+/**
+ * @brief  Gets the reservation's rating.
+ * @param  reservation Reservation to get the rating from.
+ * @return The reservation's rating.
+ */
+int reservation_get_const_rating(reservation_t *reservation);
+
+/**
+ * @brief  Gets the reservation's hotel identifier.
+ * @param  reservation Reservation to get the hotel identifier from.
+ * @return The reservation's hotel identifier.
+ */
+int reservation_get_const_hotel_id(reservation_t *reservation);
+
+/**
+ * @brief  Gets the reservation's hotel stars.
+ * @param  reservation Reservation to get the hotel stars from.
+ * @return The reservation's hotel stars.
+ */
+int reservation_get_hotel_stars(reservation_t *reservation);
+
+/**
+ * @brief  Gets the reservation's city tax.
+ * @param  reservation Reservation to get the city tax from.
+ * @return The reservation's city tax.
  */
 int reservation_get_city_tax(reservation_t *reservation);
 
 /**
- * @brief Gets the reservation's price per night.
- * @param reservation Reservation of type `reservation_t*`.
- * @return The reservation's price_per_night, of type `int`.
+ * @brief  Gets the reservation's price per night.
+ * @param  reservation Reservation to get the price per night from.
+ * @return The reservation's price per night.
  */
 int reservation_get_price_per_night(reservation_t *reservation);
 
 /**
- * @brief Function that frees the memory used for a given reservation,
- *        effectively deleting the reservation.
- * @param reservation Reservation of type `reservation_t*`.
+ * @brief             Frees the memory used for a given reservation.
+ * @details           All strings inside the reservation won't be freed, as they're not owned by the
+ *                    reservation.
+ * @param reservation Reservation to be deleted.
  */
 void reservation_free(reservation_t *reservation);
 

@@ -18,7 +18,6 @@
  * @file  flight.c
  * @brief Implementation of methods in include/types/flight.h
  */
-
 #include <stdlib.h>
 
 #include "types/flight.h"
