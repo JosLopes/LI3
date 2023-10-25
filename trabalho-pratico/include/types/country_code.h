@@ -18,7 +18,7 @@
  * @file     country_code.h
  * @brief    Country code in a ::user_t.
  *
- * @anchor date_examples
+ * @anchor country_code_examples
  * ### Examples
  *
  * The following example shows how to validate country codes and how to print them back to strings.
@@ -64,6 +64,10 @@ typedef uint16_t country_code_t;
  *
  * @retval 0 Valid country code
  * @retval 1 Invalid country code
+ *
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref country_code_examples).
  */
 int country_code_from_string(country_code_t *output, const char *input);
 
@@ -84,6 +88,9 @@ int country_code_from_string(country_code_t *output, const char *input);
  * @param output  Where to print the country code to. Must be at least
  *                ::COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE long.
  * @param country Country code to be printed.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref country_code_examples).
  */
 void country_code_sprintf(char *output, country_code_t country);
 

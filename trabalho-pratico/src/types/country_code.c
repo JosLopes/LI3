@@ -35,6 +35,6 @@ int country_code_from_string(country_code_t *output, const char *input) {
 }
 
 void country_code_sprintf(char *output, country_code_t country) {
-    *((uint16_t *) output) = country;
-    output[2]              = '\0';
+    *((country_code_t *) output) = country;
+    output[2]                    = '\0';
 }
