@@ -21,7 +21,7 @@
  * @details  In this module you can find a declaration of the type `flight_t` as a struct flight,
  *           as well as getter and setter functions, which allow's the developer access to any
  *           previously created flight, or gives them the ability to create a new flight.
- *           
+ *
  *           You can see what fields define a flight (and thus available through getters and
  *           setters) in the [struct's documentation](@ref flight).
  */

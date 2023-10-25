@@ -22,7 +22,7 @@
  *           reservation, as well as getter and setter functions, which allow's the developer
  *           access to any previously created reservation, or gives them the ability to create a
  *           new reservation.
- *          
+ *
  *           You can see what fields define a reservation (and thus available through getters and
  *           setters) in the [struct's documentation](@ref reservation).
  */
