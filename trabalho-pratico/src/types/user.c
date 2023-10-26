@@ -129,3 +129,7 @@ date_and_time_t user_get_account_creation_date(const user_t *user) {
 void user_free(user_t *user) {
     free(user);
 }
+
+size_t user_sizeof(void) {
+    return sizeof(struct user);
+}

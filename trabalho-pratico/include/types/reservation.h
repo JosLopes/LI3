@@ -213,4 +213,11 @@ int reservation_get_price_per_night(reservation_t *reservation);
  */
 void reservation_free(reservation_t *reservation);
 
+/**
+ * @brief   Gets the size of a ::reservation_t in memory.
+ * @details Useful for pool allocation.
+ * @return  `sizeof(reservation_t)`.
+ */
+size_t reservation_sizeof(void);
+
 #endif

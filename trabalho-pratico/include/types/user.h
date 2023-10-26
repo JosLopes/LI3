@@ -177,4 +177,11 @@ date_and_time_t user_get_account_creation_date(const user_t *user);
  */
 void user_free(user_t *user);
 
+/**
+ * @brief   Gets the size of a ::user_t in memory.
+ * @details Useful for pool allocation.
+ * @return  `sizeof(user_t)`.
+ */
+size_t user_sizeof(void);
+
 #endif
