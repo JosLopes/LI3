@@ -138,7 +138,7 @@ void *__pool_alloc_item(pool_t *pool) {
     return retval;
 }
 
-void *__pool_put_item(pool_t *pool, void *item_location) {
+void *__pool_put_item(pool_t *pool, const void *item_location) {
     void *dest = __pool_alloc_item(pool);
     if (!dest)
         return NULL;

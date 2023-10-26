@@ -151,7 +151,7 @@ void *__pool_alloc_item(pool_t *pool);
  *
  * @return The pointer to the allocated and copied item, `NULL` on failure.
  */
-void *__pool_put_item(pool_t *pool, void *item_location);
+void *__pool_put_item(pool_t *pool, const void *item_location);
 
 /**
  * @brief   Adds an item to the pool, by allocating space for it and copying it there.
