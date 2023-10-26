@@ -23,6 +23,8 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "database/user_manager.h"
+
 /**
  * @brief A database is a collection of the managers of different entities.
  */
@@ -34,6 +36,13 @@ typedef struct database database_t;
  * @return  The new database, or `NULL` on failure.
  */
 database_t *database_create(void);
+
+/**
+ * @brief Gets the user manager in a database.
+ * @param database Database to get the user manager from.
+ * @returns The user manager in @p database.
+ */
+user_manager_t *database_get_users(const database_t *database);
 
 /**
  * @brief Frees memory used by a database.

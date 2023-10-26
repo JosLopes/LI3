@@ -27,17 +27,27 @@
  * @struct database
  * @brief  A collection of the managers of different entities.
  *
- * @var database::placeholder
- *     @brief Temporary variable, as C structs cannot be empty.
+ * @var database::users
+ *     @brief All users and user relationships.
  */
 struct database {
-    int placeholder;
+    user_manager_t *users;
 };
 
 database_t *database_create(void) {
-    return malloc(sizeof(struct database));
+    database_t *database = malloc(sizeof(struct database));
+    if (!database)
+        return NULL;
+
+    database->users = user_manager_create();
+    return database;
+}
+
+user_manager_t *database_get_users(const database_t *database) {
+    return database->users;
 }
 
 void database_free(database_t *database) {
+    user_manager_free(database->users);
     free(database);
 }
