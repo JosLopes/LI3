@@ -228,4 +228,5 @@ void users_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
                                                                    __users_loader_before_parse_line,
                                                                    __users_loader_after_parse_line);
     dataset_parser_parse(stream, grammar, &data);
+    dataset_parser_grammar_free(grammar);
 }
