@@ -29,8 +29,7 @@
 #ifndef DATASET_LOADER_H
 #define DATASET_LOADER_H
 
-/* TODO - replace with database header when that's developed */
-typedef struct database database_t;
+#include "database/database.h"
 
 /**
  * @brief Data for a dataset loader.
