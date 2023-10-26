@@ -15,25 +15,26 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the program.
+ * @file  country_code.c
+ * @brief Implementation of methods in include/types/country_code.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref country_code_examples).
  */
 
-#include <stdio.h>
+#include <ctype.h>
 
-#include "dataset/dataset_loader.h"
+#include "types/country_code.h"
 
-/**
- * @brief The entry point to the test program.
- * @details Tests for dataset parsing.
-
- * @retval 0 Success
- * @retval 1 Insuccess
- */
-int main(void) {
-    if (dataset_loader_load(NULL, "/home/voidbert/Uni/3/LI3/dataset/data")) {
-        fputs("Failed to open dataset to be parsed.\n", stderr);
-        return 1;
+int country_code_from_string(country_code_t *output, const char *input) {
+    if (*input && *(input + 1) && !*(input + 2) && isalpha(*input) && isalpha(*(input + 1))) {
+        *output = *(country_code_t *) input;
+        return 0;
     }
-    return 0;
+    return 1;
+}
+
+void country_code_sprintf(char *output, country_code_t country) {
+    *((country_code_t *) output) = country;
+    output[2]                    = '\0';
 }

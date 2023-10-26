@@ -15,25 +15,28 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the program.
+ * @file     sex.h
+ * @brief    Sex of a ::user_t.
  */
 
-#include <stdio.h>
+#ifndef SEX_H
+#define SEX_H
 
-#include "dataset/dataset_loader.h"
+/** @brief The sex of a ::user_t. */
+typedef enum {
+    SEX_F, /**< @brief Female */
+    SEX_M  /**< @brief Male */
+} sex_t;
 
 /**
- * @brief The entry point to the test program.
- * @details Tests for dataset parsing.
-
- * @retval 0 Success
- * @retval 1 Insuccess
+ * @brief Parses a user sex.
+ *
+ * @param output Where the parsed sex will be placed (only on success).
+ * @param input  Input (`"M"` or `"F"`).
+ *
+ * @retval 0 Parsing success
+ * @retval 1 Parsing failure
  */
-int main(void) {
-    if (dataset_loader_load(NULL, "/home/voidbert/Uni/3/LI3/dataset/data")) {
-        fputs("Failed to open dataset to be parsed.\n", stderr);
-        return 1;
-    }
-    return 0;
-}
+int sex_from_string(sex_t *output, const char *input);
+
+#endif

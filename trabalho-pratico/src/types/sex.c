@@ -15,25 +15,22 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the program.
+ * @file  sex.c
+ * @brief Implementation of methods in include/types/sex.h
  */
 
-#include <stdio.h>
+#include <string.h>
 
-#include "dataset/dataset_loader.h"
+#include "types/sex.h"
 
-/**
- * @brief The entry point to the test program.
- * @details Tests for dataset parsing.
-
- * @retval 0 Success
- * @retval 1 Insuccess
- */
-int main(void) {
-    if (dataset_loader_load(NULL, "/home/voidbert/Uni/3/LI3/dataset/data")) {
-        fputs("Failed to open dataset to be parsed.\n", stderr);
+int sex_from_string(sex_t *output, const char *input) {
+    if (strcmp(input, "M") == 0) {
+        *output = SEX_M;
+        return 0;
+    } else if (strcmp(input, "F") == 0) {
+        *output = SEX_F;
+        return 0;
+    } else {
         return 1;
     }
-    return 0;
 }
