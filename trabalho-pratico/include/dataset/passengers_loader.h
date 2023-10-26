@@ -15,25 +15,23 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the program.
+ * @file    passengers_loader.h
+ * @brief   Module to load all the passengers in a dataset into the database.
  */
+
+#ifndef PASSENGERS_LOADER_H
+#define PASSENGERS_LOADER_H
 
 #include <stdio.h>
 
 #include "dataset/dataset_loader.h"
 
 /**
- * @brief The entry point to the test program.
- * @details Tests for dataset parsing.
-
- * @retval 0 Success
- * @retval 1 Insuccess
+ * @brief Parses a `passengers.csv` dataset file.
+ *
+ * @param dataset_loader Dataset loader, for database modification and error reporting.
+ * @param stream         File stream with passenger data to be loaded.
  */
-int main(void) {
-    if (dataset_loader_load(NULL, "/home/voidbert/Uni/3/LI3/dataset/data")) {
-        fputs("Failed to open dataset to be parsed.\n", stderr);
-        return 1;
-    }
-    return 0;
-}
+void passengers_loader_load(dataset_loader_t *dataset_loader, FILE *stream);
+
+#endif
