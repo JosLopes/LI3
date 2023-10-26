@@ -3,6 +3,7 @@
 \usepackage[a4paper, margin=2cm]{geometry}
 \usepackage{setspace}
 \usepackage[portuguese]{babel}
+\usepackage{graphicx}
 
 \chardef\_=`_
 
@@ -32,7 +33,46 @@
 
 \section{Estrutura do trabalho}
 
-TODO
+Devido ao elevado número de módulos, um diagrama completo de módulos com relações de dependência
+não cabe numa página A4, pelo que optámos por fazer vários diagramas, um para cada secção lógica
+do programa. Mesmo assim, para reduzir a complexidade visual, não incluímos todas as relações de
+dependência, mas apenas as mais relevantes.
+
+A nossa convenção gráfica é a seguinte:
+
+\begin{itemize}
+	\item Um retângulo representa um módulo;
+	\item Um retângulo com cantos arredondados representa uma estrutura de dados;
+	\item $A \rightarrow B$ significa que o módulo $A$ depende do módulo $B$.
+\end{itemize}
+
+\subsection{Subsistema de \emph{parsing}}
+
+\begin{center}
+	\includegraphics[scale=0.17]{res/parsing.png}
+\end{center}
+
+O nosso sistema de \emph{parsing} começa com \emph{tokenizadores}, que separam \emph{strings} e
+ficheiros por um delimitador (\texttt{string\_utils} e \texttt{stream\_utils}, respetivamente).
+Sobre estes é construído o caso mais específico do \texttt{fixed\_n\_delimiter\_parser}, que espera
+um número pré-determinado de \emph{tokens}, chamando um \emph{callback} diferente para cada um (uma
+gramática genérica, definível pelo programador, define estes \emph{callbacks}). Este \emph{parser}
+é utilizado para o \emph{parsing} de datas (\texttt{date}), horas de um dia (\texttt{daytime}),
+combinações de datas e horas (\texttt{date\_and\_time}), linhas de um \emph{dataset} e validação de
+\emph{emails} (\texttt{email}).
+
+Para a análise de um ficheiro de \emph{dataset}, o \texttt{dataset\_parser}, também programável com
+uma gramática, é responsável por separar o ficheiro por linhas, excluir a primeira linha de cada
+ficheiro (o \emph{header} da tabela CSV), e \emph{tokenizar} cada linha, chamando os
+\emph{callbacks} adequados. O \texttt{dataset\_loader}, não propriamente encaixado neste secção de
+\emph{parsing}, é responsável por abrir cada ficheiro do \emph{dataset}, interagir com os
+\emph{parsers} adequados, adicionando elementos à base de dados e registando os erros por eles
+reportados nos ficheiros \texttt{*\_errors.csv}.
+
+O \emph{parsing} de \emph{queries} requer um \emph{tokenizador} separado para lidar com aspas
+(\texttt{query\_tokenizer}), um \emph{parser} para determinar o tipo de \emph{query} e se os seus
+argumentos são válidos (\texttt{query\_parser}), e um \emph{parser} de um ficheiro com várias
+\emph{queries} em várias linhas (\texttt{query\_file\_parser}).
 
 \section{Otimização do uso de memória}
 
