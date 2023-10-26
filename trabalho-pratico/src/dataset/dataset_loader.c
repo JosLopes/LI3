@@ -19,8 +19,10 @@
  * @brief Implementation of methods in include/dataset/dataset_loader.h
  */
 
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #include "dataset/dataset_loader.h"
 #include "dataset/flights_loader.h"
@@ -87,7 +89,7 @@ int __dataset_loader_load_open_files_type(const char *path,
         return 1;
     *data_file = open_data_file;
 
-    sprintf(filepath, "%s/%s_errors.csv", path, type);
+    sprintf(filepath, "Resultados/%s_errors.csv", type);
     FILE *open_errors_file = fopen(filepath, "w");
     if (!open_data_file)
         return 1;
@@ -119,6 +121,13 @@ int dataset_loader_load(database_t *database, const char *path) {
     dataset_loader_t loader = {0};
     loader.database         = database;
 
+    /* Try to create "Resultados" directory if it doesn't exist */
+    int mkdir_res = mkdir("Resultados", 0755);
+    if (mkdir_res && errno != EEXIST) {
+        return 1; /* Failure to create directory */
+    }
+
+    /* Open data and error files */
     const char *types[4]        = {"users", "flights", "passengers", "reservations"};
     FILE      **data_files[4]   = {&loader.users,
                                    &loader.flights,
@@ -139,6 +148,7 @@ int dataset_loader_load(database_t *database, const char *path) {
         }
     }
 
+    /* Load dataset */
     users_loader_load(&loader, loader.users);
     flights_loader_load(&loader, loader.flights);
     reservations_loader_load(&loader, loader.reservations);
