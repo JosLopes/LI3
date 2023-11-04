@@ -17,6 +17,9 @@
 /**
  * @file  database.c
  * @brief Implementation of methods in include/database/database.h
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref database_examples).
  */
 
 #include <stdlib.h>

@@ -18,6 +18,36 @@
  * @file    database.h
  * @brief   Collection of managers of the different entities.
  * @details Its contents are to be created with the ::dataset_loader_t.
+ *
+ * @anchor database_examples
+ * ### Example
+ *
+ * This example describes how to create a ::database_t and load data to it using a
+ * ::dataset_loader_t.
+ *
+ * ```c
+ * int main(void) {
+ *     database_t *database = database_create();
+ *     if (!database) {
+ *         fprintf(stderr, "Failed to allocate database!");
+ *         return 1;
+ *     }
+ *
+ *     if (dataset_loader_load(database, "/path/to/dataset/directory")) {
+ *         fputs("Failed to open dataset to be parsed.\n", stderr);
+ *         return 1;
+ *     }
+ *
+ *     // Run your queries on database here
+ *
+ *     database_free(database);
+ *     return 0;
+ * }
+ * ```
+ *
+ * If you don't wish to user ::dataset_loader_load, you may get the entity managers in the database
+ * (by using ::database_get_users for a ::user_manager_t, for example) and interacting with those
+ * managers directly.
  */
 
 #ifndef DATABASE_H
@@ -34,6 +64,9 @@ typedef struct database database_t;
  * @brief   Instantiates a new ::database_t.
  * @details The returned value is owned by the called and should be `free`'d with ::database_free.
  * @return  The new database, or `NULL` on failure.
+ *
+ * #### Example
+ * See [the header file's documentation](@ref database_examples).
  */
 database_t *database_create(void);
 
@@ -47,6 +80,9 @@ user_manager_t *database_get_users(const database_t *database);
 /**
  * @brief Frees memory used by a database.
  * @param database Database whose memory is to be `free`'d.
+ *
+ * #### Example
+ * See [the header file's documentation](@ref database_examples).
  */
 void database_free(database_t *database);
 
