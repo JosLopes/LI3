@@ -74,6 +74,21 @@
  * allocated[i] = pool_alloc_int(int, pool);
  * *allocated[i] = i;
  * ```
+ *
+ * Now, suppose that, instead of the `allocated` array, we had a more sensible data structure we
+ * added pool-allocated items to, such as a hash table. Iterating through it wouldn't be very wise
+ * when you can iterate through the pool:
+ *
+ * ```c
+ * int callback(void *user_data, void *item) {
+ *     (void) user_data;
+ *     printf("%d\n", * (int *) item);
+ *     return 0; // Another value can be returned to stop iteration
+ * }
+ *
+ * // In main.c
+ * pool_iter(pool, callback, NULL);
+ * ```
  */
 
 /**
@@ -84,6 +99,18 @@
  *          the risk of dangling pointers, as a new block simply needs to be allocated.
  */
 typedef struct pool_t pool_t;
+
+/**
+ * @brief   Callback type for pool iterations.
+ * @details Method called by ::pool_iter for every item in a ::pool_t.
+ *
+ * @param user_data Argument passed to ::pool_iter that is passed to every callback, so that this
+ *                  method can change the program's state.
+ * @param item      Item in the pool. You must convert it to its correct type.
+ *
+ * @return `0` on success, or any other value to order pool iteration to stop.
+ */
+typedef int (*pool_iter_callback_t)(void *user_data, void *item);
 
 /**
  * @brief   Creates a pool from the size of its elements. **Use ::pool_create instead.**
@@ -171,6 +198,21 @@ void *__pool_put_item(pool_t *pool, const void *item_location);
  * See [the header file's documentation](@ref pool_examples).
  */
 #define pool_put_item(type, pool, item_location) ((type *) __pool_put_item(pool, item_location))
+
+/**
+ * @brief Iterates through every item in the pool, calling @p callback for each one.
+ *
+ * @param pool      Pool to iterate thorugh.
+ * @param callback  Method to be called for every item stored in @p pool.
+ * @param user_data Pointer to be passed to every @p callback, so that it can modify the program's
+ *                  state.
+ *
+ * @return The return value of the last-called @p callback.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref pool_examples).
+ */
+int pool_iter(pool_t *pool, pool_iter_callback_t callback, void *user_data);
 
 /**
  * @brief Frees memory allocated by a pool.

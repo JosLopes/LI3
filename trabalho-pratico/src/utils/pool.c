@@ -147,6 +147,22 @@ void *__pool_put_item(pool_t *pool, const void *item_location) {
     return dest;
 }
 
+int pool_iter(pool_t *pool, pool_iter_callback_t callback, void *user_data) {
+    for (size_t i = 0; i < pool->block_list_length; ++i) {
+        pool_block_t block = pool->blocks[i];
+
+        for (size_t j = 0; j < block.used; ++j) {
+            void *item   = ((uint8_t *) block.data) + pool->item_size * j;
+            int   retval = callback(user_data, item);
+
+            if (retval)
+                return retval;
+        }
+    }
+
+    return 0;
+}
+
 void pool_free(pool_t *pool) {
     for (size_t i = 0; i < pool->block_list_length; ++i) {
         free(pool->blocks[i].data);
