@@ -24,6 +24,15 @@
  *          - `flights.csv`;
  *          - `passengers.csv`;
  *          - `reservations.csv`.
+ *
+ * @anchor dataset_loader_examples
+ * ### Example
+ *
+ * For an example on ::dataset_loader_load, see the [database.h header](@ref database_examples).
+ *
+ * Methods such as ::dataset_loader_get_database and all the `dataset_loader_report_*_error`
+ * methods are for usage only by loaders of individual dataset files (users_loader.h,
+ * flights_loader.h, passengers_loader.h and reservations_loader.h).
  */
 
 #ifndef DATASET_LOADER_H
@@ -45,6 +54,9 @@ typedef struct dataset_loader dataset_loader_t;
  *
  * @retval 0 Success
  * @retval 1 Fatal failure (this loader only fatally fails on IO errors).
+ *
+ * #### Example
+ * See [the header file's documentation](@ref dataset_loader_examples).
  */
 int dataset_loader_load(database_t *database, const char *path);
 
