@@ -17,6 +17,9 @@
 /**
  * @file  user.c
  * @brief Implementation of methods in include/types/user.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref user_examples).
  */
 
 #include <stdlib.h>

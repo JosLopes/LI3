@@ -24,6 +24,13 @@
  *
  *           You can see what fields define a user (and thus available through getters and setters)
  *           in the [struct's documentation](@ref user).
+ *
+ * @anchor user_examples
+ * ### Examples
+ *
+ * See [the examples in user_manager.h](@ref user_manager_examples). The callback there,
+ * `iter_callback` is a great example on how to extract all data from an existing user and print it
+ * to `stdout`.
  */
 
 #ifndef USER_H
