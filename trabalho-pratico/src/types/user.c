@@ -133,3 +133,11 @@ void user_free(user_t *user) {
 size_t user_sizeof(void) {
     return sizeof(struct user);
 }
+
+int user_is_valid(const user_t *user) {
+    return user->id == NULL;
+}
+
+void user_invalidate(user_t *user) {
+    user->id = NULL;
+}

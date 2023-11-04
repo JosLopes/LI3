@@ -30,6 +30,18 @@
 typedef struct user_manager user_manager_t;
 
 /**
+ * @brief   Callback type for user manager iterations.
+ * @details Method called by ::user_manager_iter for every item in a ::user_manager_t.
+ *
+ * @param user_data Argument passed to ::user_manager_iter that is passed to every callback, so
+ *                  that this method can change the program's state.
+ * @param user      User in the manager.
+ *
+ * @return `0` on success, or any other value to order iteration to stop.
+ */
+typedef int (*user_manager_iter_callback_t)(void *user_data, user_t *user);
+
+/**
  * @brief   Instantiates a new ::user_manager_t.
  * @details The returned value is owned by the called and should be `free`'d with
  *          ::user_manager_free.
@@ -55,9 +67,21 @@ user_t *user_manager_add_user(user_manager_t *manager, const user_t *user);
  *
  * @return A ::user_t if it's found, `NULL` if it's not.
  */
-user_t *user_manager_get_by_id(user_manager_t *manager, const char *id);
+user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id);
 
-/* TODO - iterate through users */
+/**
+ * @brief Iterates through every **valid** user in a user manager, calling @p callback for each one.
+ *
+ * @param manager   User manager to iterate thorugh.
+ * @param callback  Method to be called for every user stored in @p manager.
+ * @param user_data Pointer to be passed to every @p callback, so that it can modify the program's
+ *                  state.
+ *
+ * @return The return value of the last-called @p callback.
+ */
+int user_manager_iter(user_manager_t              *manager,
+                      user_manager_iter_callback_t callback,
+                      void                        *user_data);
 
 /**
  * @brief Frees memory used by a user manager.

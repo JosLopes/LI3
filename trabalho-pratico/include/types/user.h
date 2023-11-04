@@ -184,4 +184,23 @@ void user_free(user_t *user);
  */
 size_t user_sizeof(void);
 
+/**
+ * @brief Checks if a user stored in a database is valid.
+ *
+ * @param user User to have its validity checked.
+ *
+ * @retval 0 Valid user.
+ * @retval 1 Invalid user.
+ */
+int user_is_valid(const user_t *user);
+
+/**
+ * @brief   Alters a user in a database to make it invalid.
+ * @details This will get rid of the user's identifier. If you're not using pool storage, you must
+ *          free it before using this method.
+ *
+ * @param user User to be modified.
+ */
+void user_invalidate(user_t *user);
+
 #endif
