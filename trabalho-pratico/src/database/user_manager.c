@@ -17,6 +17,9 @@
 /**
  * @file  user_manager.c
  * @brief Implementation of methods in include/database/user_manager.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref user_manager_examples).
  */
 
 #include <glib.h>

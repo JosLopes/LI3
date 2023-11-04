@@ -17,6 +17,79 @@
 /**
  * @file    user_manager.h
  * @brief   Contains and manages all users in a database.
+ * @details Usually, a user manager won't be created by itself, but inside a ::database_t.
+ *
+ * @anchor user_manager_examples
+ * ### Examples
+ *
+ * In the following example, a dataset is loaded into a database. The user manager is then
+ * extracted from the database, and the program iterates over all valid users.
+ *
+ * ```c
+ * #include <stdio.h>
+ *
+ * #include "database/user_manager.h"
+ * #include "dataset/dataset_loader.h"
+ *
+ * // Called for every user in the manager. Prints a user to stdout.
+ * int iter_callback(void *user_data, user_t *user) {
+ *     (void) user_data;
+ *
+ *     const char *id       = user_get_const_id(user);
+ *     const char *name     = user_get_const_name(user);
+ *     const char *passport = user_get_const_passport(user);
+ *
+ *     char country_code[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
+ *     country_code_sprintf(country_code, user_get_country_code(user));
+ *
+ *     char birth_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
+ *     date_sprintf(birth_date, user_get_birth_date(user));
+ *
+ *     const char *account_status =
+ *         user_get_account_status(user) == ACCOUNT_STATUS_INACTIVE ? "inactive" : "active";
+ *
+ *     char account_creation_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+ *     date_and_time_sprintf(account_creation_date, user_get_account_creation_date(user));
+ *
+ *     printf("--- USER ---\nid: %s\nname: %s\npassport: %s\ncountry_code: %s\nbirth_date: "
+ *            "%s\naccount_status: %s\naccount_creation_date: %s\n\n",
+ *            id,
+ *            name,
+ *            passport,
+ *            country_code,
+ *            birth_date,
+ *            account_status,
+ *            account_creation_date);
+ *
+ *     return 0; // You can return a value other than 0 to order iteration to stop
+ * }
+ *
+ * int main(void) {
+ *     database_t *database = database_create();
+ *     if (!database) {
+ *         fprintf(stderr, "Failed to allocate database!");
+ *         return 1;
+ *     }
+ *
+ *     if (dataset_loader_load(database, "/path/to/dataset/directory")) {
+ *         fputs("Failed to open dataset to be parsed.\n", stderr);
+ *         return 1;
+ *     }
+ *
+ *     user_manager_iter(database_get_users(database), iter_callback, NULL);
+ *
+ *     database_free(database);
+ *     return 0;
+ * }
+ * ```
+ *
+ * Another operation (other than iteration) that can be performed on a ::user_manager_t is lookup
+ * by user identifier (::user_manager_get_by_id).
+ *
+ * If you'd rather not use a database, you could create the user manager yourself with
+ * ::user_manager_create, add users to it using ::user_manager_add_user, and freeing it in the end
+ * with ::user_manager_free. Just keep in mind that both added users and their associated strings
+ * will be copied to memory pools.
  */
 
 #ifndef USER_MANAGER_H
@@ -78,6 +151,9 @@ user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id);
  *                  state.
  *
  * @return The return value of the last-called @p callback.
+ *
+ * #### Example
+ * See [the header file's documentation](@ref user_manager_examples).
  */
 int user_manager_iter(user_manager_t              *manager,
                       user_manager_iter_callback_t callback,
