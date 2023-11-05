@@ -38,14 +38,20 @@ int main(int argc, char **argv) {
         char *dataset_dir = argv[1], *query_file = argv[2];
         (void) query_file;
 
-        /* Allocate database here */
+        database_t *database = database_create();
+        if (!database) {
+            fprintf(stderr, "Failed to allocate database!");
+            return 1;
+        }
 
-        if (dataset_loader_load(NULL, dataset_dir)) {
+        if (dataset_loader_load(database, dataset_dir)) {
             fputs("Failed to load dataset files!\n", stderr);
             return 1;
         }
 
         /* Parse and execute queries here */
+
+        database_free(database);
     } else {
         fputs("Invalid command-line arguments! Usage:\n\n", stderr);
         fputs("./programa-principal - Interactive mode\n", stderr);

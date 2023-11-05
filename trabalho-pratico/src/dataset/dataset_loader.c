@@ -17,6 +17,9 @@
 /**
  * @file  dataset_loader.c
  * @brief Implementation of methods in include/dataset/dataset_loader.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref dataset_loader_examples).
  */
 
 #include <errno.h>

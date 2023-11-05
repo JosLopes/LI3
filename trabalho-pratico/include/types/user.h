@@ -24,6 +24,13 @@
  *
  *           You can see what fields define a user (and thus available through getters and setters)
  *           in the [struct's documentation](@ref user).
+ *
+ * @anchor user_examples
+ * ### Examples
+ *
+ * See [the examples in user_manager.h](@ref user_manager_examples). The callback there,
+ * `iter_callback` is a great example on how to extract all data from an existing user and print it
+ * to `stdout`.
  */
 
 #ifndef USER_H
@@ -176,5 +183,31 @@ date_and_time_t user_get_account_creation_date(const user_t *user);
  * @param user User to be deleted.
  */
 void user_free(user_t *user);
+
+/**
+ * @brief   Gets the size of a ::user_t in memory.
+ * @details Useful for pool allocation.
+ * @return  `sizeof(user_t)`.
+ */
+size_t user_sizeof(void);
+
+/**
+ * @brief Checks if a user stored in a database is valid.
+ *
+ * @param user User to have its validity checked.
+ *
+ * @retval 0 Valid user.
+ * @retval 1 Invalid user.
+ */
+int user_is_valid(const user_t *user);
+
+/**
+ * @brief   Alters a user in a database to make it invalid.
+ * @details This will get rid of the user's identifier. If you're not using pool storage, you must
+ *          free it before using this method.
+ *
+ * @param user User to be modified.
+ */
+void user_invalidate(user_t *user);
 
 #endif

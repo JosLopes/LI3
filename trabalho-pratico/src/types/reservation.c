@@ -162,3 +162,7 @@ int reservation_get_price_per_night(reservation_t *reservation) {
 void reservation_free(reservation_t *reservation) {
     free(reservation);
 }
+
+size_t reservation_sizeof(void) {
+    return sizeof(struct reservation);
+}

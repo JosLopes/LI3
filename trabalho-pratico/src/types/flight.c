@@ -155,3 +155,7 @@ int flight_get_total_seats(const flight_t *flight) {
 void flight_free(flight_t *flight) {
     free(flight);
 }
+
+size_t flight_sizeof(void) {
+    return sizeof(struct flight);
+}

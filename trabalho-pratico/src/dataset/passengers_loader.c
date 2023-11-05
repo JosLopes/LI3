@@ -93,5 +93,7 @@ void passengers_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
                                    line_grammar,
                                    __passengers_loader_before_parse_line,
                                    __passengers_loader_after_parse_line);
+
     dataset_parser_parse(stream, grammar, &data);
+    dataset_parser_grammar_free(grammar);
 }

@@ -17,6 +17,9 @@
 /**
  * @file  user.c
  * @brief Implementation of methods in include/types/user.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref user_examples).
  */
 
 #include <stdlib.h>
@@ -128,4 +131,16 @@ date_and_time_t user_get_account_creation_date(const user_t *user) {
 
 void user_free(user_t *user) {
     free(user);
+}
+
+size_t user_sizeof(void) {
+    return sizeof(struct user);
+}
+
+int user_is_valid(const user_t *user) {
+    return user->id == NULL;
+}
+
+void user_invalidate(user_t *user) {
+    user->id = NULL;
 }

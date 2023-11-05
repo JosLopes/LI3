@@ -207,4 +207,11 @@ int flight_get_total_seats(const flight_t *flight);
  */
 void flight_free(flight_t *flight);
 
+/**
+ * @brief   Gets the size of a ::flight_t in memory.
+ * @details Useful for pool allocation.
+ * @return  `sizeof(flight_t)`.
+ */
+size_t flight_sizeof(void);
+
 #endif
