@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef USER_MANAGER_H
-#define USER_MANAGER_H
+#ifndef FLIGHT_MANAGER_H
+#define FLIGHT_MANAGER_H
 
 #include "types/flight.h"
 

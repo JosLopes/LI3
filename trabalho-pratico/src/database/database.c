@@ -34,7 +34,8 @@
  *     @brief All users and user relationships.
  */
 struct database {
-    user_manager_t *users;
+    user_manager_t   *users;
+    flight_manager_t *flights;
 };
 
 database_t *database_create(void) {
@@ -42,12 +43,17 @@ database_t *database_create(void) {
     if (!database)
         return NULL;
 
-    database->users = user_manager_create();
+    database->users   = user_manager_create();
+    database->flights = flight_manager_create();
     return database;
 }
 
 user_manager_t *database_get_users(const database_t *database) {
     return database->users;
+}
+
+flight_manager_t *database_get_flights(const database_t *database) {
+    return database->flights;
 }
 
 void database_free(database_t *database) {

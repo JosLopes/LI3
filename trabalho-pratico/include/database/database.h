@@ -53,6 +53,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "database/flight_manager.h"
 #include "database/user_manager.h"
 
 /**
@@ -76,6 +77,13 @@ database_t *database_create(void);
  * @returns The user manager in @p database.
  */
 user_manager_t *database_get_users(const database_t *database);
+
+/**
+ * @brief Gets the flight manager in a database.
+ * @param database Database to get the flight manager from.
+ * @returns The flight manager in @p database.
+ */
+flight_manager_t *database_get_flights(const database_t *database);
 
 /**
  * @brief Frees memory used by a database.
