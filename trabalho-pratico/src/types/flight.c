@@ -120,6 +120,10 @@ const char *flight_get_const_plane_model(const flight_t *flight) {
     return flight->plane_model;
 }
 
+const char *flight_get_const_id(const flight_t *flight) {
+    return flight->id;
+}
+
 airport_code_t flight_get_origin(const flight_t *flight) {
     return flight->origin;
 }
@@ -158,4 +162,8 @@ void flight_free(flight_t *flight) {
 
 size_t flight_sizeof(void) {
     return sizeof(struct flight);
+}
+
+void flight_invalidate(flight_t *flight) {
+    flight->id = NULL;
 }

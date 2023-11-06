@@ -145,6 +145,13 @@ const char *flight_get_const_airline(const flight_t *flight);
 const char *flight_get_const_plane_model(const flight_t *flight);
 
 /**
+ * @brief  Gets the flight's identifier.
+ * @param  flight Flight to get the id from.
+ * @return The flight's identifier.
+ */
+const char *flight_get_const_id(const flight_t *flight);
+
+/**
  * @brief  Gets the flight's origin.
  * @param  flight Flight to get the origin from.
  * @return The flight's origin.
@@ -213,5 +220,12 @@ void flight_free(flight_t *flight);
  * @return  `sizeof(flight_t)`.
  */
 size_t flight_sizeof(void);
+
+/**
+ * @brief Invalidates a flight.
+ * @details Sets all fields to their default values.
+ * @param flight Flight to be invalidated.
+ */
+void flight_invalidate(flight_t *flight);
 
 #endif
