@@ -145,13 +145,6 @@ const char *flight_get_const_airline(const flight_t *flight);
 const char *flight_get_const_plane_model(const flight_t *flight);
 
 /**
- * @brief  Gets the flight's identifier.
- * @param  flight Flight to get the id from.
- * @return The flight's identifier.
- */
-const char *flight_get_const_id(const flight_t *flight);
-
-/**
  * @brief  Gets the flight's origin.
  * @param  flight Flight to get the origin from.
  * @return The flight's origin.
@@ -220,6 +213,16 @@ void flight_free(flight_t *flight);
  * @return  `sizeof(flight_t)`.
  */
 size_t flight_sizeof(void);
+
+/**
+ * @brief Checks if a flight is valid.
+ * @details A flight is valid if it has an airline, a plane model, an origin, a destination, a valid id,
+ *          a scheduled departure date, a scheduled arrival date, a number of passengers, a real
+ *          departure date and a number of total seats.
+ * @param flight Flight to be checked.
+ * @return `1` if the flight is valid, `0` otherwise.
+ */
+int flight_is_valid(const flight_t *flight);
 
 /**
  * @brief Invalidates a flight.
