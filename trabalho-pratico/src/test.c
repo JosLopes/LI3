@@ -40,14 +40,14 @@ int iter_callback(void *user_data, flight_t *flight) {
     char destination[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
     airport_code_sprintf(destination, flight_get_destination(flight));
 
-    char schedule_departure_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
-    date_sprintf(schedule_departure_date, flight_get_schedule_departure_date(flight));
+    char schedule_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(schedule_departure_date, flight_get_schedule_departure_date(flight));
 
-    char schedule_arrival_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
-    date_sprintf(schedule_arrival_date, flight_get_schedule_arrival_date(flight));
+    char schedule_arrival_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(schedule_arrival_date, flight_get_schedule_arrival_date(flight));
 
-    char real_departure_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
-    date_sprintf(real_departure_date, flight_get_real_departure_date(flight));
+    char real_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(real_departure_date, flight_get_real_departure_date(flight));
 
     printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: %d\norigin: %s"
            "\ndestination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
@@ -72,7 +72,7 @@ int main() {
         return 1;
     }
 
-    if (dataset_loader_load(database, "/path/to/dataset/directory")) {
+    if (dataset_loader_load(database, "/home/voidbert/Uni/3/LI3/dataset/data")) {
         fputs("Failed to open dataset to be parsed.\n", stderr);
         return 1;
     }
