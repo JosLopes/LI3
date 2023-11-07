@@ -39,10 +39,18 @@
  *
  * @var flights_loader_t::dataset
  *     @brief Dataset loader, so that errors can be reported.
- * @var flights_loader_t::database
- *     @brief Database in ::dataset_loader_t::dataset
+ * @var flights_loader_t::flights
+ *     @brief Flight manager to add new flights to.
  * @var flights_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
+ * @var flights_loader_t::current_flight
+ *     @brief Flight being currently parsed, whose fields are still being filled in.
+ * @var flights_loader_t::airline_terminator
+ *     @brief Where a ``'\0'`` terminator needs to be placed, so that the flight's airline name
+ *            ends.
+ * @var flights_loader_t::plane_model_terminator
+ *     @brief Where a ``'\0'`` terminator needs to be placed, so that the flight's plane model name
+ *            ends.
  */
 typedef struct {
     dataset_loader_t *dataset;
@@ -68,12 +76,17 @@ int __flight_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
-    uint64_t parsed_id;
-    int      retcode = int_utils_parse_positive(&parsed_id, token);
+    size_t parsed_id;
+    int    retcode = int_utils_parse_positive(&parsed_id, token);
     if (!retcode) {
         flight_set_id(loader->current_flight, parsed_id);
         return 0;
     } else {
+        if (*token)
+            fprintf(stderr,
+                    "Non-numerical flight ID detected, \"%s\". Our program's architecture doesn't "
+                    "allow for this.\n",
+                    token);
         return 1;
     }
 }
@@ -108,7 +121,7 @@ int __flight_loader_parse_plane_model(void *loader_data, char *token, size_t nto
     }
 }
 
-/** @brief Parses a flight's total seats */
+/** @brief Parses a flight's number of total seats */
 int __flight_loader_parse_total_seats(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
@@ -123,14 +136,14 @@ int __flight_loader_parse_total_seats(void *loader_data, char *token, size_t nto
     }
 }
 
-/** @brief Parses a flight's origin */
+/** @brief Parses a flight's origin airport */
 int __flight_loader_parse_origin(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
     airport_code_t airport_code;
     int            retcode = airport_code_from_string(&airport_code, token);
-    if (!retcode) {
+    if (retcode) {
         return retcode;
     } else {
         flight_set_origin(loader->current_flight, airport_code);
@@ -138,14 +151,14 @@ int __flight_loader_parse_origin(void *loader_data, char *token, size_t ntoken) 
     }
 }
 
-/** @brief Parses a flight's destination */
+/** @brief Parses a flight's destination airport */
 int __flight_loader_parse_destination(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
     airport_code_t airport_code;
     int            retcode = airport_code_from_string(&airport_code, token);
-    if (!retcode) {
+    if (retcode) {
         return retcode;
     } else {
         flight_set_destination(loader->current_flight, airport_code);
@@ -153,14 +166,14 @@ int __flight_loader_parse_destination(void *loader_data, char *token, size_t nto
     }
 }
 
-/** @brief Parses a flight's schedule departure date */
+/** @brief Parses a flight's scheduled departure date */
 int __flight_loader_parse_schedule_departure_date(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
     date_and_time_t date_and_time;
     int             retcode = date_and_time_from_string(&date_and_time, token);
-    if (!retcode) {
+    if (retcode) {
         return retcode;
     } else {
         flight_set_schedule_departure_date(loader->current_flight, date_and_time);
@@ -168,14 +181,14 @@ int __flight_loader_parse_schedule_departure_date(void *loader_data, char *token
     }
 }
 
-/** @brief Parses a flight's schedule arrival date */
+/** @brief Parses a flight's scheduled arrival date */
 int __flight_loader_parse_schedule_arrival_date(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
     date_and_time_t date_and_time;
     int             retcode = date_and_time_from_string(&date_and_time, token);
-    if (!retcode) {
+    if (retcode) {
         return retcode;
     } else {
         flight_set_schedule_arrival_date(loader->current_flight, date_and_time);
@@ -190,7 +203,7 @@ int __flight_loader_parse_real_departure_date(void *loader_data, char *token, si
 
     date_and_time_t date_and_time;
     int             retcode = date_and_time_from_string(&date_and_time, token);
-    if (!retcode) {
+    if (retcode) {
         return retcode;
     } else {
         flight_set_real_departure_date(loader->current_flight, date_and_time);
@@ -208,14 +221,14 @@ int __flight_loader_parse_real_arrival_date(void *loader_data, char *token, size
     return retcode;
 }
 
-/** @brief Parses a flight's pilot */
+/** @brief Parses a flight's pilot name */
 int __flight_loader_parse_pilot(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     (void) loader_data;
     return (*token == 0); /* Fail on empty pilot name */
 }
 
-/** @brief Parses a flight's copilot */
+/** @brief Parses a flight's copilot name */
 int __flight_loader_parse_copilot(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     (void) loader_data;
@@ -241,6 +254,7 @@ int __flights_loader_after_parse_line(void *loader_data, int retval) {
         *loader->airline_terminator     = '\0';
         *loader->plane_model_terminator = '\0';
 
+        flight_set_number_of_passengers(loader->current_flight, 0);
         flight_manager_add_flight(loader->flights, loader->current_flight);
     }
     return 0;
