@@ -148,7 +148,7 @@ void daytime_sprintf(char *output, daytime_t time);
  *
  * @return The difference `a - b` in seconds.
  */
-uint32_t daytime_diff(daytime_t a, daytime_t b);
+int32_t daytime_diff(daytime_t a, daytime_t b);
 
 /**
  * @brief Gets the hours from a time.
