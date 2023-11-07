@@ -191,6 +191,11 @@ int __flight_loader_parse_schedule_arrival_date(void *loader_data, char *token, 
     if (retcode) {
         return retcode;
     } else {
+        if (date_and_time_diff(date_and_time,
+                               flight_get_schedule_departure_date(loader->current_flight)) < 0) {
+            return 1; /* Arrival before departure */
+        }
+
         flight_set_schedule_arrival_date(loader->current_flight, date_and_time);
         return 0;
     }
@@ -214,11 +219,20 @@ int __flight_loader_parse_real_departure_date(void *loader_data, char *token, si
 /** @brief Parses a flight's real arrival date */
 int __flight_loader_parse_real_arrival_date(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    (void) loader_data;
+    flights_loader_t *loader = (flights_loader_t *) loader_data;
 
     date_and_time_t date_and_time;
     int             retcode = date_and_time_from_string(&date_and_time, token);
-    return retcode;
+
+    if (!retcode) {
+        if (date_and_time_diff(date_and_time,
+                               flight_get_real_departure_date(loader->current_flight)) < 0) {
+            return 1; /* Arrival before departure */
+        }
+        return 0;
+    } else {
+        return retcode;
+    }
 }
 
 /** @brief Parses a flight's pilot name */
