@@ -24,6 +24,13 @@
  *
  *           You can see what fields define a flight (and thus available through getters and
  *           setters) in the [struct's documentation](@ref flight).
+ *
+ * @anchor flight_examples
+ * ### Examples
+ *
+ * See [the examples in flight_manager.h](@ref flight_manager_examples). The callback there,
+ * `iter_callback` is a great example on how to extract all data from an existing flight and print
+ * it to `stdout`.
  */
 
 #ifndef FLIGHT_H

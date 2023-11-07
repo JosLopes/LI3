@@ -17,6 +17,9 @@
 /**
  * @file  flight.c
  * @brief Implementation of methods in include/types/flight.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref flight_examples).
  */
 #include <stdlib.h>
 
