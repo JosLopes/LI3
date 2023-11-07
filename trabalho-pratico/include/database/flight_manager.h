@@ -19,6 +19,7 @@
  * @brief   Contains and manages all flights in a database.
  * @details Usually, a flight manager won't be created by itself, but inside a ::database_t.
  *
+ *
  * @anchor flight_manager_examples
  * ### Examples
  *
@@ -47,14 +48,14 @@
  *     char destination[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
  *     airport_code_sprintf(destination, flight_get_destination(flight));
  *
- *     char schedule_departure_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
- *     date_sprintf(schedule_departure_date, flight_get_schedule_departure_date(flight));
+ *     char schedule_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+ *     date_and_time_sprintf(schedule_departure_date, flight_get_schedule_departure_date(flight));
  *
- *     char schedule_arrival_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
- *     date_sprintf(schedule_arrival_date, flight_get_schedule_arrival_date(flight));
+ *     char schedule_arrival_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+ *     date_and_time_sprintf(schedule_arrival_date, flight_get_schedule_arrival_date(flight));
  *
- *     char real_departure_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
- *     date_sprintf(real_departure_date, flight_get_real_departure_date(flight));
+ *     char real_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+ *     date_and_time_sprintf(real_departure_date, flight_get_real_departure_date(flight));
  *
  *     printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: %d\norigin: %s"
  *            "\ndestination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
@@ -106,13 +107,13 @@ typedef struct flight_manager flight_manager_t;
  * @brief   Callback type for flight manager iterations.
  * @details Method called by ::flight_manager_iter for every item in a ::flight_manager_t.
  *
- * @param flight_data Argument passed to ::flight_manager_iter that is passed to every callback, so
- *                    that this method can change the program's state.
- * @param flight      Flight in the manager.
+ * @param user_data Argument passed to ::flight_manager_iter that is passed to every callback, so
+ *                  that this method can change the program's state.
+ * @param flight    Flight in the manager.
  *
  * @return `0` on success, or any other value to order iteration to stop.
  */
-typedef int (*flight_manager_iter_callback_t)(void *flight_data, flight_t *flight);
+typedef int (*flight_manager_iter_callback_t)(void *user_data, flight_t *flight);
 
 /**
  * @brief   Creates a new flight manager.
@@ -134,7 +135,7 @@ flight_manager_t *flight_manager_create(void);
 flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight);
 
 /**
- * @brief   Gets a flight from a flight manager by its identifier.
+ * @brief Gets a flight from a flight manager by its identifier.
  *
  * @param manager Flight manager to get a flight from.
  * @param id      Identifier of the flight to get.
@@ -147,16 +148,16 @@ flight_t *flight_manager_get_by_id(const flight_manager_t *manager, const char *
  * @brief   Iterates over all flights in a flight manager.
  * @details Calls @p callback for every flight in @p manager.
  *
- * @param manager      Flight manager to iterate over.
- * @param callback     Method called for every flight in @p manager.
- * @param flight_data  Argument passed to @p callback.
+ * @param manager    Flight manager to iterate over.
+ * @param callback   Method called for every flight in @p manager.
+ * @param user_data  Argument passed to @p callback.
  *
  * @return `0` if iteration was successful, or any other value if @p callback returned a non-zero
  *         value.
  */
 int flight_manager_iter(flight_manager_t              *manager,
                         flight_manager_iter_callback_t callback,
-                        void                          *flight_data);
+                        void                          *user_data);
 
 /**
  * @brief Frees memory used by a flight manager.

@@ -35,7 +35,7 @@
  * @brief  A data type that contains and manages all flights in a database.
  *
  * @var flight_manager::flights
- *     @brief Set of users in the manager.
+ *     @brief Set of flights in the manager.
  * @var flight_manager::strings
  *     @brief Pool for any string that may need to be stored in a flight.
  * @var flight_manager::id_flights_rel
@@ -71,7 +71,7 @@ flight_manager_t *flight_manager_create(void) {
         return NULL;
     }
 
-    manager->id_flights_rel = g_hash_table_new(g_str_hash, g_str_equal);
+    manager->id_flights_rel = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     return manager;
 }
@@ -90,11 +90,13 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
         flight_set_airline(pool_flight, pool_airline);
         flight_set_plane_model(pool_flight, pool_plane_model);
 
-        size_t pool_id = flight_get_id(flight);
-        if (!g_hash_table_insert(manager->id_flights_rel, &pool_id, pool_flight)) {
+        size_t flight_id = flight_get_id(flight);
+        if (!g_hash_table_insert(manager->id_flights_rel,
+                                 GINT_TO_POINTER(flight_id),
+                                 pool_flight)) {
             fprintf(stderr,
-                    "REPEATED FLIGHT ID \"%ld\". This shouldn't happen! Replacing it.\n",
-                    pool_id);
+                    "REPEATED FLIGHT ID %zu. This shouldn't happen! Replacing it.\n",
+                    flight_id);
             /* Do not fail and return NULL. Show must go on */
         }
 
@@ -111,34 +113,34 @@ flight_t *flight_manager_get_by_id(const flight_manager_t *manager, const char *
 }
 
 /**
- * @struct user_manager_iter_user_data_t
- * @brief Internal data type for the `user_data` parameter in ::__user_manager_iter_callback.
+ * @struct flight_manager_iter_flight_data_t
+ * @brief Internal data type for the `user_data` parameter in ::__flight_manager_iter_callback.
  *
- * @var user_manager_iter_user_data_t::callback
- *     @brief Callback to be called for every valid user.
- * @var user_manager_iter_user_data_t::original_user_data.
- *     @brief `user_data` parameter for every ::user_manager_iter_user_data_t::callback.
+ * @var flight_manager_iter_flight_data_t::callback
+ *     @brief Callback to be called for every valid flight.
+ * @var flight_manager_iter_flight_data_t::original_user_data.
+ *     @brief `user_data` parameter for every ::flight_manager_iter_flight_data_t::callback.
  */
 typedef struct {
     flight_manager_iter_callback_t callback;
-    void                          *original_flight_data;
+    void                          *original_user_data;
 } flight_manager_iter_flight_data_t;
 
 /**
- * @brief   Callback for every item in the user manager's pool.
- * @details Auxiliary function for ::user_manager_iter. Makes sure the target callback is only
- *          called for valid users.
+ * @brief   Callback for every item in the flight manager's pool.
+ * @details Auxiliary function for ::flight_manager_iter. Makes sure the target callback is only
+ *          called for valid flights.
  *
- * @param user_data A ::user_manager_iter_user_data_t.
- * @param item      A ::user_t in a user manager's pool.
+ * @param user_data A ::flight_manager_iter_flight_data_t.
+ * @param item      A ::flight_t in a flight manager's pool.
  *
  * @return The return value of the target callback, or `0` for filtered-out items.
  */
-int __flight_manager_iter_callback(void *flight_data, void *item) {
+int __flight_manager_iter_callback(void *user_data, void *item) {
     if (flight_is_valid((flight_t *) item) == 0) {
         flight_manager_iter_flight_data_t *helper_data =
-            (flight_manager_iter_flight_data_t *) flight_data;
-        return helper_data->callback(helper_data->original_flight_data, (flight_t *) item);
+            (flight_manager_iter_flight_data_t *) user_data;
+        return helper_data->callback(helper_data->original_user_data, (flight_t *) item);
     }
 
     return 0;
@@ -146,10 +148,10 @@ int __flight_manager_iter_callback(void *flight_data, void *item) {
 
 int flight_manager_iter(flight_manager_t              *manager,
                         flight_manager_iter_callback_t callback,
-                        void                          *flight_data) {
+                        void                          *user_data) {
 
-    flight_manager_iter_flight_data_t helper_data = {.callback             = callback,
-                                                     .original_flight_data = flight_data};
+    flight_manager_iter_flight_data_t helper_data = {.callback           = callback,
+                                                     .original_user_data = user_data};
     return pool_iter(manager->flights, __flight_manager_iter_callback, &helper_data);
 }
 
