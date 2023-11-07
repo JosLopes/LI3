@@ -45,7 +45,7 @@
  * }
  * ```
  *
- * If you don't wish to user ::dataset_loader_load, you may get the entity managers in the database
+ * If you don't wish to use ::dataset_loader_load, you may get the entity managers in the database
  * (by using ::database_get_users for a ::user_manager_t, for example) and interacting with those
  * managers directly.
  */

@@ -32,6 +32,8 @@
  *
  * @var database::users
  *     @brief All users and user relationships.
+ * @var database::flights
+ *     @brief All flights and flight relationships.
  */
 struct database {
     user_manager_t   *users;
@@ -58,5 +60,6 @@ flight_manager_t *database_get_flights(const database_t *database) {
 
 void database_free(database_t *database) {
     user_manager_free(database->users);
+    flight_manager_free(database->flights);
     free(database);
 }
