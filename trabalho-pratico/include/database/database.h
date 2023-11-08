@@ -53,6 +53,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "database/reservation_manager.h"
 #include "database/user_manager.h"
 
 /**
@@ -76,6 +77,13 @@ database_t *database_create(void);
  * @returns The user manager in @p database.
  */
 user_manager_t *database_get_users(const database_t *database);
+
+/**
+ * @brief Gets the reservation manager in a database.
+ * @param database Database to get the reservation manager from.
+ * @returns The reservation manager in @p database.
+ */
+reservation_manager_t *database_get_reservations(const database_t *database);
 
 /**
  * @brief Frees memory used by a database.
