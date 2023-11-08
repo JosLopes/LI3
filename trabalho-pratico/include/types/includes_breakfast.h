@@ -58,7 +58,7 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
  * | - | - | - | - | - | -- |
  * | 1 | 2 | 3 | 4 | 5 | 6  |
  */
-#define INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE 4
+#define INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE 6
 
 /**
  * @brief Prints an "includes breakfast" field using `sprintf`.
