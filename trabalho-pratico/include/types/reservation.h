@@ -175,14 +175,14 @@ size_t reservation_get_id(reservation_t *reservation);
  * @param  reservation Reservation to get the rating from.
  * @return The reservation's rating.
  */
-int reservation_get_const_rating(reservation_t *reservation);
+int reservation_get_rating(reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel identifier.
  * @param  reservation Reservation to get the hotel identifier from.
  * @return The reservation's hotel identifier.
  */
-int reservation_get_const_hotel_id(reservation_t *reservation);
+int reservation_get_hotel_id(reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel stars.
@@ -219,5 +219,24 @@ void reservation_free(reservation_t *reservation);
  * @return  `sizeof(reservation_t)`.
  */
 size_t reservation_sizeof(void);
+
+/**
+ * @brief Checks if a reservation is valid.
+ *
+ * @param reservation Reservation to have its validity checked.
+ *
+ * @retval 0 Valid reservation.
+ * @retval 1 Invalid reservation.
+ */
+int reservation_is_valid(const reservation_t *reservation);
+
+/**
+ * @brief   Alters a reservation in a database to make it invalid.
+ * @details This will get rid of the reservation's original identifier, giving it the value "-1". If
+ *          you're not using pool storage, you must free it before using this method.
+ *
+ * @param reservation Reservation to be modified.
+ */
+void reservation_invalidate(reservation_t *reservation);
 
 #endif
