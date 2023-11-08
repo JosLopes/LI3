@@ -142,7 +142,7 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
  *
  * @return The flight with identifier @p id, or `NULL` if it does not exist.
  */
-flight_t *flight_manager_get_by_id(const flight_manager_t *manager, const char *id);
+flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id);
 
 /**
  * @brief   Iterates over all flights in a flight manager.
