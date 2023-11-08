@@ -29,12 +29,7 @@
  *          every other value the reservation includes breakfast.
  */
 typedef enum includes_breakfast {
-    INCLUDES_BREAKFAST_0,
-    INCLUDES_BREAKFAST_1,
-    INCLUDES_BREAKFAST_NO_INPUT,
-    INCLUDES_BREAKFAST_F,
     INCLUDES_BREAKFAST_FALSE,
-    INCLUDES_BREAKFAST_T,
     INCLUDES_BREAKFAST_TRUE
 } includes_breakfast_t;
 
