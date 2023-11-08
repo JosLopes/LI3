@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "dataset/reservations_loader.h"
+#include "database/reservation_manager.h"
 #include "types/includes_breakfast.h"
 #include "types/reservation.h"
 #include "utils/dataset_parser.h"
@@ -118,7 +119,13 @@ int __reservation_loader_parse_user_id(void *loader_data, char *token, size_t nt
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
+    user_manager_t *user_manager = database_get_users(dataset_loader_get_database(loader->dataset));
+
     size_t length = strlen(token);
+    /* TODO - verify if this condition is needed
+     * user_manager_get_by_id(user_manager, token)!=NULL
+    */
+    (void) user_manager;
     if (length) {
         reservation_set_user_id(loader->current_reservation, token);
         loader->user_id_terminator = token + length;
@@ -169,9 +176,9 @@ int __reservation_loader_parse_hotel_stars(void *loader_data, char *token, size_
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
     int                    output;
-    int                    whole_number_below_x_ret = __its_an_whole_number(&output, token);
+    int                    whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_below_x_ret == 0 && output >= STARS_FLOOR_VALUE &&
+    if (whole_number_ret == 0 && output >= STARS_FLOOR_VALUE &&
         output <= STARS_CELLING_VALUE) {
         reservation_set_hotel_stars(loader->current_reservation, output);
         return 0;
@@ -187,9 +194,9 @@ int __reservation_loader_parse_city_tax(void *loader_data, char *token, size_t n
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
     int                    output;
-    int                    whole_number_below_x_ret = __its_an_whole_number(&output, token);
+    int                    whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_below_x_ret == 0 && output >= CITY_TAX_FLOOR_VALUE) {
+    if (whole_number_ret == 0 && output >= CITY_TAX_FLOOR_VALUE) {
         reservation_set_city_tax(loader->current_reservation, output);
         return 0;
     } else {
@@ -242,9 +249,9 @@ int __reservation_loader_parse_price_per_night(void *loader_data, char *token, s
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
     int                    output;
-    int                    whole_number_below_x_ret = __its_an_whole_number(&output, token);
+    int                    whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_below_x_ret == 0 && output >= PRICE_PER_NIGHT_FLOOR_VALUE) {
+    if (whole_number_ret == 0 && output >= PRICE_PER_NIGHT_FLOOR_VALUE) {
         reservation_set_price_per_night(loader->current_reservation, output);
         return 0;
     } else {
@@ -292,9 +299,9 @@ int __reservation_loader_parse_rating(void *loader_data, char *token, size_t nto
     }
 
     int output;
-    int whole_number_below_x_ret = __its_an_whole_number(&output, token);
+    int whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_below_x_ret == 0 && output >= RATING_FLOOR_VALUE &&
+    if (whole_number_ret == 0 && output >= RATING_FLOOR_VALUE &&
         output <= RATING_CELLING_VALUE) {
         reservation_set_rating(loader->current_reservation, output);
         return 0;

@@ -75,7 +75,7 @@ reservation_manager_t *reservation_manager_create(void) {
         return NULL;
     }
 
-    manager->id_reservations_rel = g_hash_table_new(g_str_hash, g_str_equal);
+    manager->id_reservations_rel = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     return manager;
 }
@@ -87,9 +87,6 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
     if (!pool_reservation)
         return NULL;
 
-    /* Reservation identifier */
-    size_t res_id = reservation_get_id((reservation_t *) reservation);
-
     /* Copy strings to string pool */
     char *pool_user_id =
         string_pool_put(manager->strings, reservation_get_const_user_id(reservation));
@@ -99,8 +96,12 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
     if (pool_user_id && pool_hotel_name) {
         reservation_set_user_id(pool_reservation, pool_user_id);
         reservation_set_hotel_name(pool_reservation, pool_hotel_name);
+        /* Reservation identifier */
+        size_t res_id = reservation_get_id((reservation_t *) reservation);
 
-        if (!g_hash_table_insert(manager->id_reservations_rel, &res_id, pool_reservation)) {
+        if (!g_hash_table_insert(manager->id_reservations_rel,
+                                 GINT_TO_POINTER(res_id),
+                                 pool_reservation)) {
             fprintf(stderr,
                     "REPEATED RESERVATION ID \"%ld\". This shouldn't happen! Replacing it.\n",
                     res_id);
@@ -116,7 +117,7 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
 }
 
 reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manager, size_t id) {
-    return g_hash_table_lookup(manager->id_reservations_rel, &id);
+    return g_hash_table_lookup(manager->id_reservations_rel, GINT_TO_POINTER(id));
 }
 
 /**
