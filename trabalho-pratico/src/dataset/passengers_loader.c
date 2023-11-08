@@ -24,6 +24,7 @@
 
 #include "dataset/passengers_loader.h"
 #include "utils/dataset_parser.h"
+#include "utils/int_utils.h"
 
 /** @brief Table header for `passengers_errors.csv` */
 #define PASSENGERS_LOADER_HEADER "flight_id;user_id"
@@ -34,14 +35,17 @@
  *
  * @var passengers_loader_t::dataset
  *     @brief Dataset loader, so that errors can be reported.
- * @var passengers_loader_t::database
- *     @brief Database in ::passengers_loader_t::dataset
+ * @var passengers_loader_t::users
+ *     @brief User manager to add new passenger relationships to.
+ * @var passengers_loader_t::flights
+ *     @brief Flight manager to check for flight existence.
  * @var passengers_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
  */
 typedef struct {
     dataset_loader_t *dataset;
-    database_t       *database;
+    user_manager_t   *users;
+    flight_manager_t *flights;
 
     char *error_line;
 } passengers_loader_t;
@@ -55,17 +59,27 @@ int __passengers_loader_before_parse_line(void *loader_data, char *line) {
     return 0;
 }
 
-/* TODO - write values to a passenger field in passengers_loader_t */
-
-/**
- * @brief Temporary function that reports parsing success.
- * @details To be replaced with actual parsing functions.
- */
-int __passengers_loader_success(void *loader_data, char *token, size_t ntoken) {
-    (void) loader_data;
-    (void) token;
+/** @brief Parses a user flight in a user-flight passenger relation. */
+int __passengers_loader_parse_flight_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    return 0;
+    passengers_loader_t *loader = (passengers_loader_t *) loader_data;
+
+    size_t id;
+    if (int_utils_parse_positive(&id, token)) {
+        return 1;
+    }
+
+    /* Fail if the flight isn't found (invalid flights won't be found too). */
+    return flight_manager_get_by_id(loader->flights, id) == NULL;
+}
+
+/** @brief Parses a user id in a user-flight passenger relation. */
+int __passengers_loader_parse_user_id(void *loader_data, char *token, size_t ntoken) {
+    (void) ntoken;
+    passengers_loader_t *loader = (passengers_loader_t *) loader_data;
+
+    /* Fail if the user isn't found (invalid user won't be found too). */
+    return user_manager_get_by_id(loader->users, token) == NULL;
 }
 
 /** @brief Places a parsed passenger in the database and handles errors */
@@ -74,16 +88,20 @@ int __passengers_loader_after_parse_line(void *loader_data, int retval) {
         passengers_loader_t *loader = (passengers_loader_t *) loader_data;
         dataset_loader_report_passengers_error(loader->dataset, loader->error_line);
     }
+
     return 0;
 }
 
 void passengers_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
     dataset_loader_report_passengers_error(dataset_loader, PASSENGERS_LOADER_HEADER);
-    passengers_loader_t data = {.dataset  = dataset_loader,
-                                .database = dataset_loader_get_database(dataset_loader)};
+    passengers_loader_t data = {
+        .dataset = dataset_loader,
+        .users   = database_get_users(dataset_loader_get_database(dataset_loader)),
+        .flights = database_get_flights(dataset_loader_get_database(dataset_loader))};
 
-    fixed_n_delimiter_parser_iter_callback_t token_callbacks[2] = {__passengers_loader_success,
-                                                                   __passengers_loader_success};
+    fixed_n_delimiter_parser_iter_callback_t token_callbacks[2] = {
+        __passengers_loader_parse_flight_id,
+        __passengers_loader_parse_user_id};
 
     fixed_n_delimiter_parser_grammar_t *line_grammar =
         fixed_n_delimiter_parser_grammar_new(';', 2, token_callbacks);
