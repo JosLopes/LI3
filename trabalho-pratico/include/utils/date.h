@@ -161,7 +161,7 @@ void date_sprintf(char *output, date_t date);
  *
  * @return The difference `a - b` in days.
  */
-uint64_t date_diff(date_t a, date_t b);
+int64_t date_diff(date_t a, date_t b);
 
 /**
  * @brief Gets the year from a date.

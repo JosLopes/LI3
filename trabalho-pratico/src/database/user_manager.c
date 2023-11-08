@@ -65,7 +65,7 @@ user_manager_t *user_manager_create(void) {
     }
 
     manager->strings = string_pool_create(USER_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
-    if (!manager->users) {
+    if (!manager->strings) {
         pool_free(manager->users);
         free(manager);
         return NULL;

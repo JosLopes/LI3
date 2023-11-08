@@ -148,14 +148,14 @@ void daytime_sprintf(char *output, daytime_t daytime) {
             daytime_union.fields.seconds);
 }
 
-uint32_t daytime_diff(daytime_t a, daytime_t b) {
+int32_t daytime_diff(daytime_t a, daytime_t b) {
     daytime_union_helper_t a_union = {.daytime = a};
     daytime_union_helper_t b_union = {.daytime = b};
 
-    uint32_t a_seconds =
-        a_union.fields.hours * 3600 + a_union.fields.minutes * 60 + a_union.fields.seconds;
-    uint32_t b_seconds =
-        b_union.fields.hours * 3600 + b_union.fields.minutes * 60 + b_union.fields.seconds;
+    uint32_t a_seconds = (uint32_t) a_union.fields.hours * 3600 +
+                         (uint32_t) a_union.fields.minutes * 60 + (uint32_t) a_union.fields.seconds;
+    uint32_t b_seconds = (uint32_t) b_union.fields.hours * 3600 +
+                         (uint32_t) b_union.fields.minutes * 60 + (uint32_t) b_union.fields.seconds;
 
     return a_seconds - b_seconds;
 }

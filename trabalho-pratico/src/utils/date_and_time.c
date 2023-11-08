@@ -135,7 +135,7 @@ void date_and_time_sprintf(char *output, date_and_time_t date_and_time) {
     sprintf(output, "%s %s", date_str, time_str);
 }
 
-uint64_t date_and_time_diff(date_and_time_t a, date_and_time_t b) {
+int64_t date_and_time_diff(date_and_time_t a, date_and_time_t b) {
     date_and_time_union_helper_t a_union = {.date_and_time = a};
     date_and_time_union_helper_t b_union = {.date_and_time = b};
 

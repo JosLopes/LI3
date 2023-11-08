@@ -21,58 +21,51 @@
 
 #include <stdio.h>
 
-#include "database/user_manager.h"
+#include "database/flight_manager.h"
 #include "dataset/dataset_loader.h"
-#include "types/user.h"
+#include "types/flight.h"
 #include "utils/pool.h"
 
-/**
- * @brief Callback called for every user in the database, that prints it to the screen.
- *
- * @param user_data `NULL`.
- * @param user      User to be printed to `stdout`.
- *
- * @retval Always `0`, as this cannot fail.
- */
-int iter_callback(void *user_data, user_t *user) {
+int iter_callback(void *user_data, flight_t *flight) {
     (void) user_data;
 
-    const char *id       = user_get_const_id(user);
-    const char *name     = user_get_const_name(user);
-    const char *passport = user_get_const_passport(user);
+    size_t      id          = flight_get_id(flight);
+    const char *airline     = flight_get_const_airline(flight);
+    const char *passport    = flight_get_const_plane_model(flight);
+    int         total_seats = flight_get_total_seats(flight);
 
-    char country_code[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
-    country_code_sprintf(country_code, user_get_country_code(user));
+    char origin[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
+    airport_code_sprintf(origin, flight_get_origin(flight));
 
-    char birth_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
-    date_sprintf(birth_date, user_get_birth_date(user));
+    char destination[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
+    airport_code_sprintf(destination, flight_get_destination(flight));
 
-    const char *account_status =
-        user_get_account_status(user) == ACCOUNT_STATUS_INACTIVE ? "inactive" : "active";
+    char schedule_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(schedule_departure_date, flight_get_schedule_departure_date(flight));
 
-    char account_creation_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
-    date_and_time_sprintf(account_creation_date, user_get_account_creation_date(user));
+    char schedule_arrival_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(schedule_arrival_date, flight_get_schedule_arrival_date(flight));
 
-    printf("--- USER ---\nid: %s\nname: %s\npassport: %s\ncountry_code: %s\nbirth_date: "
-           "%s\naccount_status: %s\naccount_creation_date: %s\n\n",
+    char real_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(real_departure_date, flight_get_real_departure_date(flight));
+
+    printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: %d\norigin: %s"
+           "\ndestination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
+           "real_departure_date: %s\n\n",
            id,
-           name,
+           airline,
            passport,
-           country_code,
-           birth_date,
-           account_status,
-           account_creation_date);
-    return 0;
+           total_seats,
+           origin,
+           destination,
+           schedule_departure_date,
+           schedule_arrival_date,
+           real_departure_date);
+
+    return 0; // You can return a value other than 0 to order iteration to stop
 }
 
-/**
- * @brief The entry point to the test program.
- * @details Tests for dataset parsing.
-
- * @retval 0 Success
- * @retval 1 Insuccess
- */
-int main(void) {
+int main() {
     database_t *database = database_create();
     if (!database) {
         fprintf(stderr, "Failed to allocate database!");
@@ -84,7 +77,7 @@ int main(void) {
         return 1;
     }
 
-    user_manager_iter(database_get_users(database), iter_callback, NULL);
+    flight_manager_iter(database_get_flights(database), iter_callback, NULL);
 
     database_free(database);
     return 0;

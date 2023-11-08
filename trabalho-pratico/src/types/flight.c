@@ -17,6 +17,9 @@
 /**
  * @file  flight.c
  * @brief Implementation of methods in include/types/flight.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref flight_examples).
  */
 #include <stdlib.h>
 
@@ -158,4 +161,12 @@ void flight_free(flight_t *flight) {
 
 size_t flight_sizeof(void) {
     return sizeof(struct flight);
+}
+
+int flight_is_valid(const flight_t *flight) {
+    return flight->id == (size_t) -1;
+}
+
+void flight_invalidate(flight_t *flight) {
+    flight->id = -1;
 }

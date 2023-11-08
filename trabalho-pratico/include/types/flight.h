@@ -24,6 +24,13 @@
  *
  *           You can see what fields define a flight (and thus available through getters and
  *           setters) in the [struct's documentation](@ref flight).
+ *
+ * @anchor flight_examples
+ * ### Examples
+ *
+ * See [the examples in flight_manager.h](@ref flight_manager_examples). The callback there,
+ * `iter_callback` is a great example on how to extract all data from an existing flight and print
+ * it to `stdout`.
  */
 
 #ifndef FLIGHT_H
@@ -213,5 +220,22 @@ void flight_free(flight_t *flight);
  * @return  `sizeof(flight_t)`.
  */
 size_t flight_sizeof(void);
+
+/**
+ * @brief Checks if a flight is valid.
+ * @details A flight is valid if it has an airline, a plane model, an origin, a destination, a valid id,
+ *          a scheduled departure date, a scheduled arrival date, a number of passengers, a real
+ *          departure date and a number of total seats.
+ * @param flight Flight to be checked.
+ * @return `1` if the flight is valid, `0` otherwise.
+ */
+int flight_is_valid(const flight_t *flight);
+
+/**
+ * @brief Invalidates a flight.
+ * @details Sets all fields to their default values.
+ * @param flight Flight to be invalidated.
+ */
+void flight_invalidate(flight_t *flight);
 
 #endif
