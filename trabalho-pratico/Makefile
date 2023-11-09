@@ -133,7 +133,7 @@ $(DOCSDIR): $(SOURCES) $(HEADERS) $(THEMES)
 	$(eval TMP_LATEX = $(shell mktemp -d))
 
 	@mkdir -p $(BUILDDIR)
-	pdflatex -halt-on-error -output-directory $(TMP_LATEX) $<
+	cd reports && pdflatex -halt-on-error -output-directory $(TMP_LATEX) $(shell basename $<)
 	@cp $(TMP_LATEX)/$@ $(BUILDDIR)/$@
 	@ln -s $(BUILDDIR)/$@ $@
 	@rm -r $(TMP_LATEX)
