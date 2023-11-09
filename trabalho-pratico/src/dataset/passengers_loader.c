@@ -29,6 +29,7 @@
 #include "utils/dataset_parser.h"
 #include "utils/int_utils.h"
 #include "utils/pool.h"
+#include "utils/stream_utils.h"
 #include "utils/string_pool.h"
 
 /** @brief Table header for `passengers_errors.csv` */
@@ -188,16 +189,78 @@ int __passengers_loader_after_parse_line(void *loader_data, int retval) {
 }
 
 /**
+ * @struct passengers_loader_erroneous_flight_callback_data_t
+ * @brief  Type of `user_data` parameter in ::__passengers_loader_report_erroneous_flight and
+ *         in ::__passengers_loader_check_line_for_erroneous_flight.
+ *
+ * @var passengers_loader_erroneous_flight_callback_data_t::dataset
+ *     @brief Dataset loader, so that errors can be reported.
+ * @var passengers_loader_erroneous_flight_callback_data_t::flights_stream
+ *     @brief File stream containing flights, so that these can pe printed to the errors file.
+ * @var passengers_loader_erroneous_flight_callback_data_t::flight_id
+ *     @brief Identifier of the flight currently being looked up in the dataset file.
+ */
+typedef struct {
+    dataset_loader_t *dataset;
+    FILE             *flights_stream;
+    char             *flight_id;
+} passengers_loader_erroneous_flight_callback_data_t;
+
+/**
+ * @brief Checks if a given line of the dataset contains the desired flight, reporting it as an
+ *        error if that's the case.
+ *
+ * @param user_data A pointer to a ::passengers_loader_erroneous_flight_callback_data_t (this
+ *                  includes the ID of the desired erroneous flight).
+ * @param line      Current line in the `flights.csv` dataset file.
+ *
+ * @retval 0 Continue flight lookup.
+ * @retval 1 Flight found. Stop lookup.
+ */
+int __passengers_loader_check_line_for_erroneous_flight(void *user_data, char *line) {
+    passengers_loader_erroneous_flight_callback_data_t *data =
+        (passengers_loader_erroneous_flight_callback_data_t *) user_data;
+
+    if (strncmp(data->flight_id, line, 10) == 0) { /* Flights always have 10-digit IDs */
+        dataset_loader_report_flights_error(data->dataset, line);
+        return 1; /* Stop looking */
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * @brief Looks up a flight with errors in a dataset and prints it to the errors file.
+ *
+ * @param user_data A pointer to a ::passengers_loader_erroneous_flight_callback_data_t.
+ * @param item      A pointer to the flight's identifier (`uint64_t`).
+ */
+int __passengers_loader_report_erroneous_flight(void *user_data, void *item) {
+    passengers_loader_erroneous_flight_callback_data_t *data =
+        (passengers_loader_erroneous_flight_callback_data_t *) user_data;
+
+    char flight_id_str[11];
+    sprintf(flight_id_str, "%010" PRIu64, *(uint64_t *) item);
+    data->flight_id = flight_id_str;
+
+    stream_tokenize(data->flights_stream,
+                    '\n',
+                    __passengers_loader_check_line_for_erroneous_flight,
+                    user_data);
+    return 0;
+}
+
+/**
  * @brief Reports all flights with more passengers than seats.
  *
  * @param loader  Data about parsing results.
  * @param flights File with the flights, to read the correct lines to print to the error file.
  */
 void __passengers_loader_report_erroneous_flights(passengers_loader_t *loader, FILE *flights) {
-    (void) loader;
-    (void) flights;
+    passengers_loader_erroneous_flight_callback_data_t data = {.dataset        = loader->dataset,
+                                                               .flights_stream = flights};
 
-    /* TODO - implement this */
+    pool_iter(loader->invalid_flight_ids, __passengers_loader_report_erroneous_flight, &data);
 }
 
 void passengers_loader_load(dataset_loader_t *dataset_loader,
