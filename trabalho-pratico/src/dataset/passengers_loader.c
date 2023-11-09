@@ -21,12 +21,14 @@
 
 #include <ctype.h>
 #include <glib.h>
-#include <stddef.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <string.h>
 
 #include "dataset/passengers_loader.h"
 #include "utils/dataset_parser.h"
 #include "utils/int_utils.h"
+#include "utils/pool.h"
 #include "utils/string_pool.h"
 
 /** @brief Table header for `passengers_errors.csv` */
@@ -49,6 +51,9 @@ typedef struct {
 /** @brief Block capacity of ::passengers_loader_t::commit_buffer_id_pool */
 #define PASSENGERS_LOADER_ID_POOL_BLOCK_CAPACITY 8192
 
+/** @brief Block capacity (in flight IDs) of ::passengers_loader_t::invalid_flight_ids */
+#define PASSENGERS_LOADER_INVALID_FLIGHTS_POOL_CAPACITY 512
+
 /**
  * @struct passengers_loader_t
  * @brief  Temporary data needed to load a set of passengers.
@@ -69,6 +74,8 @@ typedef struct {
  *     @brief Pool where IDs in ::passengers_loader_t::commit_buffer are stored.
  * @var passengers_loader_t::current_relation
  *     @brief Current user-flight relation being parsed.
+ * @var passengers_loader_t::invalid_flight_ids
+ *     @brief List of invalid flight IDs to be printed to the errors file.
  * @var passengers_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
  */
@@ -83,7 +90,8 @@ typedef struct {
 
     passenger_relation_t current_relation;
 
-    char *error_line;
+    pool_t *invalid_flight_ids;
+    char   *error_line;
 } passengers_loader_t;
 
 /**
@@ -130,7 +138,19 @@ void __passengers_loader_commit_flight_list(passengers_loader_t *loader) {
     flight_t *flight = flight_manager_get_by_id(loader->flights, loader->commit_buffer_flight);
     flight_set_number_of_passengers(flight, loader->commit_buffer->len);
 
-    /* TODO - remove invalid flights */
+    if ((guint) flight_get_total_seats(flight) < loader->commit_buffer->len) {
+        flight_manager_invalidate_by_id(loader->flights, loader->commit_buffer_flight);
+        pool_put_item(uint64_t, loader->invalid_flight_ids, &loader->commit_buffer_flight);
+
+        /* Print passenger entries as invalid */
+        char print_buffer[LINE_MAX];
+        for (size_t i = 0; i < loader->commit_buffer->len; ++i) {
+            char *user_id = g_ptr_array_index(loader->commit_buffer, i);
+            sprintf(print_buffer, "%010" PRIu64 ";%s", loader->commit_buffer_flight, user_id);
+            dataset_loader_report_passengers_error(loader->dataset, print_buffer);
+        }
+    }
+
     /* TODO - add passengers to database, when that's ready */
 }
 
@@ -167,17 +187,41 @@ int __passengers_loader_after_parse_line(void *loader_data, int retval) {
     return 0;
 }
 
-void passengers_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
+/**
+ * @brief Reports all flights with more passengers than seats.
+ *
+ * @param loader  Data about parsing results.
+ * @param flights File with the flights, to read the correct lines to print to the error file.
+ */
+void __passengers_loader_report_erroneous_flights(passengers_loader_t *loader, FILE *flights) {
+    (void) loader;
+    (void) flights;
+
+    /* TODO - implement this */
+}
+
+void passengers_loader_load(dataset_loader_t *dataset_loader,
+                            FILE             *passengers_stream,
+                            FILE             *flights_stream) {
+
     dataset_loader_report_passengers_error(dataset_loader, PASSENGERS_LOADER_HEADER);
     passengers_loader_t data = {
-        .dataset               = dataset_loader,
-        .users                 = database_get_users(dataset_loader_get_database(dataset_loader)),
-        .flights               = database_get_flights(dataset_loader_get_database(dataset_loader)),
-        .commit_buffer         = g_ptr_array_new(),
-        .commit_buffer_id_pool = string_pool_create(PASSENGERS_LOADER_ID_POOL_BLOCK_CAPACITY)};
+        .dataset       = dataset_loader,
+        .users         = database_get_users(dataset_loader_get_database(dataset_loader)),
+        .flights       = database_get_flights(dataset_loader_get_database(dataset_loader)),
+        .commit_buffer = g_ptr_array_new()};
 
+    data.commit_buffer_id_pool = string_pool_create(PASSENGERS_LOADER_ID_POOL_BLOCK_CAPACITY);
     if (!data.commit_buffer_id_pool) { /* Allocation failure */
         g_ptr_array_free(data.commit_buffer, TRUE);
+        return;
+    }
+
+    data.invalid_flight_ids =
+        pool_create(uint64_t, PASSENGERS_LOADER_INVALID_FLIGHTS_POOL_CAPACITY);
+    if (!data.invalid_flight_ids) { /* Allocation failure */
+        g_ptr_array_free(data.commit_buffer, TRUE);
+        string_pool_free(data.commit_buffer_id_pool);
         return;
     }
 
@@ -194,11 +238,13 @@ void passengers_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
                                    __passengers_loader_before_parse_line,
                                    __passengers_loader_after_parse_line);
 
-    dataset_parser_parse(stream, grammar, &data);
+    dataset_parser_parse(passengers_stream, grammar, &data);
     if (data.commit_buffer->len > 0) /* Don't fail on empty files */
         __passengers_loader_commit_flight_list(&data);
+    __passengers_loader_report_erroneous_flights(&data, flights_stream);
 
     g_ptr_array_free(data.commit_buffer, TRUE);
     string_pool_free(data.commit_buffer_id_pool);
+    pool_free(data.invalid_flight_ids);
     dataset_parser_grammar_free(grammar);
 }
