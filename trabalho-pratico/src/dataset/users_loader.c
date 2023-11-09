@@ -193,6 +193,9 @@ int __user_loader_parse_account_creation_date(void *loader_data, char *token, si
     int             date_and_time_parse_ret = date_and_time_from_string(&date, token);
     if (date_and_time_parse_ret) {
         return date_and_time_parse_ret;
+    } else if (date_diff(date_and_time_get_date(date), user_get_birth_date(loader->current_user)) <
+               0) {
+        return 1;
     } else {
         user_set_account_creation_date(loader->current_user, date);
         return 0;
