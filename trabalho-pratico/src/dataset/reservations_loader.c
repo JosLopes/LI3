@@ -264,11 +264,11 @@ int __reservation_loader_parse_includes_breakfast(void *loader_data, char *token
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    includes_breakfast_t *includes_breakfast = malloc(sizeof(enum includes_breakfast));
-    int includes_breakfast_ret = includes_breakfast_from_string(includes_breakfast, token);
+    includes_breakfast_t includes_breakfast;
+    int includes_breakfast_ret = includes_breakfast_from_string(&includes_breakfast, token);
 
     if (!includes_breakfast_ret) {
-        reservation_set_includes_breakfast(loader->current_reservation, *includes_breakfast);
+        reservation_set_includes_breakfast(loader->current_reservation, includes_breakfast);
         return 0;
     } else {
         return 1;
@@ -341,6 +341,7 @@ void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
         .dataset      = dataset_loader,
         .reservations = database_get_reservations(dataset_loader_get_database(dataset_loader)),
         .current_reservation = reservation_create()};
+
     fixed_n_delimiter_parser_iter_callback_t token_callbacks[14] = {
         __reservation_loader_parse_id,
         __reservation_loader_parse_user_id,
@@ -366,4 +367,7 @@ void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
                                    __reservations_loader_before_parse_line,
                                    __reservations_loader_after_parse_line);
     dataset_parser_parse(stream, grammar, &data);
+
+    dataset_parser_grammar_free(grammar);
+    reservation_free(data.current_reservation);
 }
