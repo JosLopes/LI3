@@ -78,6 +78,12 @@ int main() {
         return 1;
     }
 
+    /* Invalidation test. Remove later */
+    flight_manager_invalidate_by_id(database_get_flights(database), 999);
+    if (flight_manager_get_by_id(database_get_flights(database), 999)) {
+        fputs("Flight still in index!\n", stderr);
+    }
+
     flight_manager_iter(database_get_flights(database), iter_callback, NULL);
 
     database_free(database);
