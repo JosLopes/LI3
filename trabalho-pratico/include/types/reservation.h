@@ -32,6 +32,9 @@
 #include "types/includes_breakfast.h"
 #include "utils/date.h"
 
+/** @brief Value of a reservation's rating when it's not specified. */
+#define RESERVATION_NO_RATING 0
+
 /**
  * @brief Type `reservation_t` defined as a struct reservation, that stores valuable information of
  *        a given reservation.
@@ -96,7 +99,8 @@ void reservation_set_id(reservation_t *reservation, size_t id);
 /**
  * @brief Sets the reservation's rating.
  * @param reservation Reservation to have its rating set.
- * @param rating      Rating of the reservation.
+ * @param rating      Rating of the reservation. ::RESERVATION_NO_RATING means no rating was
+ *                    provided.
  */
 void reservation_set_rating(reservation_t *reservation, int rating);
 
@@ -173,7 +177,7 @@ size_t reservation_get_id(reservation_t *reservation);
 /**
  * @brief  Gets the reservation's rating.
  * @param  reservation Reservation to get the rating from.
- * @return The reservation's rating.
+ * @return The reservation's rating. ::RESERVATION_NO_RATING means no rating was provided.
  */
 int reservation_get_rating(reservation_t *reservation);
 
