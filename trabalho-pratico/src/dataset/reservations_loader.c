@@ -19,15 +19,15 @@
  * @brief Implementation of methods in include/dataset/reservations_loader.h
  */
 
-#include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "dataset/reservations_loader.h"
 #include "database/reservation_manager.h"
-#include "types/includes_breakfast.h"
+#include "dataset/reservations_loader.h"
 #include "types/reservation.h"
 #include "utils/dataset_parser.h"
+#include "utils/int_utils.h"
 
 /** @brief Table header for `reservations_errors.csv` */
 #define RESERVATIONS_LOADER_HEADER                                                                 \
@@ -40,10 +40,15 @@
  *
  * @var reservations_loader_t::dataset
  *     @brief Dataset loader, so that errors can be reported.
- * @var reservations_loader_t::database
- *     @brief Database in ::reservations_loader_t::dataset
+ * @var reservations_loader_t::reservations
+ *     @brief Reservations manager to add new reservations to.
  * @var reservations_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
+ * @var reservations_loader_t::user_id_terminator
+ *     @brief Where a ``'\0'`` terminator needs to be placed, so that the user's identifier ends.
+ * @var reservations_loader_t::hotel_name_terminator
+ *     @brief Where a ``'\0'`` terminator needs to be placed, so that a reservation's hotel name
+ *            ends.
  */
 typedef struct {
     dataset_loader_t      *dataset;
@@ -55,38 +60,6 @@ typedef struct {
     char          *user_id_terminator, *hotel_name_terminator;
 } reservations_loader_t;
 
-/* Verifies if a string only contains zero's */
-int __all_zeros_string(char *token) {
-    for (int index = 0; token[index] != '\0'; index++) {
-        if (token[index] != '0')
-            return 1;
-    }
-    return 0;
-}
-
-/**
- * @brief Verifies if a string corresponds to a whole number.
- *
- * @details If the string corresponds to an whole number, the value is stored on the @p output.
- *
- * @retval 0 True.
- * @retval 1 False.
- */
-int __its_an_whole_number(int *output, char *token) {
-    int index;
-    int string_sum = 0;
-    for (index = 0; token[index] != '\0' && token[index] != '.'; index++) {
-        string_sum += string_sum * 10 + (token[index] - 48);
-    }
-
-    if ((token[index] == '.' && __all_zeros_string(token + index + 1))) {
-        return 1;
-    }
-
-    *output = string_sum;
-    return 0;
-}
-
 /**
  * @brief Stores the beginning of the current line, in case it needs to be printed to the errors
  *        file.
@@ -96,20 +69,34 @@ int __reservations_loader_before_parse_line(void *loader_data, char *line) {
     return 0;
 }
 
-/* Before the numerical part of an identifier, there is an "BOOK" string */
-#define NUMBER_OF_CHARACTERS_BEFORE_INT_BOOK 4
-
 /** @brief Parses a reservation's identifier */
 int __reservation_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
     size_t length = strlen(token);
-    if (length) {
-        reservation_set_id(loader->current_reservation,
-                           atoi(token + NUMBER_OF_CHARACTERS_BEFORE_INT_BOOK));
-        return 0;
+    if (length > 4) { /* Skip "Book" before any reservation ID */
+        uint64_t id;
+        int      retval = int_utils_parse_positive(&id, token + 4);
+
+        if (retval) {
+            fprintf(stderr,
+                    "Non-numerical reservation ID detected, \"%s\". Our program's architecture "
+                    "doesn't allow for this.\n",
+                    token);
+            return 1;
+        } else {
+            reservation_set_id(loader->current_reservation, id);
+            return 0;
+        }
     } else {
+        if (length != 0) {
+            fprintf(stderr,
+                    "Reservation ID detected that doesn't start with \"Book\" detected, \"%s\". "
+                    "Our program's architecture doesn't allow for this.\n",
+                    token);
+        }
+
         return 1;
     }
 }
@@ -119,13 +106,7 @@ int __reservation_loader_parse_user_id(void *loader_data, char *token, size_t nt
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    user_manager_t *user_manager = database_get_users(dataset_loader_get_database(loader->dataset));
-
     size_t length = strlen(token);
-    /* TODO - verify if this condition is needed
-     * user_manager_get_by_id(user_manager, token)!=NULL
-    */
-    (void) user_manager;
     if (length) {
         reservation_set_user_id(loader->current_reservation, token);
         loader->user_id_terminator = token + length;
@@ -135,20 +116,34 @@ int __reservation_loader_parse_user_id(void *loader_data, char *token, size_t nt
     }
 }
 
-/* Before the numerical part of an hotel identifier, there is an "HTL" string */
-#define NUMBER_OF_CHARACTERS_BEFORE_INT_HOTEL_ID 3
-
 /** @brief Parses a reservation's hotel id */
 int __reservation_loader_parse_hotel_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
     size_t length = strlen(token);
-    if (length) {
-        reservation_set_hotel_id(loader->current_reservation,
-                                 atoi(token + NUMBER_OF_CHARACTERS_BEFORE_INT_HOTEL_ID));
-        return 0;
+    if (length > 3) { /* Skip "HTL" before any reservation ID */
+        uint64_t id;
+        int      retval = int_utils_parse_positive(&id, token + 3);
+
+        if (retval) {
+            fprintf(stderr,
+                    "Non-numerical hotel ID detected, \"%s\". Our program's architecture doesn't "
+                    "doesn't allow for this.\n",
+                    token);
+            return 1;
+        } else {
+            reservation_set_hotel_id(loader->current_reservation, id);
+            return 0;
+        }
     } else {
+        if (length != 0) {
+            fprintf(stderr,
+                    "Hotel ID detected that doesn't start with \"HTL\" detected, \"%s\". "
+                    "Our program's architecture doesn't allow for this.\n",
+                    token);
+        }
+
         return 1;
     }
 }
@@ -168,43 +163,39 @@ int __reservation_loader_parse_hotel_name(void *loader_data, char *token, size_t
     }
 }
 
-#define STARS_CELLING_VALUE 5
-#define STARS_FLOOR_VALUE   1
-
-/** @brief Parses a reservation's hotel stars */
+/** @brief Parses a reservation's hotel number of stars */
 int __reservation_loader_parse_hotel_stars(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-    int                    output;
-    int                    whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_ret == 0 && output >= STARS_FLOOR_VALUE &&
-        output <= STARS_CELLING_VALUE) {
-        reservation_set_hotel_stars(loader->current_reservation, output);
+    uint64_t hotel_stars;
+    int      retval = int_utils_parse_positive(&hotel_stars, token);
+
+    if (retval == 0 && hotel_stars >= 1 && hotel_stars <= 5) {
+        reservation_set_hotel_stars(loader->current_reservation, hotel_stars);
         return 0;
     } else {
         return 1;
     }
 }
 
-#define CITY_TAX_FLOOR_VALUE 0
-
-/** @brief Parses a reservation's city tax */
+/** @brief Parses a reservation's hotel city tax */
 int __reservation_loader_parse_city_tax(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-    int                    output;
-    int                    whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_ret == 0 && output >= CITY_TAX_FLOOR_VALUE) {
-        reservation_set_city_tax(loader->current_reservation, output);
+    uint64_t city_tax;
+    int      retval = int_utils_parse_positive(&city_tax, token);
+
+    if (!retval) {
+        reservation_set_city_tax(loader->current_reservation, city_tax);
         return 0;
     } else {
         return 1;
     }
 }
 
-/** @brief Parses a reservation's address */
+/** @brief Parses a reservation's hotel address */
 int __reservation_loader_parse_address(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
@@ -212,7 +203,7 @@ int __reservation_loader_parse_address(void *loader_data, char *token, size_t nt
     return (*token == '\0'); /* Fail on empty addresses */
 }
 
-/** @brief Parses a reservation's begin date */
+/** @brief Parses a reservation's beginning date */
 int __reservation_loader_parse_begin_date(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
@@ -236,23 +227,30 @@ int __reservation_loader_parse_end_date(void *loader_data, char *token, size_t n
     int    date_parse_ret = date_from_string(&date, token);
     if (date_parse_ret) {
         return date_parse_ret;
+
+        /*
+         * TODO - add when correct date difference has been merged
+         *
+         * } else if (date_diff(reservation_get_end_date(loader->current_reservation),
+         *                      reservation_get_begin_date(loader->current_reservation)) < 0) {
+         *   return 1;
+         */
     } else {
         reservation_set_end_date(loader->current_reservation, date);
         return 0;
     }
 }
 
-#define PRICE_PER_NIGHT_FLOOR_VALUE 1
-
 /** @brief Parses a reservation's price per night */
 int __reservation_loader_parse_price_per_night(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-    int                    output;
-    int                    whole_number_ret = __its_an_whole_number(&output, token);
 
-    if (whole_number_ret == 0 && output >= PRICE_PER_NIGHT_FLOOR_VALUE) {
-        reservation_set_price_per_night(loader->current_reservation, output);
+    uint64_t price_per_night;
+    int      retval = int_utils_parse_positive(&price_per_night, token);
+
+    if (retval == 0 && price_per_night > 0) {
+        reservation_set_price_per_night(loader->current_reservation, price_per_night);
         return 0;
     } else {
         return 1;
@@ -284,26 +282,21 @@ int __reservation_loader_parse_room_details(void *loader_data, char *token, size
     return 0; /* no verification needed */
 }
 
-#define NO_RATING            -1 /* Value to return when no rating was given to a reservation */
-#define RATING_CELLING_VALUE 5
-#define RATING_FLOOR_VALUE   1
-
 /** @brief Parses a reservation's rating */
 int __reservation_loader_parse_rating(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
     if (*token == '\0') {
-        reservation_set_rating(loader->current_reservation, NO_RATING);
+        reservation_set_rating(loader->current_reservation, RESERVATION_NO_RATING);
         return 0;
     }
 
-    int output;
-    int whole_number_ret = __its_an_whole_number(&output, token);
+    uint64_t rating;
+    int      retval = int_utils_parse_positive(&rating, token);
 
-    if (whole_number_ret == 0 && output >= RATING_FLOOR_VALUE &&
-        output <= RATING_CELLING_VALUE) {
-        reservation_set_rating(loader->current_reservation, output);
+    if (retval == 0 && rating >= 1 && rating <= 5) {
+        reservation_set_rating(loader->current_reservation, rating);
         return 0;
     } else {
         return 1;
