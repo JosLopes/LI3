@@ -34,10 +34,13 @@
  *     @brief All users and user relationships.
  * @var database::reservations
  *     @brief All reservations and reservations relationships.
+ * @var database::flights
+ *     @brief All flights and flight relationships.
  */
 struct database {
     user_manager_t        *users;
     reservation_manager_t *reservations;
+    flight_manager_t      *flights;
 };
 
 database_t *database_create(void) {
@@ -47,6 +50,7 @@ database_t *database_create(void) {
 
     database->users        = user_manager_create();
     database->reservations = reservation_manager_create();
+    database->flights      = flight_manager_create();
     return database;
 }
 
@@ -58,8 +62,13 @@ reservation_manager_t *database_get_reservations(const database_t *database) {
     return database->reservations;
 }
 
+flight_manager_t *database_get_flights(const database_t *database) {
+    return database->flights;
+}
+
 void database_free(database_t *database) {
     user_manager_free(database->users);
     reservation_manager_free(database->reservations);
+    flight_manager_free(database->flights);
     free(database);
 }

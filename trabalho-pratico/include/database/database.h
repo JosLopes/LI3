@@ -45,7 +45,7 @@
  * }
  * ```
  *
- * If you don't wish to user ::dataset_loader_load, you may get the entity managers in the database
+ * If you don't wish to use ::dataset_loader_load, you may get the entity managers in the database
  * (by using ::database_get_users for a ::user_manager_t, for example) and interacting with those
  * managers directly.
  */
@@ -53,6 +53,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include "database/flight_manager.h"
 #include "database/reservation_manager.h"
 #include "database/user_manager.h"
 
@@ -84,6 +85,13 @@ user_manager_t *database_get_users(const database_t *database);
  * @returns The reservation manager in @p database.
  */
 reservation_manager_t *database_get_reservations(const database_t *database);
+
+/**
+ * @brief Gets the flight manager in a database.
+ * @param database Database to get the flight manager from.
+ * @returns The flight manager in @p database.
+ */
+flight_manager_t *database_get_flights(const database_t *database);
 
 /**
  * @brief Frees memory used by a database.

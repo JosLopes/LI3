@@ -139,7 +139,7 @@ void date_and_time_sprintf(char *output, date_and_time_t date_and_time);
  *
  * @return The difference `a - b` in seconds.
  */
-uint64_t date_and_time_diff(date_and_time_t a, date_and_time_t b);
+int64_t date_and_time_diff(date_and_time_t a, date_and_time_t b);
 
 /**
  * @brief Gets the date from a timed date.
