@@ -49,7 +49,7 @@ struct reservation_manager {
 };
 
 /** @brief Number of reservations in each block of ::reservation_manager::reservations. */
-#define RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY 20000
+#define RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY 50000
 
 /** @brief Number of characters in each block of ::reservation_manager::strings. */
 #define RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY 100000
@@ -62,7 +62,6 @@ reservation_manager_t *reservation_manager_create(void) {
     manager->reservations =
         __pool_create(reservation_sizeof(), RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY);
     if (!manager->reservations) {
-        pool_free(manager->reservations);
         free(manager);
         return NULL;
     }
@@ -70,7 +69,6 @@ reservation_manager_t *reservation_manager_create(void) {
     manager->strings = string_pool_create(RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
     if (!manager->strings) {
         pool_free(manager->reservations);
-        string_pool_free(manager->strings);
         free(manager);
         return NULL;
     }
@@ -96,6 +94,7 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
     if (pool_user_id && pool_hotel_name) {
         reservation_set_user_id(pool_reservation, pool_user_id);
         reservation_set_hotel_name(pool_reservation, pool_hotel_name);
+
         /* Reservation identifier */
         size_t res_id = reservation_get_id((reservation_t *) reservation);
 
@@ -127,13 +126,13 @@ reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manage
  *
  * @var reservation_manager_iter_reservation_data_t::callback
  *     @brief Callback to be called for every valid reservation.
- * @var reservation_manager_iter_reservation_data_t::original_reservation_data.
- *     @brief `reservation_data` parameter for every 
+ * @var reservation_manager_iter_reservation_data_t::original_user_data.
+ *     @brief `user_data` parameter for every
  *            ::reservation_manager_iter_reservation_data_t::callback.
  */
 typedef struct {
     reservation_manager_iter_callback_t callback;
-    void                               *original_reservation_data;
+    void                               *original_user_data;
 } reservation_manager_iter_reservation_data_t;
 
 /**
@@ -141,28 +140,26 @@ typedef struct {
  * @details Auxiliary function for ::reservation_manager_iter. Makes sure the target callback is
  *          only called for valid reservations.
  *
- * @param reservation_data A ::reservation_manager_iter_reservation_data_t.
- * @param item             A ::reservation_t in a reservation manager's pool.
+ * @param user_data A ::reservation_manager_iter_reservation_data_t.
+ * @param item      A ::reservation_t in a reservation manager's pool.
  *
  * @return The return value of the target callback, or `0` for filtered-out items.
  */
-int __reservation_manager_iter_callback(void *reservation_data, void *item) {
+int __reservation_manager_iter_callback(void *user_data, void *item) {
     if (reservation_is_valid((reservation_t *) item) == 0) {
         reservation_manager_iter_reservation_data_t *helper_data =
-            (reservation_manager_iter_reservation_data_t *) reservation_data;
-        return helper_data->callback(helper_data->original_reservation_data,
-                                     (reservation_t *) item);
+            (reservation_manager_iter_reservation_data_t *) user_data;
+        return helper_data->callback(helper_data->original_user_data, (reservation_t *) item);
     }
     return 0;
 }
 
 int reservation_manager_iter(reservation_manager_t              *manager,
                              reservation_manager_iter_callback_t callback,
-                             void                               *reservation_data) {
+                             void                               *user_data) {
 
-    reservation_manager_iter_reservation_data_t helper_data = {.callback = callback,
-                                                               .original_reservation_data =
-                                                                   reservation_data};
+    reservation_manager_iter_reservation_data_t helper_data = {.callback           = callback,
+                                                               .original_user_data = user_data};
     return pool_iter(manager->reservations, __reservation_manager_iter_callback, &helper_data);
 }
 

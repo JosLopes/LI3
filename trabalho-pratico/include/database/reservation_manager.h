@@ -15,11 +15,11 @@
  */
 
 /**
- * @file    user_manager.h
+ * @file    reservation_manager.h
  * @brief   Contains and manages all reservations in a database.
  * @details Usually, a reservation manager won't be created by itself, but inside a ::database_t.
  *
- * @anchor user_manager_examples
+ * @anchor reservation_manager_examples
  * ### Examples
  *
  * In the following example, a dataset is loaded into a database. The reservation manager is then
@@ -31,9 +31,9 @@
  * #include "database/reservation_manager.h"
  * #include "dataset/dataset_loader.h"
  *
- * //Callback called for every reservation in the database, that prints it to the screen.
- * int iter_callback(void *reservation_data, reservation_t *reservation) {
- *     (void) reservation_data;
+ * // Callback called for every reservation in the database, that prints it to the screen.
+ * int iter_callback(void *user_data, reservation_t *reservation) {
+ *     (void) user_data;
  *
  *     const char *user_id    = reservation_get_const_user_id(reservation);
  *     const char *hotel_name = reservation_get_const_hotel_name(reservation);
@@ -45,7 +45,8 @@
  *     int price_per_night    = reservation_get_price_per_night(reservation);
  *
  *     char includes_breakfast[INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE];
- *     includes_breakfast_sprintf(includes_breakfast,reservation_get_includes_breakfast(reservation));
+ *     includes_breakfast_sprintf(includes_breakfast,
+ *         reservation_get_includes_breakfast(reservation));
  *
  *     char begin_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
  *     date_sprintf(begin_date, reservation_get_begin_date(reservation));
@@ -54,7 +55,7 @@
  *     date_sprintf(end_date, reservation_get_end_date(reservation));
  *
  *     printf("--- reservation ---\nuser_id: %s\nhotel_name: %s\nincludes_breakfast: %s\n"
- *            "begin_date: %s\nend_date: %s\nid: BOOK%ld\nrating: %d\nhotel_id: HTL%d\n"
+ *            "begin_date: %s\nend_date: %s\nid: BOOK%zu\nrating: %d\nhotel_id: HTL%d\n"
  *            "hotel_stars: %d\n city_tax: %d\nprice_per_night: %d\n\n",
  *            user_id,
  *            hotel_name,
@@ -70,7 +71,6 @@
  *     return 0;
  * }
  *
- * //The entry point to the test program.
  * int main(void) {
  *     database_t *database = database_create();
  *     if (!database) {
@@ -113,14 +113,13 @@ typedef struct reservation_manager reservation_manager_t;
  * @brief   Callback type for reservation manager iterations.
  * @details Method called by ::reservation_manager_iter for every item in a ::reservation_manager_t.
  *
- * @param reservation_data Argument passed to ::reservation_manager_iter that is passed to every
- *                         callback, so that this method can change the program's state.
- * @param reservation      Reservation in the manager.
+ * @param user_data   Argument passed to ::reservation_manager_iter that is passed to every
+ *                    callback, so that this method can change the program's state.
+ * @param reservation Reservation in the manager.
  *
  * @return `0` on success, or any other value to order iteration to stop.
  */
-typedef int (*reservation_manager_iter_callback_t)(void          *reservation_data,
-                                                   reservation_t *reservation);
+typedef int (*reservation_manager_iter_callback_t)(void *user_data, reservation_t *reservation);
 
 /**
  * @brief   Instantiates a new ::reservation_manager_t.
@@ -157,8 +156,8 @@ reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manage
  *
  * @param manager   reservation manager to iterate through.
  * @param callback  Method to be called for every reservation stored in @p manager.
- * @param reservation_data Pointer to be passed to every @p callback, so that it can modify the
- *                         program's state.
+ * @param user_data Pointer to be passed to every @p callback, so that it can modify the program's
+ *                  state.
  *
  * @return The return value of the last-called @p callback.
  *
@@ -167,7 +166,7 @@ reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manage
  */
 int reservation_manager_iter(reservation_manager_t              *manager,
                              reservation_manager_iter_callback_t callback,
-                             void                               *reservation_data);
+                             void                               *user_data);
 
 /**
  * @brief Frees memory used by a reservation manager.

@@ -27,13 +27,13 @@
 /**
  * @brief Callback called for every reservation in the database, that prints it to the screen.
  *
- * @param reservation_data `NULL`.
- * @param reservation      reservation to be printed to `stdout`.
+ * @param user_data   `NULL`.
+ * @param reservation reservation to be printed to `stdout`.
  *
  * @retval Always `0`, as this cannot fail.
  */
-int iter_callback(void *reservation_data, reservation_t *reservation) {
-    (void) reservation_data;
+int iter_callback(void *user_data, reservation_t *reservation) {
+    (void) user_data;
 
     const char *user_id         = reservation_get_const_user_id(reservation);
     const char *hotel_name      = reservation_get_const_hotel_name(reservation);
@@ -55,7 +55,7 @@ int iter_callback(void *reservation_data, reservation_t *reservation) {
 
     printf(
         "--- reservation ---\nuser_id: %s\nhotel_name: %s\nincludes_breakfast: %s\n"
-        "begin_date: %s\nend_date: %s\nid: BOOK%ld\nrating: %d\nhotel_id: HTL%d\nhotel_stars: %d\n"
+        "begin_date: %s\nend_date: %s\nid: BOOK%zu\nrating: %d\nhotel_id: HTL%d\nhotel_stars: %d\n"
         "city_tax: %d\nprice_per_night: %d\n\n",
         user_id,
         hotel_name,
@@ -85,7 +85,7 @@ int main(void) {
         return 1;
     }
 
-    if (dataset_loader_load(database, "/home/jose/Desktop/datasets/dataset/data")) {
+    if (dataset_loader_load(database, "/home/voidbert/Uni/3/LI3/dataset/data")) {
         fputs("Failed to open dataset to be parsed.\n", stderr);
         return 1;
     }
