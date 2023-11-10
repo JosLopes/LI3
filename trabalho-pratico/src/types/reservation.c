@@ -16,6 +16,9 @@
 /**
  * @file  reservation.c
  * @brief Implementation of methods in include/types/reservation.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref reservation_examples).
  */
 
 #include <stdlib.h>

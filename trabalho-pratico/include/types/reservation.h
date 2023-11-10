@@ -25,6 +25,13 @@
  *
  *           You can see what fields define a reservation (and thus available through getters and
  *           setters) in the [struct's documentation](@ref reservation).
+ *
+ * @anchor reservation_examples
+ * ### Examples
+ *
+ * See [the examples in reservation_manager.h](@ref reservation_manager_examples). The callback
+ * there, `iter_callback` is a great example on how to extract all data from an existing
+ * reservation and print it to `stdout`.
  */
 #ifndef RESERVATION_H
 #define RESERVATION_H
