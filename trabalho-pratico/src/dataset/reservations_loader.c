@@ -227,14 +227,8 @@ int __reservation_loader_parse_end_date(void *loader_data, char *token, size_t n
     int    date_parse_ret = date_from_string(&date, token);
     if (date_parse_ret) {
         return date_parse_ret;
-
-        /*
-         * TODO - add when correct date difference has been merged
-         *
-         * } else if (date_diff(reservation_get_end_date(loader->current_reservation),
-         *                      reservation_get_begin_date(loader->current_reservation)) < 0) {
-         *   return 1;
-         */
+    } else if (date_diff(date, reservation_get_begin_date(loader->current_reservation)) < 0) {
+        return 1;
     } else {
         reservation_set_end_date(loader->current_reservation, date);
         return 0;
