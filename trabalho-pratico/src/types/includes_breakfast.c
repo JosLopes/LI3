@@ -28,40 +28,40 @@
 
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input) {
     size_t len = strlen(input);
-    if (*input == '\0' || (*input == '0' && len == 1)) {
-        *output = INCLUDES_BREAKFAST_FALSE;
-        return 0;
-    } else if (*input == '1' && len == 1) {
-        *output = INCLUDES_BREAKFAST_TRUE;
-        return 0;
-    }
+    if (len > INCLUDES_BREAKFAST_STRLEN_FALSE)
+        return 1;
 
     char lower_case[INCLUDES_BREAKFAST_STRLEN_FALSE + 1];
     for (size_t i = 0; i < len; ++i)
         lower_case[i] = tolower(input[i]);
     lower_case[len] = '\0';
-    
-    if(!strcmp(lower_case, "f") || !strcmp(lower_case, "false")) {
+
+    if (*lower_case == '\0') {
         *output = INCLUDES_BREAKFAST_FALSE;
         return 0;
-    } else if (!strcmp(lower_case, "t") || !strcmp(lower_case, "true")) {
+    } else if (strcmp(lower_case, "0") == 0) {
+        *output = INCLUDES_BREAKFAST_FALSE;
+        return 0;
+    } else if (strcmp(lower_case, "f") == 0) {
+        *output = INCLUDES_BREAKFAST_FALSE;
+        return 0;
+    } else if (strcmp(lower_case, "false") == 0) {
+        *output = INCLUDES_BREAKFAST_FALSE;
+        return 0;
+    } else if (strcmp(lower_case, "1") == 0) {
+        *output = INCLUDES_BREAKFAST_TRUE;
+        return 0;
+    } else if (strcmp(lower_case, "t") == 0) {
+        *output = INCLUDES_BREAKFAST_TRUE;
+        return 0;
+    } else if (strcmp(lower_case, "true") == 0) {
         *output = INCLUDES_BREAKFAST_TRUE;
         return 0;
     }
+
     return 1;
 }
 
 void includes_breakfast_sprintf(char *output, includes_breakfast_t breakfast) {
-    const char *source = "";
-
-    switch (breakfast) {
-        case INCLUDES_BREAKFAST_FALSE:
-            source = "false";
-            break;
-        case INCLUDES_BREAKFAST_TRUE:
-            source = "true";
-            break;
-    }
-
-    strcpy(output, source);
+    strcpy(output, breakfast == INCLUDES_BREAKFAST_TRUE ? "True" : "False");
 }
