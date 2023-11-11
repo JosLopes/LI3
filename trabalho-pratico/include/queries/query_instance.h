@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "queries/query_type_list.h"
+
 /**
  * @brief Instance of a query in a query file / inputted by the user.
  */
@@ -103,7 +105,13 @@ size_t query_instance_get_number_in_file(const query_instance_t *query);
  */
 void *query_instance_get_argument_data(const query_instance_t *query);
 
-/** @brief Frees memory used by a query instance, created by ::query_instance_create. */
-void query_instance_free(query_instance_t *query);
+/**
+ * @brief Frees memory used by a query instance, created by ::query_instance_create.
+ *
+ * @param query           Query instance to be freed.
+ * @param query_type_list List of supported queries (to know how to free `argument_data` in @p
+ *                        query).
+ */
+void query_instance_free(query_instance_t *query, query_type_list_t *query_type_list);
 
 #endif
