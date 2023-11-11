@@ -23,26 +23,18 @@
 #define INCLUDES_BREAKFAST_H
 
 /**
- * @brief   Indicates if breakfast is included for a ::reservation_t.
- * @details For the values `INCLUDES_BREAKFAST_0`, `INCLUDES_BREAKFAST_NO_INPUT`,
- *          `INCLUDES_BREAKFAST_F` and `INCLUDES_BREAKFAST_FALSE` a breakfast is not included, for
- *          every other value the reservation includes breakfast.
+ * @brief Indicates if breakfast is included for a ::reservation_t.
  */
 typedef enum includes_breakfast {
-    INCLUDES_BREAKFAST_0,
-    INCLUDES_BREAKFAST_1,
-    INCLUDES_BREAKFAST_NO_INPUT,
-    INCLUDES_BREAKFAST_F,
-    INCLUDES_BREAKFAST_FALSE,
-    INCLUDES_BREAKFAST_T,
-    INCLUDES_BREAKFAST_TRUE
+    INCLUDES_BREAKFAST_FALSE, /**< @brief Breakfast not included. */
+    INCLUDES_BREAKFAST_TRUE   /**< @brief Breakfast included. */
 } includes_breakfast_t;
 
 /**
  * @brief Parses a reservation's inclusion of breakfast.
  *
  * @param output Where the parsed value will be placed (only on success).
- * @param input  Input (`"0"`,`"1"`, NULL (no input), `"f"`, `"false"`, `"t"` or `"true"`).
+ * @param input  Input (`""`, `"0"`, `"f"`, `"false"`, `"1"`, `"t"` or `"true"`).
  *
  * @retval 0 Parsing success
  * @retval 1 Parsing failure
@@ -58,7 +50,7 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
  * | - | - | - | - | - | -- |
  * | 1 | 2 | 3 | 4 | 5 | 6  |
  */
-#define INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE 4
+#define INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE 6
 
 /**
  * @brief Prints an "includes breakfast" field using `sprintf`.

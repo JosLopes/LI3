@@ -21,52 +21,64 @@
 
 #include <stdio.h>
 
-#include "database/flight_manager.h"
+#include "database/reservation_manager.h"
 #include "dataset/dataset_loader.h"
-#include "types/flight.h"
-#include "utils/pool.h"
 
-int iter_callback(void *user_data, flight_t *flight) {
+/**
+ * @brief Callback called for every reservation in the database, that prints it to the screen.
+ *
+ * @param user_data   `NULL`.
+ * @param reservation reservation to be printed to `stdout`.
+ *
+ * @retval Always `0`, as this cannot fail.
+ */
+int iter_callback(void *user_data, reservation_t *reservation) {
     (void) user_data;
 
-    size_t      id          = flight_get_id(flight);
-    const char *airline     = flight_get_const_airline(flight);
-    const char *passport    = flight_get_const_plane_model(flight);
-    int         total_seats = flight_get_total_seats(flight);
+    const char *user_id         = reservation_get_const_user_id(reservation);
+    const char *hotel_name      = reservation_get_const_hotel_name(reservation);
+    size_t      id              = reservation_get_id(reservation);
+    int         rating          = reservation_get_rating(reservation);
+    int         hotel_id        = reservation_get_hotel_id(reservation);
+    int         hotel_stars     = reservation_get_hotel_stars(reservation);
+    int         city_tax        = reservation_get_city_tax(reservation);
+    int         price_per_night = reservation_get_price_per_night(reservation);
 
-    char origin[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
-    airport_code_sprintf(origin, flight_get_origin(flight));
+    char includes_breakfast[INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE];
+    includes_breakfast_sprintf(includes_breakfast, reservation_get_includes_breakfast(reservation));
 
-    char destination[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
-    airport_code_sprintf(destination, flight_get_destination(flight));
+    char begin_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
+    date_sprintf(begin_date, reservation_get_begin_date(reservation));
 
-    char schedule_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
-    date_and_time_sprintf(schedule_departure_date, flight_get_schedule_departure_date(flight));
+    char end_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
+    date_sprintf(end_date, reservation_get_end_date(reservation));
 
-    char schedule_arrival_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
-    date_and_time_sprintf(schedule_arrival_date, flight_get_schedule_arrival_date(flight));
-
-    char real_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
-    date_and_time_sprintf(real_departure_date, flight_get_real_departure_date(flight));
-
-    printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: %d\norigin: %s"
-           "\ndestination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
-           "real_departure_date: %s\npassenger_count: %d\n\n",
-           id,
-           airline,
-           passport,
-           total_seats,
-           origin,
-           destination,
-           schedule_departure_date,
-           schedule_arrival_date,
-           real_departure_date,
-           flight_get_number_of_passengers(flight));
-
-    return 0; // You can return a value other than 0 to order iteration to stop
+    printf(
+        "--- reservation ---\nuser_id: %s\nhotel_name: %s\nincludes_breakfast: %s\n"
+        "begin_date: %s\nend_date: %s\nid: BOOK%zu\nrating: %d\nhotel_id: HTL%d\nhotel_stars: %d\n"
+        "city_tax: %d\nprice_per_night: %d\n\n",
+        user_id,
+        hotel_name,
+        includes_breakfast,
+        begin_date,
+        end_date,
+        id,
+        rating,
+        hotel_id,
+        hotel_stars,
+        city_tax,
+        price_per_night);
+    return 0;
 }
 
-int main() {
+/**
+ * @brief The entry point to the test program.
+ * @details Tests for dataset parsing.
+
+ * @retval 0 Success
+ * @retval 1 Failure
+ */
+int main(void) {
     database_t *database = database_create();
     if (!database) {
         fprintf(stderr, "Failed to allocate database!");
@@ -78,7 +90,7 @@ int main() {
         return 1;
     }
 
-    flight_manager_iter(database_get_flights(database), iter_callback, NULL);
+    reservation_manager_iter(database_get_reservations(database), iter_callback, NULL);
 
     database_free(database);
     return 0;
