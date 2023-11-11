@@ -40,6 +40,8 @@
  *
  * @var reservations_loader_t::dataset
  *     @brief Dataset loader, so that errors can be reported.
+ * @var reservations_loader_t::users
+ *     @brief Users manager to check for existence of users mentioned in reservations.
  * @var reservations_loader_t::reservations
  *     @brief Reservations manager to add new reservations to.
  * @var reservations_loader_t::error_line
@@ -52,6 +54,7 @@
  */
 typedef struct {
     dataset_loader_t      *dataset;
+    user_manager_t        *users;
     reservation_manager_t *reservations;
 
     char *error_line;
@@ -107,7 +110,7 @@ int __reservation_loader_parse_user_id(void *loader_data, char *token, size_t nt
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
     size_t length = strlen(token);
-    if (length) {
+    if (length && user_manager_get_by_id(loader->users, token) != NULL) {
         reservation_set_user_id(loader->current_reservation, token);
         loader->user_id_terminator = token + length;
         return 0;
@@ -326,6 +329,7 @@ void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
     dataset_loader_report_reservations_error(dataset_loader, RESERVATIONS_LOADER_HEADER);
     reservations_loader_t data = {
         .dataset      = dataset_loader,
+        .users        = database_get_users(dataset_loader_get_database(dataset_loader)),
         .reservations = database_get_reservations(dataset_loader_get_database(dataset_loader)),
         .current_reservation = reservation_create()};
 
