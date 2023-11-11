@@ -104,6 +104,24 @@ size_t query_instance_get_number_in_file(const query_instance_t *query);
 void *query_instance_get_argument_data(const query_instance_t *query);
 
 /**
+ * @brief   Gets the size of a ::query_instance_t in memory.
+ * @details Useful for pool and contiguous array allocation.
+ * @return  `sizeof(query_instance_t)`.
+ */
+size_t query_instance_sizeof(void);
+
+/**
+ * @brief   Frees memory used by a query instance, when it's stored in a pool.
+ * @details Frees the contents of a `query_instance_t *`, but does not attempt to free the pointer
+ *          itself.
+ *
+ * @param query           Query instance to be freed.
+ * @param query_type_list List of supported queries (to know how to free `argument_data` in @p
+ *                        query).
+ */
+void query_instance_pooled_free(query_instance_t *query, query_type_list_t *query_type_list);
+
+/**
  * @brief Frees memory used by a query instance, created by ::query_instance_create.
  *
  * @param query           Query instance to be freed.

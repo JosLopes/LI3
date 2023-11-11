@@ -92,16 +92,22 @@ void *query_instance_get_argument_data(const query_instance_t *query) {
     return query->argument_data;
 }
 
-void query_instance_free(query_instance_t *query, query_type_list_t *query_type_list) {
+size_t query_instance_sizeof(void) {
+    return sizeof(struct query_instance);
+}
+
+void query_instance_pooled_free(query_instance_t *query, query_type_list_t *query_type_list) {
     query_type_t *type = query_type_list_get_by_index(query_type_list, query->type);
     if (!type) {
-        free(query);
         return; /* Invalid query type */
     } else {
         query_type_free_query_instance_argument_data_callback cb =
             query_type_get_free_query_instance_argument_data_callback(type);
         cb(query->argument_data);
     }
+}
 
+void query_instance_free(query_instance_t *query, query_type_list_t *query_type_list) {
+    query_instance_pooled_free(query, query_type_list);
     free(query);
 }
