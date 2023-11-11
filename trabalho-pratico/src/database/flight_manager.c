@@ -108,8 +108,21 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
     }
 }
 
-flight_t *flight_manager_get_by_id(const flight_manager_t *manager, const char *id) {
-    return g_hash_table_lookup(manager->id_flights_rel, id);
+flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id) {
+    return g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
+}
+
+int flight_manager_invalidate_by_id(flight_manager_t *manager, uint64_t id) {
+    (void) manager;
+    (void) id;
+
+    flight_t *flight = g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
+    if (!flight)
+        return 1;
+
+    flight_invalidate(flight);
+    g_hash_table_remove(manager->id_flights_rel, GINT_TO_POINTER(id));
+    return 0;
 }
 
 /**

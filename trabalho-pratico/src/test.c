@@ -51,7 +51,7 @@ int iter_callback(void *user_data, flight_t *flight) {
 
     printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: %d\norigin: %s"
            "\ndestination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
-           "real_departure_date: %s\n\n",
+           "real_departure_date: %s\npassenger_count: %d\n\n",
            id,
            airline,
            passport,
@@ -60,7 +60,8 @@ int iter_callback(void *user_data, flight_t *flight) {
            destination,
            schedule_departure_date,
            schedule_arrival_date,
-           real_departure_date);
+           real_departure_date,
+           flight_get_number_of_passengers(flight));
 
     return 0; // You can return a value other than 0 to order iteration to stop
 }
