@@ -58,8 +58,19 @@ query_type_t *query_type_create(
     query_type_parse_arguments_callback                   parse_arguments,
     query_type_free_query_instance_argument_data_callback free_query_instance_argument_data);
 
+/**
+ * @brief Gets the method called for parsing query arguments from a ::query_type_t.
+ * @param type ::query_type_t to get the method called for parsing query arguments from.
+ * @return The method called for parsing query arguments.
+ */
 query_type_parse_arguments_callback query_type_get_parse_arguments_callback(query_type_t *type);
 
+/**
+ * @brief Gets the method called for freeing ::query_instance::argument_data from a ::query_type_t.
+ * @param type ::query_type_t to get the method called for freeing ::query_instance::argument_data
+ *             from.
+ * @return The method called for freeing ::query_instance::argument_data.
+ */
 query_type_free_query_instance_argument_data_callback
     query_type_get_free_query_instance_argument_data_callback(query_type_t *type);
 
