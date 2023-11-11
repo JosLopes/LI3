@@ -17,6 +17,9 @@
 /**
  * @file  query_parser.c
  * @brief Implementation of methods in include/queries/query_parser.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref query_parser_examples).
  */
 
 #include <string.h>

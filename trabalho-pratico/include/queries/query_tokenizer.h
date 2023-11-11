@@ -24,6 +24,8 @@
  *          - There is no quote escaping;
  *          - Quotes must be preceded and proceded by spaces (e.g.: ``Hello "a b c" Goodbye``).
  *
+ *          Under normal circumstances, you should use a [query parser](@ref query_parser.h).
+ *
  * @anchor query_tokenizer_examples
  * ### Examples
  *

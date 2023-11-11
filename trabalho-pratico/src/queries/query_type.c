@@ -17,6 +17,9 @@
 /**
  * @file  query_type.c
  * @brief Implementation of methods in include/queries/query_type.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref query_type_examples).
  */
 
 #include <stdlib.h>

@@ -18,8 +18,10 @@
  * @file  query_instance.h
  * @brief An occurrence of a query (in a file, or inputted by the user).
  *
+ * @anchor query_instance_examples
  * ### Examples
- * TODO - query instance examples (when the rest of the query system is ready)
+ * TODO - query instance examples (when the rest of the query system, including dispatcher, is
+ *        ready)
  */
 
 #ifndef QUERY_INSTANCE_H
@@ -37,12 +39,8 @@ typedef struct query_instance query_instance_t;
 
 /**
  * @brief Create a new query instance.
- * @details You should not create a query instance yourself, but use a query parser instead. Also,
- *          the returned value should then be freed with ::query_instance_free.
- *
- * @return A new ::query_instance_t, or `NULL` on failure.
- *
- * TODO - link to query parser
+ * @return A new ::query_instance_t, that should be `free`'d with ::query_instance_free, or `NULL`
+ *         on failure.
  */
 query_instance_t *query_instance_create(void);
 

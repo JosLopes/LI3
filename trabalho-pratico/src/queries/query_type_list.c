@@ -17,6 +17,9 @@
 /**
  * @file  query_type_list.c
  * @brief Implementation of methods in include/queries/query_type_list.h
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_type_list_examples).
  */
 
 #include <stddef.h>
@@ -25,12 +28,12 @@
 #include "queries/q1.h"
 #include "queries/query_type_list.h"
 
-/** @brief Number of queries supported (1 to QUERY_TYPE_LIST_COUNT). */
+/** @brief Number of queries supported (1 to ::QUERY_TYPE_LIST_COUNT). */
 #define QUERY_TYPE_LIST_COUNT 1
 
 /**
  * @struct query_type_list
- * @brief List of all supported queries.
+ * @brief Container structure for the list of all supported queries.
  *
  * @var query_type_list::list
  *     @brief List of all supported queries.

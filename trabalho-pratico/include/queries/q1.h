@@ -15,8 +15,9 @@
  */
 
 /**
- * @file  q1.h
- * @brief A placeholder query. TODO - change this documentation when query 1 is actually done
+ * @file    q1.h
+ * @brief   A placeholder query.
+ * @details TODO - change this documentation when query 1 is actually done
  */
 
 #ifndef Q1_H
