@@ -155,7 +155,9 @@ int dataset_loader_load(database_t *database, const char *path) {
     users_loader_load(&loader, loader.users);
     flights_loader_load(&loader, loader.flights);
     reservations_loader_load(&loader, loader.reservations);
-    passengers_loader_load(&loader, loader.reservations);
+
+    rewind(loader.flights);
+    passengers_loader_load(&loader, loader.passengers, loader.flights);
 
     __dataset_loader_load_close_all_files(&loader);
     return 0;
