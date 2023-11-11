@@ -22,13 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "queries/query_tokenizer.h"
-
-int query_token_callback(void *user_data, char *token) {
-    (void) user_data;
-    printf("%s\n", token);
-    return 0;
-}
+#include "queries/query_parser.h"
 
 /**
  * @brief The entry point to the test program.
@@ -37,18 +31,35 @@ int query_token_callback(void *user_data, char *token) {
  * @retval 1 Insuccess
  */
 int main(void) {
-    const char *queries[4] = {"88F Hello world",
-                              "1 \"Hello, world\"",
-                              "2 \"multiple   spaces\"",
-                              "3 \"multiple quotes\" \"in this query\""};
+    const char *queries[5] = {"88F Hello world",
+                              "1 \"Hello, world\" test      123 \"last ends in quotes\"",
+                              "1F \"multiple   spaces\"",
+                              "3 \"unknown query\" \"number\"",
+                              "3F \"unknown formatted\" \"query\""};
 
-    for (size_t i = 0; i < 4; ++i) {
-        int result = query_tokenizer_tokenize_const(queries[i], query_token_callback, NULL);
-        if (result)
-            fprintf(stderr, "Failed to parse query: %s\n", queries[i]);
-        else
-            putchar('\n');
+    query_type_list_t *query_list = query_type_list_create();
+    if (!query_list) {
+        fprintf(stderr, "Failed to allocate query definitions!\n");
+        return 1;
     }
 
+    GPtrArray *aux = g_ptr_array_new();
+
+    for (size_t i = 0; i < 5; ++i) {
+        query_instance_t *query = query_instance_create();
+
+        int result = query_parser_parse_string_const(query, queries[i], query_list, aux);
+        if (result)
+            fprintf(stderr, "Failed to parse query: %s\n", queries[i]);
+        else if (query_instance_get_formatted(query))
+            printf("Query's output must be formatted!\n");
+        else
+            printf("Query's output should not be formatted!\n");
+
+        query_instance_free(query, query_list);
+    }
+
+    query_type_list_free(query_list);
+    g_ptr_array_free(aux, TRUE);
     return 0;
 }

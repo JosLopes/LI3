@@ -20,22 +20,25 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "queries/q1.h"
 
 void *__q1_parse_arguments(char **argv, size_t argc) {
-    (void) argv;
-    (void) argc;
+    printf("Q1 arguments: [ ");
+    for (size_t i = 0; i < argc; ++i) {
+        if (i == argc - 1)
+            printf("\"%s\"", argv[i]);
+        else
+            printf("\"%s\", ", argv[i]);
+    }
+    printf(" ]\n");
 
-    printf("Parsing Q1 arguments!");
-
-    return NULL; /* Fail */
+    return malloc(666); /* To prove there are no leaks */
 }
 
 void __q1_free_query_instance_argument_data(void *argument_data) {
-    (void) argument_data;
-
-    printf("Freeing Q1 argument data!");
+    free(argument_data);
 }
 
 query_type_t *q1_create(void) {
