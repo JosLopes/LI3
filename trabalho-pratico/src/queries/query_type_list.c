@@ -58,7 +58,7 @@ query_type_list_t *query_type_list_create(void) {
         }
     }
 
-    return 0;
+    return list;
 }
 
 query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index) {
