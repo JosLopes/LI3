@@ -53,6 +53,10 @@ struct query_instance {
 
 query_instance_t *query_instance_create(void) {
     query_instance_t *ret = malloc(sizeof(struct query_instance));
+    if (!ret)
+        return NULL;
+
+    ret->type = 0; /* Invalid type so that deallocations don't deal with uninitialized data */
     return ret;
 }
 
