@@ -21,6 +21,7 @@
 #include <stdio.h>
 
 #include "dataset/dataset_loader.h"
+#include "queries/query_type_list.h"
 
 /**
  * @brief The entry point to the main program.
@@ -38,19 +39,29 @@ int main(int argc, char **argv) {
         char *dataset_dir = argv[1], *query_file = argv[2];
         (void) query_file;
 
+        query_type_list_t *query_list = query_type_list_create();
+        if (!query_list) {
+            fprintf(stderr, "Failed to allocate query definitions!\n");
+            return 1;
+        }
+
         database_t *database = database_create();
         if (!database) {
-            fprintf(stderr, "Failed to allocate database!");
+            query_type_list_free(query_list);
+            fprintf(stderr, "Failed to allocate database!\n");
             return 1;
         }
 
         if (dataset_loader_load(database, dataset_dir)) {
+            query_type_list_free(query_list);
+            database_free(database);
             fputs("Failed to load dataset files!\n", stderr);
             return 1;
         }
 
         /* Parse and execute queries here */
 
+        query_type_list_free(query_list);
         database_free(database);
     } else {
         fputs("Invalid command-line arguments! Usage:\n\n", stderr);
