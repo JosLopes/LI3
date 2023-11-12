@@ -30,12 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "queries/query_instance_typedef.h"
 #include "queries/query_type_list.h"
-
-/**
- * @brief Instance of a query in a query file / inputted by the user.
- */
-typedef struct query_instance query_instance_t;
 
 /**
  * @brief Create a new query instance.

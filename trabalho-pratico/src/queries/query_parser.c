@@ -24,7 +24,6 @@
 
 #include <string.h>
 
-#include "queries/query_instance.h"
 #include "queries/query_parser.h"
 #include "queries/query_tokenizer.h"
 #include "utils/int_utils.h"
