@@ -26,14 +26,8 @@
 #include "queries/query_instance.h"
 
 void *__qplaceholder_parse_arguments(char **argv, size_t argc) {
-    printf("QPLACEHOLDER arguments: [ ");
-    for (size_t i = 0; i < argc; ++i) {
-        if (i == argc - 1)
-            printf("\"%s\"", argv[i]);
-        else
-            printf("\"%s\", ", argv[i]);
-    }
-    printf(" ]\n");
+    (void) argv;
+    (void) argc;
 
     return (void *) 1; /* Don't fail with NULL */
 }
@@ -49,11 +43,11 @@ void *__qplaceholder_generate_statistics(database_t       *database,
     (void) instances;
     (void) n;
 
-    return malloc(666); /* Leak test */
+    return NULL; /* Fail on purpose */
 }
 
 void __qplaceholder_free_statistics(void *statistics) {
-    free(statistics);
+    (void) statistics;
 }
 
 int __qplaceholder_execute(database_t       *database,
@@ -62,15 +56,17 @@ int __qplaceholder_execute(database_t       *database,
                            FILE             *output) {
     (void) database;
     (void) statistics;
+    (void) instance;
+    (void) output;
 
-    fprintf(output, "Query on line %zu\n", query_instance_get_number_in_file(instance));
+    /* fprintf(output, "Query on line %zu\n", query_instance_get_number_in_file(instance)); */
     return 0;
 }
 
 query_type_t *qplaceholder_create(void) {
     return query_type_create(__qplaceholder_parse_arguments,
                              __qplaceholder_free_query_instance_argument_data,
-                             __qplaceholder_generate_statistics,
-                             __qplaceholder_free_statistics,
+                             NULL,
+                             NULL,
                              __qplaceholder_execute);
 }
