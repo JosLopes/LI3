@@ -15,21 +15,21 @@
  */
 
 /**
- * @file    q1.h
+ * @file    qplaceholder.h
  * @brief   A placeholder query.
- * @details TODO - change this documentation when query 1 is actually done
+ * @details TODO - Remove when all queries are done
  */
 
-#ifndef Q1_H
-#define Q1_H
+#ifndef QPLACEHOLDER_H
+#define QPLACEHOLDER_H
 
 #include "queries/query_type.h"
 
 /**
- * @brief   Initializes the definition of query 1.
+ * @brief   Initializes the definition of this placeholder query.
  * @details This is done automatically in ::query_type_list_init.
  * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
  */
-query_type_t *q1_create(void);
+query_type_t *qplaceholder_create(void);
 
 #endif

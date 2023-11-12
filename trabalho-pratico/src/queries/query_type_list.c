@@ -25,11 +25,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "queries/q1.h"
+#include "queries/qplaceholder.h"
 #include "queries/query_type_list.h"
 
 /** @brief Number of queries supported (1 to ::QUERY_TYPE_LIST_COUNT). */
-#define QUERY_TYPE_LIST_COUNT 1
+#define QUERY_TYPE_LIST_COUNT 10
 
 /**
  * @struct query_type_list
@@ -47,7 +47,16 @@ query_type_list_t *query_type_list_create(void) {
     if (!list)
         return NULL;
 
-    query_type_t *(*constructors[QUERY_TYPE_LIST_COUNT])(void) = {q1_create};
+    query_type_t *(*constructors[QUERY_TYPE_LIST_COUNT])(void) = {qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create,
+                                                                  qplaceholder_create};
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         list->list[i] = constructors[i]();
