@@ -42,21 +42,21 @@
  *     @brief Method that executes a single query.
  */
 struct query_type {
-    query_type_parse_arguments_callback                   parse_arguments;
-    query_type_free_query_instance_argument_data_callback free_query_instance_argument_data;
+    query_type_parse_arguments_callback_t                   parse_arguments;
+    query_type_free_query_instance_argument_data_callback_t free_query_instance_argument_data;
 
-    query_type_generate_statistics_callback generate_statistics;
-    query_type_free_statistics_callback     free_statistics;
+    query_type_generate_statistics_callback_t generate_statistics;
+    query_type_free_statistics_callback_t     free_statistics;
 
-    query_type_execute_callback execute;
+    query_type_execute_callback_t execute;
 };
 
 query_type_t *query_type_create(
-    query_type_parse_arguments_callback                   parse_arguments,
-    query_type_free_query_instance_argument_data_callback free_query_instance_argument_data,
-    query_type_generate_statistics_callback               generate_statistics,
-    query_type_free_statistics_callback                   free_statistics,
-    query_type_execute_callback                           execute) {
+    query_type_parse_arguments_callback_t                   parse_arguments,
+    query_type_free_query_instance_argument_data_callback_t free_query_instance_argument_data,
+    query_type_generate_statistics_callback_t               generate_statistics,
+    query_type_free_statistics_callback_t                   free_statistics,
+    query_type_execute_callback_t                           execute) {
 
     query_type_t *query = malloc(sizeof(struct query_type));
     if (!query)
@@ -71,27 +71,27 @@ query_type_t *query_type_create(
     return query;
 }
 
-query_type_parse_arguments_callback query_type_get_parse_arguments_callback(query_type_t *type) {
+query_type_parse_arguments_callback_t query_type_get_parse_arguments_callback(query_type_t *type) {
     return type->parse_arguments;
 }
 
-query_type_free_query_instance_argument_data_callback
+query_type_free_query_instance_argument_data_callback_t
     query_type_get_free_query_instance_argument_data_callback(query_type_t *type) {
 
     return type->free_query_instance_argument_data;
 }
 
-query_type_generate_statistics_callback
+query_type_generate_statistics_callback_t
     query_type_get_generate_statistics_callback(query_type_t *type) {
 
     return type->generate_statistics;
 }
 
-query_type_free_statistics_callback query_type_get_free_statistics_callback(query_type_t *type) {
+query_type_free_statistics_callback_t query_type_get_free_statistics_callback(query_type_t *type) {
     return type->free_statistics;
 }
 
-query_type_execute_callback query_type_get_execute_callback(query_type_t *type) {
+query_type_execute_callback_t query_type_get_execute_callback(query_type_t *type) {
     return type->execute;
 }
 

@@ -27,7 +27,7 @@
  * - ::query_instance_set_type;
  * - ::query_instance_set_formatted;
  * - ::query_instance_set_number_in_file (use 1 if not a query in a file);
- * - ::query_instance_set_argument_data (see ::query_type_parse_arguments_callback for your query
+ * - ::query_instance_set_argument_data (see ::query_type_parse_arguments_callback_t for your query
  *   type).
  *
  * To run the query you created, see ::query_dispatcher_dispatch_single.

@@ -101,7 +101,7 @@ void query_instance_pooled_free(query_instance_t *query, query_type_list_t *quer
     if (!type) {
         return; /* Invalid query type */
     } else {
-        query_type_free_query_instance_argument_data_callback cb =
+        query_type_free_query_instance_argument_data_callback_t cb =
             query_type_get_free_query_instance_argument_data_callback(type);
         cb(query->argument_data);
     }

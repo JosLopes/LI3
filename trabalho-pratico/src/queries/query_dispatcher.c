@@ -75,10 +75,11 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
     if (!type)
         return 0;
 
-    query_type_generate_statistics_callback generate_stats =
+    query_type_generate_statistics_callback_t generate_stats =
         query_type_get_generate_statistics_callback(type);
-    query_type_free_statistics_callback free_stats = query_type_get_free_statistics_callback(type);
-    query_type_execute_callback         execute    = query_type_get_execute_callback(type);
+    query_type_free_statistics_callback_t free_stats =
+        query_type_get_free_statistics_callback(type);
+    query_type_execute_callback_t execute = query_type_get_execute_callback(type);
 
     void *statistics = NULL;
     if (generate_stats)

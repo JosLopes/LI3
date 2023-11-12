@@ -23,7 +23,7 @@
  *
  * The following example uses ::query_parser_parse_string_const. ::query_parser_parse_string has
  * the same behavior for non-constant strings. Also, suppose that query 1's
- * ::query_type_parse_arguments_callback just prints the queries arguments to `stdout`, and there
+ * ::query_type_parse_arguments_callback_t just prints the queries arguments to `stdout`, and there
  * are no other queries.
  *
  * ```c
