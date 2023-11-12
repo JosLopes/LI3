@@ -74,6 +74,26 @@ O \emph{parsing} de \emph{queries} requer um \emph{tokenizador} separado para li
 argumentos são válidos (\texttt{query\_parser}), e um \emph{parser} de um ficheiro com várias
 \emph{queries} em várias linhas (\texttt{query\_file\_parser}).
 
+\subsection{Tipos}
+
+\begin{center}
+	\includegraphics[scale=0.3]{res/tipos.png}
+\end{center}
+
+O nosso projeto define três tipos principais (\texttt{user\_t}, \texttt{reservation\_t} e
+\texttt{flight\_t}) associados aos conjuntos de dados guardados na \texttt{database}, e necessários
+para execução das \emph{queries}. A natureza das suas declarações é opaca, ou incompleta, pelo que
+as interfaces (\emph{header files}), respectivas a cada estrutura, disponibilizam getters e setters
+que fornecem aos módulos externos acesso aos seus campos, seja para modificar, ou para ler dados.
+Deste modo, conseguimos controlar o acesso aos dados presentes na \texttt{database}, prevenindo
+possíveis erros provenientes da incorreta manipulação das estruturas de dados. Ademais, garantimos
+que futuras alterações às estruturas estarão contidas apenas no respectivo módulo, aumentando o
+nivel de \emph{future proofing} do programa.  
+
+Já os tipos auxiliares (também opacos), que complementam, e dos quais dependem, os tipos principais,
+facilitam o \emph{parsing} e consequente armazenamento de dados (excluindo os desnecessários, como
+apontado na secção 2.1).
+
 \section{Otimização do uso de memória}
 
 Dado que os \emph{datasets} da 2.ª fase serão de maior dimensão, preocupámo-nos desde já com a
