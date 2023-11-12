@@ -42,6 +42,20 @@ void __qplaceholder_free_query_instance_argument_data(void *argument_data) {
     (void) argument_data;
 }
 
+void *__qplaceholder_generate_statistics(database_t       *database,
+                                         query_instance_t *instances,
+                                         size_t            n) {
+    (void) database;
+    (void) instances;
+    (void) n;
+
+    return malloc(666); /* Leak test */
+}
+
+void __qplaceholder_free_statistics(void *statistics) {
+    free(statistics);
+}
+
 int __qplaceholder_execute(database_t       *database,
                            void             *statistics,
                            query_instance_t *instance,
@@ -56,7 +70,7 @@ int __qplaceholder_execute(database_t       *database,
 query_type_t *qplaceholder_create(void) {
     return query_type_create(__qplaceholder_parse_arguments,
                              __qplaceholder_free_query_instance_argument_data,
-                             NULL,
-                             NULL,
+                             __qplaceholder_generate_statistics,
+                             __qplaceholder_free_statistics,
                              __qplaceholder_execute);
 }
