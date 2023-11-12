@@ -18,8 +18,8 @@
  * @file    query_instance_typedef.h
  * @brief   See query_instance.h.
  * @details This file exists to solve a fake circular dependency, as query_type.h only needs to
- *          know the type of a query instance, but does not need to interact with it (that's left
- *          to the callback implementation in q1.h through q10.h).
+ *          know ::query_instance_t is a valid type (to define its callbacks), but does not need to
+ *          interact with it (that's left to the callback implementation in q1.h through q10.h).
  */
 
 #ifndef QUERY_INSTANCE_TYPEDEF_H

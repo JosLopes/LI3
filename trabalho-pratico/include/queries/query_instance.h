@@ -20,8 +20,21 @@
  *
  * @anchor query_instance_examples
  * ### Examples
- * TODO - query instance examples (when the rest of the query system, including dispatcher, is
- *        ready)
+ *
+ * A query instance usually originates from a [query parser](@ref queryparser.h). You can also
+ * create it using ::query_instance_create, followed by calling each one of the following setters:
+ *
+ * - ::query_instance_set_type;
+ * - ::query_instance_set_formatted;
+ * - ::query_instance_set_number_in_file (use 1 if not a query in a file);
+ * - ::query_instance_set_argument_data (see ::query_type_parse_arguments_callback for your query
+ *   type).
+ *
+ * To run the query you created, see ::query_dispatcher_dispatch_single.
+ *
+ * In the end, don't forget to call ::query_instance_free. ::query_instance_pooled_free only
+ * applies if you haven't created your query instance with ::query_instance_create, but allocated
+ * it in a pool / array.
  */
 
 #ifndef QUERY_INSTANCE_H
@@ -50,14 +63,14 @@ void query_instance_set_type(query_instance_t *query, size_t type);
 /**
  * @brief Sets whether a query's output should be formatted or not.
  * @param query     Query instance to have its formatting flag set.
- * @param formatted If the query's output formatted or not.
+ * @param formatted If the query's output should be formatted or not.
  */
 void query_instance_set_formatted(query_instance_t *query, int formatted);
 
 /**
  * @brief Sets the number of the line a query was on.
- * @param query          Query instance to have its formatting flag set.
- * @param number_in_file The number of the line @p query query was on (in the query file).
+ * @param query          Query instance to have its line number in the file set.
+ * @param number_in_file The number of the line @p query was on (in the query file).
  */
 void query_instance_set_number_in_file(query_instance_t *query, size_t number_in_file);
 
@@ -72,28 +85,28 @@ void query_instance_set_argument_data(query_instance_t *query, void *argument_da
 
 /**
  * @brief  Gets the type of a query.
- * @param  query Query get the type from.
+ * @param  query Query to get the type from.
  * @return The type of @p query.
  */
 size_t query_instance_get_type(const query_instance_t *query);
 
 /**
  * @brief  Gets whether a query's output should or not be formatted.
- * @param  query Query get the formatted flag from.
+ * @param  query Query to get the formatted flag from.
  * @return Whether @p query 's output should or not be formatted.
  */
 int query_instance_get_formatted(const query_instance_t *query);
 
 /**
  * @brief  Gets the number of the line a query was on.
- * @param  query Query get the number in file from.
- * @return The number of the line @p query query was on.
+ * @param  query Query to get the number in file from.
+ * @return The number of the line @p query was on.
  */
 size_t query_instance_get_number_in_file(const query_instance_t *query);
 
 /**
  * @brief  Gets data resulting from parsing the query's arguments.
- * @param  query Query get the number in file from.
+ * @param  query Query to get argument data from.
  * @return Data resulting from parsing the query's arguments. Its data type will depend on the
  *         query's type.
  */

@@ -93,8 +93,9 @@
 /**
  * @brief Parses a **MODIFIABLE** string containing a query.
  *
- * @param output          Where the parsed query is placed. This will be modified on failure too.
- * @param input           String to parse, that will be modified in the parsing process.
+ * @param output          Where the parsed query is placed. This **will be modified on failure**
+ *                        too.
+ * @param input           String to parse, that **will be modified** in the parsing process.
  * @param query_type_list List of available queries.
  * @param aux             Auxiliary `GPtrArray`, that can be provided to be modified and avoid
  *                        memory allocations. If `NULL`, a new array will be instantiated.
@@ -112,8 +113,10 @@ int query_parser_parse_string(query_instance_t  *output,
 
 /**
  * @brief   Parses a string containing a query.
- * @details The current implementation copies the provided string to a temporary buffer. Keep that
- *          in mind for performance reasons.
+ *
+ * @details The current implementation allocates a writeable buffer and copies over the string
+ *          before calling ::query_parser_parse_string, so **it's very inefficient** and should not
+ *          be used for large strings.
  *
  * @param output          Where the parsed query is placed. This will be modified on failure too.
  * @param input           String to parse.

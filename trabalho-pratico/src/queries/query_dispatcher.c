@@ -39,6 +39,7 @@ void query_dispatcher_dispatch_single(database_t        *database,
 }
 
 /**
+ * @struct query_dispatcher_data_t
  * @brief Data needed while dispatching a list of queries.
  *
  * @var query_dispatcher_data_t::database

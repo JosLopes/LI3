@@ -34,7 +34,7 @@
  * @var query_instance_list::list
  *     @brief Actual sorted list of ::query_instance_t.
  * @var query_instance_list::sorted
- *     @brief If the list is sorted. When performing a lookup, the array will be sorted so that
+ *     @brief If the list is sorted. When performing an iteration, the array will be sorted so that
  *            this becomes `1`.
  */
 struct query_instance_list {

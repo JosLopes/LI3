@@ -20,8 +20,12 @@
  *
  * @anchor query_file_parser_examples
  * ### Examples
- * TODO - query file parser examples (when the rest of the query system, including dispatcher, is
- *        ready)
+ *
+ * To parse a file with queries, first create a
+ * [list of query types](@ref query_type_list_examples). Then, open the file with `fopen`, and,
+ * along with the query type list, pass it to ::query_file_parser_parse. In the end, don't forget to
+ * free the resulting ::query_instance_list_t using ::query_instance_list_free. See batch_mode.c
+ * for a code example.
  */
 
 #ifndef QUERY_FILE_PARSER_H
@@ -39,6 +43,9 @@
  *
  * @return A pointer to a ::query_instance_list_t, that must later be `free`'d by
  *         ::query_instance_list_free, or `NULL` on failure.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_file_parser_examples).
  */
 query_instance_list_t *query_file_parser_parse(FILE *input, query_type_list_t *query_type_list);
 

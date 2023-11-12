@@ -20,7 +20,13 @@
  *
  * @anchor query_dispatcher_examples
  * ### Examples
- * TODO
+ *
+ * batch_mode.c is a great example of everything you need to do to be able to start dispatching
+ * queries. Essentially, you need to [load a database from a dataset](@ref dataset_loader_examples),
+ * [create a list of query definitions](@ref query_type_list_examples) and
+ * [load a query file](@ref query_file_parser_examples). The hardest part is creating the set of
+ * output files for all queries. To make sure the output file order is correct,
+ * ::query_instance_list_iter is used.
  */
 
 #ifndef QUERY_DISPATCHER_H
@@ -47,7 +53,7 @@ void query_dispatcher_dispatch_single(database_t        *database,
 /**
  * @brief Runs a list of queries.
  *
- * @param database            Database, so that the query can get information.
+ * @param database            Database, so that the queries can get information.
  * @param query_instance_list List of queries to be run.
  * @param query_type_list     List of known queries.
  * @param outputs             Where the queries' results will be written to. These should be in

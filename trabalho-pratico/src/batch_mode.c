@@ -16,7 +16,7 @@
 
 /**
  * @file  batch_mode.c
- * @brief Implementation of methods in include/queries/batch_mode.h
+ * @brief Implementation of methods in batch_mode.c
  *
  * ### Examples
  * See [the header file's documentation](@ref batch_mode_examples).
@@ -31,7 +31,8 @@
 #include "queries/query_type_list.h"
 
 /**
- * @brief Data structure used for query iteration in ::__batch_mode_init_file_callback.
+ * @struct batch_mode_iter_data_t
+ * @brief  Data structure used for query iteration in ::__batch_mode_init_file_callback.
  *
  * @var batch_mode_iter_data::outputs
  *     @brief Where to write opened files to.
@@ -41,7 +42,7 @@
 typedef struct {
     FILE **outputs;
     size_t i;
-} batch_mode_iter_data;
+} batch_mode_iter_data_t;
 
 /**
  * @brief Called for each query, to open the file to write the query output.
@@ -50,7 +51,7 @@ typedef struct {
  * @param instance  Query query instance, whose output should be outputted.
  */
 int __batch_mode_init_file_callback(void *user_data, query_instance_t *instance) {
-    batch_mode_iter_data *iter_data = (batch_mode_iter_data *) user_data;
+    batch_mode_iter_data_t *iter_data = (batch_mode_iter_data_t *) user_data;
 
     char path[PATH_MAX];
     sprintf(path, "Resultados/command%zu_output.txt", query_instance_get_number_in_file(instance));
@@ -121,7 +122,7 @@ int batch_mode_run(const char *dataset_dir, const char *query_file_path) {
         return 1;
     }
 
-    batch_mode_iter_data iter_data = {.outputs = query_outputs, .i = 0};
+    batch_mode_iter_data_t iter_data = {.outputs = query_outputs, .i = 0};
     if (query_instance_list_iter(query_instance_list,
                                  __batch_mode_init_file_callback,
                                  &iter_data)) {

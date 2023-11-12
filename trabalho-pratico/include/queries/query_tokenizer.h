@@ -24,7 +24,8 @@
  *          - There is no quote escaping;
  *          - Quotes must be preceded and proceded by spaces (e.g.: ``Hello "a b c" Goodbye``).
  *
- *          Under normal circumstances, you should use a [query parser](@ref query_parser.h).
+ *          Under normal circumstances, you should use a [query parser](@ref query_parser.h)
+ *          instead.
  *
  * @anchor query_tokenizer_examples
  * ### Examples
@@ -70,7 +71,7 @@
 /**
  * @brief Splits a **MODIFIABLE** string into query tokens.
  *
- * a@param input     String to tokenize, that that will be modified for this function to work, but
+ * @param input     String to tokenize, that that will be modified for this function to work, but
  *                  later restored to its original form.
  * @param callback  Function called for every token read.
  * @param user_data Pointer passed to every call of @p callback, so that it can edit program state.

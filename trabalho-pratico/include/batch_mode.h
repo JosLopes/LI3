@@ -35,6 +35,9 @@
  * @retval 0 Success
  * @retval 1 Fatal failure (allocation / file IO errors). A message will also be printed to
  *         `stderr`.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref batch_mode_examples).
  */
 int batch_mode_run(const char *dataset_dir, const char *query_file_path);
 

@@ -50,6 +50,9 @@ typedef struct {
 /**
  * @brief Handles space-separated tokens from a string.
  * @details Auxiliary method for ::query_tokenizer_tokenize.
+ *
+ * @param tokenizer_data A pointer to a ::query_tokenizer_data_t.
+ * @param token          Space-separated token to process (take quotes into account).
  */
 int __query_tokenizer_handle_space_split(void *tokenizer_data, char *token) {
     query_tokenizer_data_t *tokenizer = (query_tokenizer_data_t *) tokenizer_data;

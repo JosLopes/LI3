@@ -29,7 +29,7 @@
 #include "utils/int_utils.h"
 
 /**
- * @brief query_parser_data
+ * @struct query_parser_data_t
  * @brief State of a query parser.
  *
  * @var query_parser_data_t::query_type_list
@@ -41,8 +41,8 @@
  * @var query_parser_data_t::first_token_parsed
  *     @brief Whether the first token (contains query number) has been parsed.
  * @var query_parser_data_t::last_terminator
- *     @brief Where null terminator (``'\0'``) should be placed, so that the last token ends. `NULL`
- *            if no token has yet been parsed.
+ *     @brief Where a null terminator (``'\0'``) should be placed, so that the last token ends.
+ *            `NULL` if no token has yet been parsed.
  */
 typedef struct {
     query_type_list_t *query_type_list;
@@ -52,6 +52,16 @@ typedef struct {
     char              *last_terminator;
 } query_parser_data_t;
 
+/**
+ * @brief   Callback for every token in the query.
+ * @details Parses the first token and adds the remaining ones to an array.
+ *
+ * @param user_data A pointer to a ::query_parser_data_t.
+ * @param token     Current query token being parsed.
+ *
+ * @retval 0 Parsing success
+ * @retval 1 Parsing failure
+ */
 int __query_parser_tokenize_callback(void *user_data, char *token) {
     query_parser_data_t *parser = (query_parser_data_t *) user_data;
 
