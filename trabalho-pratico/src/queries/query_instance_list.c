@@ -92,7 +92,7 @@ int query_instance_list_iter_types(query_instance_list_t                  *list,
         instance = (query_instance_t *) ((uint8_t *) instance + query_instance_sizeof());
         i++;
 
-        if (query_instance_get_type(instance) != current_set_type) {
+        if (i == list->list->len || query_instance_get_type(instance) != current_set_type) {
             if (current_set_count > 0) {
                 int cb_ret = callback(user_data, current_set, current_set_count);
                 if (cb_ret)
@@ -111,6 +111,31 @@ int query_instance_list_iter_types(query_instance_list_t                  *list,
     return 0;
 }
 
+int query_instance_list_iter(query_instance_list_t            *list,
+                             query_instance_list_iter_callback callback,
+                             void                             *user_data) {
+
+    if (!list->sorted) {
+        g_array_sort(list->list, __query_instance_list_compare);
+        list->sorted = 1;
+    }
+
+    for (size_t i = 0; i < list->list->len; ++i) {
+        query_instance_t *instance =
+            (query_instance_t *) ((uint8_t *) list->list->data + i * query_instance_sizeof());
+
+        int retval = callback(user_data, instance);
+        if (retval)
+            return retval;
+    }
+
+    return 0;
+}
+
+size_t query_instance_list_get_length(query_instance_list_t *list) {
+    return list->list->len;
+}
+
 void query_instance_list_free(query_instance_list_t *list, query_type_list_t *query_type_list) {
     for (size_t i = 0; i < list->list->len; ++i) {
         query_instance_t *instance =
@@ -118,6 +143,11 @@ void query_instance_list_free(query_instance_list_t *list, query_type_list_t *qu
         query_instance_pooled_free(instance, query_type_list);
     }
 
+    g_array_free(list->list, TRUE);
+    free(list);
+}
+
+void query_instance_list_free_no_internals(query_instance_list_t *list) {
     g_array_free(list->list, TRUE);
     free(list);
 }

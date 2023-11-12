@@ -50,6 +50,17 @@ typedef int (*query_instance_list_iter_types_callback)(void             *user_da
                                                        size_t            n);
 
 /**
+ * @brief Method called for every query in a query list, used by ::query_instance_list_iter.
+ *
+ * @param user_data Pointer, kept from call to call, so that this callback can modify the program's
+ *                  state.
+ * @param instance  Query instance.
+ *
+ * @return `0` on success, other value for immediate termination of iteration.
+ */
+typedef int (*query_instance_list_iter_callback)(void *user_data, query_instance_t *instance);
+
+/**
  * @brief   Creates an empty list of ::query_instance_t.
  * @details This value must be `free`'d with ::query_instance_list_free.
  * @return  A new ::query_instance_list_t, or `NULL` on failure.
@@ -57,10 +68,10 @@ typedef int (*query_instance_list_iter_types_callback)(void             *user_da
 query_instance_list_t *query_instance_list_create(void);
 
 /**
- * @brief   Moves a query instance into a list of query instances.
+ * @brief   **Moves** a query instance into a list of query instances.
  * @details Because this operation is a move, when ::query_instance_list_free gets called,
  *          ::query_instance_pooled_free will be called for every @p query you provide to this
- *          method.
+ *          method. See ::query_instance_list_free_no_internals to avoid those deletions.
  *
  * @param list  List of query instances to add @p query to.
  * @param query Query instance to be added to @p list.
@@ -81,6 +92,26 @@ int query_instance_list_iter_types(query_instance_list_t                  *list,
                                    void                                   *user_data);
 
 /**
+ * @brief Iterates over every query in a query instance lst.
+ *
+ * @param list      List of query instances.
+ * @param callback  Callback called for every set of queries of each type.
+ * @param user_data Value passed to @p callback, so that it can modify the program's state.
+ *
+ * @return The last value returned by @p callback (will always be `0` on success).
+ */
+int query_instance_list_iter(query_instance_list_t            *list,
+                             query_instance_list_iter_callback callback,
+                             void                             *user_data);
+
+/**
+ * @brief  Gets the length of a ::query_instance_list_t.
+ * @param  list List to get the length from.
+ * @return The length of @p list.
+ */
+size_t query_instance_list_get_length(query_instance_list_t *list);
+
+/**
  * @brief Frees memory allocated by ::query_instance_list_create.
  *
  * @param list List allocated by ::query_instance_list_create.
@@ -88,5 +119,13 @@ int query_instance_list_iter_types(query_instance_list_t                  *list,
  *                        query instance in the list).
  */
 void query_instance_list_free(query_instance_list_t *list, query_type_list_t *query_type_list);
+
+/**
+ * @brief Frees memory allocated by ::query_instance_list_create, but doesn't free the query
+ *        instances inside it.
+ *
+ * @param list List allocated by ::query_instance_list_create.
+ */
+void query_instance_list_free_no_internals(query_instance_list_t *list);
 
 #endif
