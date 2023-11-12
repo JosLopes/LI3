@@ -142,7 +142,18 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
  *
  * @return The flight with identifier @p id, or `NULL` if it does not exist.
  */
-flight_t *flight_manager_get_by_id(const flight_manager_t *manager, const char *id);
+flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id);
+
+/**
+ * @brief Invalidates a flight stored in a manager.
+ *
+ * @param manager Flight manager to get a flight removed from.
+ * @param id      Identifier of the flight to invalidate.
+ *
+ * @retval 0 Flight was in the manager and was invalidated.
+ * @retval 1 Flight not in the manager to begin with.
+ */
+int flight_manager_invalidate_by_id(flight_manager_t *manager, uint64_t id);
 
 /**
  * @brief   Iterates over all flights in a flight manager.

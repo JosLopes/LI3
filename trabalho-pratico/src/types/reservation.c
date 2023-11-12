@@ -16,6 +16,9 @@
 /**
  * @file  reservation.c
  * @brief Implementation of methods in include/types/reservation.h
+ *
+ * #### Example
+ * See [the header file's documentation](@ref reservation_examples).
  */
 
 #include <stdlib.h>
@@ -139,11 +142,11 @@ size_t reservation_get_id(reservation_t *reservation) {
     return reservation->id;
 }
 
-int reservation_get_const_rating(reservation_t *reservation) {
+int reservation_get_rating(reservation_t *reservation) {
     return reservation->rating;
 }
 
-int reservation_get_const_hotel_id(reservation_t *reservation) {
+int reservation_get_hotel_id(reservation_t *reservation) {
     return reservation->hotel_id;
 }
 
@@ -165,4 +168,12 @@ void reservation_free(reservation_t *reservation) {
 
 size_t reservation_sizeof(void) {
     return sizeof(struct reservation);
+}
+
+int reservation_is_valid(const reservation_t *reservation) {
+    return reservation->id == (size_t) -1;
+}
+
+void reservation_invalidate(reservation_t *reservation) {
+    reservation->id = -1;
 }

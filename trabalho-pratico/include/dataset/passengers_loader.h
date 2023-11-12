@@ -29,9 +29,14 @@
 /**
  * @brief Parses a `passengers.csv` dataset file.
  *
- * @param dataset_loader Dataset loader, for database modification and error reporting.
- * @param stream         File stream with passenger data to be loaded.
+ * @param dataset_loader    Dataset loader, for database modification and error reporting.
+ * @param passengers_stream File stream with passenger data to be loaded. It is assumed this stream
+ *                          is ordered by flight IDs.
+ * @param flights_stream    File stream with flight data to be printed in case of errors. It is
+ *                          assumed this stream is ordered by flight IDs.
  */
-void passengers_loader_load(dataset_loader_t *dataset_loader, FILE *stream);
+void passengers_loader_load(dataset_loader_t *dataset_loader,
+                            FILE             *passengers_stream,
+                            FILE             *flights_stream);
 
 #endif

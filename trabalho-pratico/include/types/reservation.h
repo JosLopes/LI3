@@ -25,12 +25,22 @@
  *
  *           You can see what fields define a reservation (and thus available through getters and
  *           setters) in the [struct's documentation](@ref reservation).
+ *
+ * @anchor reservation_examples
+ * ### Examples
+ *
+ * See [the examples in reservation_manager.h](@ref reservation_manager_examples). The callback
+ * there, `iter_callback` is a great example on how to extract all data from an existing
+ * reservation and print it to `stdout`.
  */
 #ifndef RESERVATION_H
 #define RESERVATION_H
 
 #include "types/includes_breakfast.h"
 #include "utils/date.h"
+
+/** @brief Value of a reservation's rating when it's not specified. */
+#define RESERVATION_NO_RATING 0
 
 /**
  * @brief Type `reservation_t` defined as a struct reservation, that stores valuable information of
@@ -96,7 +106,8 @@ void reservation_set_id(reservation_t *reservation, size_t id);
 /**
  * @brief Sets the reservation's rating.
  * @param reservation Reservation to have its rating set.
- * @param rating      Rating of the reservation.
+ * @param rating      Rating of the reservation. ::RESERVATION_NO_RATING means no rating was
+ *                    provided.
  */
 void reservation_set_rating(reservation_t *reservation, int rating);
 
@@ -173,16 +184,16 @@ size_t reservation_get_id(reservation_t *reservation);
 /**
  * @brief  Gets the reservation's rating.
  * @param  reservation Reservation to get the rating from.
- * @return The reservation's rating.
+ * @return The reservation's rating. ::RESERVATION_NO_RATING means no rating was provided.
  */
-int reservation_get_const_rating(reservation_t *reservation);
+int reservation_get_rating(reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel identifier.
  * @param  reservation Reservation to get the hotel identifier from.
  * @return The reservation's hotel identifier.
  */
-int reservation_get_const_hotel_id(reservation_t *reservation);
+int reservation_get_hotel_id(reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel stars.
@@ -219,5 +230,24 @@ void reservation_free(reservation_t *reservation);
  * @return  `sizeof(reservation_t)`.
  */
 size_t reservation_sizeof(void);
+
+/**
+ * @brief Checks if a reservation is valid.
+ *
+ * @param reservation Reservation to have its validity checked.
+ *
+ * @retval 0 Valid reservation.
+ * @retval 1 Invalid reservation.
+ */
+int reservation_is_valid(const reservation_t *reservation);
+
+/**
+ * @brief   Alters a reservation in a database to make it invalid.
+ * @details This will get rid of the reservation's original identifier, giving it the value "-1". If
+ *          you're not using pool storage, you must free it before using this method.
+ *
+ * @param reservation Reservation to be modified.
+ */
+void reservation_invalidate(reservation_t *reservation);
 
 #endif

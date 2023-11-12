@@ -133,7 +133,7 @@ $(DOCSDIR): $(SOURCES) $(HEADERS) $(THEMES)
 	$(eval TMP_LATEX = $(shell mktemp -d))
 
 	@mkdir -p $(BUILDDIR)
-	pdflatex -halt-on-error -output-directory $(TMP_LATEX) $<
+	cd reports && pdflatex -halt-on-error -output-directory $(TMP_LATEX) $(shell basename $<)
 	@cp $(TMP_LATEX)/$@ $(BUILDDIR)/$@
 	@ln -s $(BUILDDIR)/$@ $@
 	@rm -r $(TMP_LATEX)
@@ -142,7 +142,7 @@ $(DOCSDIR): $(SOURCES) $(HEADERS) $(THEMES)
 clean:
 	@# Reports must be removed from the "clean" rule when they're made permanent
 	rm -r $(BUILDDIR) $(DEPDIR) $(DOCSDIR) $(OBJDIR) $(REPORTS) $(MAIN_EXENAME) $(TEST_EXENAME) \
-		2> /dev/null ; true
+		Resultados 2> /dev/null ; true
 
 install: $(BUILDDIR)/$(MAIN_EXENAME)
 	install -Dm 755 $(BUILDDIR)/$(MAIN_EXENAME) $(PREFIX)/bin

@@ -18,62 +18,50 @@
  * @file  includes_breakfast.c
  * @brief Implementation of methods in include/types/includes_breakfast.h
  */
+#include <ctype.h>
 #include <string.h>
 
 #include "types/includes_breakfast.h"
 
+/** @brief Value of `strlen("false")`. */
+#define INCLUDES_BREAKFAST_STRLEN_FALSE 5
+
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input) {
-    if (*input == '\0') {
-        *output = INCLUDES_BREAKFAST_NO_INPUT;
-        return 0;
-    } else if (strcmp(input, "f") == 0) {
-        *output = INCLUDES_BREAKFAST_F;
-        return 0;
-    } else if (strcmp(input, "false") == 0) {
+    size_t len = strlen(input);
+    if (len > INCLUDES_BREAKFAST_STRLEN_FALSE)
+        return 1;
+
+    char lower_case[INCLUDES_BREAKFAST_STRLEN_FALSE + 1];
+    for (size_t i = 0; i < len; ++i)
+        lower_case[i] = tolower(input[i]);
+    lower_case[len] = '\0';
+
+    if (*lower_case == '\0') {
         *output = INCLUDES_BREAKFAST_FALSE;
         return 0;
-    } else if (strcmp(input, "t") == 0) {
-        *output = INCLUDES_BREAKFAST_T;
+    } else if (strcmp(lower_case, "0") == 0) {
+        *output = INCLUDES_BREAKFAST_FALSE;
         return 0;
-    } else if (strcmp(input, "true") == 0) {
+    } else if (strcmp(lower_case, "f") == 0) {
+        *output = INCLUDES_BREAKFAST_FALSE;
+        return 0;
+    } else if (strcmp(lower_case, "false") == 0) {
+        *output = INCLUDES_BREAKFAST_FALSE;
+        return 0;
+    } else if (strcmp(lower_case, "1") == 0) {
         *output = INCLUDES_BREAKFAST_TRUE;
         return 0;
-    } else if (strcmp(input, "1") == 0) {
-        *output = INCLUDES_BREAKFAST_1;
+    } else if (strcmp(lower_case, "t") == 0) {
+        *output = INCLUDES_BREAKFAST_TRUE;
         return 0;
-    } else if (strcmp(input, "0") == 0) {
-        *output = INCLUDES_BREAKFAST_0;
+    } else if (strcmp(lower_case, "true") == 0) {
+        *output = INCLUDES_BREAKFAST_TRUE;
         return 0;
     }
+
     return 1;
 }
 
 void includes_breakfast_sprintf(char *output, includes_breakfast_t breakfast) {
-    const char *source = "";
-
-    switch (breakfast) {
-        case INCLUDES_BREAKFAST_0:
-            source = "0";
-            break;
-        case INCLUDES_BREAKFAST_1:
-            source = "1";
-            break;
-        case INCLUDES_BREAKFAST_NO_INPUT:
-            source = "";
-            break;
-        case INCLUDES_BREAKFAST_F:
-            source = "f";
-            break;
-        case INCLUDES_BREAKFAST_FALSE:
-            source = "false";
-            break;
-        case INCLUDES_BREAKFAST_T:
-            source = "t";
-            break;
-        case INCLUDES_BREAKFAST_TRUE:
-            source = "true";
-            break;
-    }
-
-    strcpy(output, source);
+    strcpy(output, breakfast == INCLUDES_BREAKFAST_TRUE ? "True" : "False");
 }
