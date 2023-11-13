@@ -48,18 +48,7 @@
 #ifndef STREAM_UTILS_H
 #define STREAM_UTILS_H
 
-/**
- * @brief Callback method for ::stream_tokenize, called for every token read.
- *
- * @param user_data Pointer provided to ::stream_tokenize, kept from call to call, so that this
- *                  callback can modify the program's state.
- * @param token     The token that was read.
- *
- * @return `0` on success, other value for immediate termination of tokenization. It's recommeneded
- *         that these values are positive, as negative values have special meanings (see
- *         ::STREAM_TOKENIZE_RET_ALLOCATION_FAILURE).
- */
-typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
+#include "utils/tokenize_iter_callback.h"
 
 /**
  * @brief Value returned by ::stream_tokenize when allocations from `getdelim` fail.
