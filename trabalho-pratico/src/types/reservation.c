@@ -56,17 +56,17 @@
  *     @brief Price per night of a given reservation.
  */
 struct reservation {
-    char                   *user_id;
-    char                   *hotel_name;
-    enum includes_breakfast includes_breakfast;
-    date_t                  begin_date;
-    date_t                  end_date;
-    size_t                  id;
-    int                     rating;
-    int                     hotel_id;
-    int                     hotel_stars;
-    int                     city_tax;
-    int                     price_per_night;
+    char                *user_id;
+    char                *hotel_name;
+    includes_breakfast_t includes_breakfast;
+    date_t               begin_date;
+    date_t               end_date;
+    size_t               id;
+    int                  rating;
+    int                  hotel_id;
+    int                  hotel_stars;
+    int                  city_tax;
+    int                  price_per_night;
 };
 
 reservation_t *reservation_create(void) {
