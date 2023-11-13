@@ -74,25 +74,19 @@ O \emph{parsing} de \emph{queries} requer um \emph{tokenizador} separado para li
 argumentos são válidos (\texttt{query\_parser}), e um \emph{parser} de um ficheiro com várias
 \emph{queries} em várias linhas (\texttt{query\_file\_parser}).
 
-\subsection{Tipos}
+\subsection{Entidades}
 
 \begin{center}
 	\includegraphics[scale=0.3]{res/tipos.png}
 \end{center}
 
-O nosso projeto define três tipos principais (\texttt{user\_t}, \texttt{reservation\_t} e
-\texttt{flight\_t}) associados aos conjuntos de dados guardados na \texttt{database}, e necessários
-para execução das \emph{queries}. A natureza das suas declarações é opaca, ou incompleta, pelo que
-as interfaces (\emph{header files}), respectivas a cada estrutura, disponibilizam getters e setters
-que fornecem aos módulos externos acesso aos seus campos, seja para modificar, ou para ler dados.
-Deste modo, conseguimos controlar o acesso aos dados presentes na \texttt{database}, prevenindo
-possíveis erros provenientes da incorreta manipulação das estruturas de dados. Ademais, garantimos
-que futuras alterações às estruturas estarão contidas apenas no respectivo módulo, aumentando o
-nivel de \emph{future proofing} do programa.  
-
-Já os tipos auxiliares (também opacos), que complementam, e dos quais dependem, os tipos principais,
-facilitam o \emph{parsing} e consequente armazenamento de dados (excluindo os desnecessários, como
-apontado na secção 2.1).
+O nosso projeto define três entidades (\texttt{user\_t}, \texttt{reservation\_t} e
+\texttt{flight\_t}), correspondentes às definidas no enunciado do trabalho, juntamente com módulos
+de estruturas de dados auxiliares. Os campos destas entidades formam um subconjunto dos campos
+definidos no enunciado do trabalho (não armazenamos campos nunca pedidos por \emph{queries}). A
+única exceção ocorre nos voos, onde adicionamos um campo relativo ao número de passageiros, devido
+à sua grande utilidade tanto para a validação do \emph{dataset} como para a execução de
+\emph{queries}.
 
 \section{Otimização do uso de memória}
 
