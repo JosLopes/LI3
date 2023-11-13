@@ -83,18 +83,7 @@
 #ifndef STRING_UTILS_H
 #define STRING_UTILS_H
 
-/**
- * @brief Callback method for ::string_tokenize, called for every token read.
- *
- * @param user_data Pointer provided to ::string_tokenize, kept from call to call, so that this
- *                  callback can modify the program's state.
- * @param token     The token that was read.
- *
- * @return `0` on success, other value for immediate termination of tokenization. It's recommended
- *         that this value is positive, not to risk being confused with
- *         ::STRING_CONST_TOKENIZE_FAILED_MALLOC.
- */
-typedef int (*tokenize_iter_callback_t)(void *user_data, char *token);
+#include "utils/tokenize_iter_callback.h"
 
 /**
  * @brief Splits a **MODIFIABLE** string into tokens, separated by @p delimiter.

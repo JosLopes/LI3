@@ -16,42 +16,24 @@
 
 /**
  * @file main.c
- * @brief Contains the entry point to the program.
+ * @brief Contains the entry point to main the program.
  */
 #include <stdio.h>
 
-#include "dataset/dataset_loader.h"
+#include "batch_mode.h"
 
 /**
- * @brief The entry point to the main program.
+ * @brief  The entry point to the main program.
  * @retval 0 Success
  * @retval 1 Insuccess
  */
 int main(int argc, char **argv) {
     if (argc == 1) {
-        /* Interactive mode */
         fputs("Interactive mode not yet implemented!\n", stderr);
         fputs("We're very lucky if we manage to finish batch mode in time.\n", stderr);
         return 1;
     } else if (argc == 3) {
-        /* Batch mode */
-        char *dataset_dir = argv[1], *query_file = argv[2];
-        (void) query_file;
-
-        database_t *database = database_create();
-        if (!database) {
-            fprintf(stderr, "Failed to allocate database!");
-            return 1;
-        }
-
-        if (dataset_loader_load(database, dataset_dir)) {
-            fputs("Failed to load dataset files!\n", stderr);
-            return 1;
-        }
-
-        /* Parse and execute queries here */
-
-        database_free(database);
+        return batch_mode_run(argv[1], argv[2]);
     } else {
         fputs("Invalid command-line arguments! Usage:\n\n", stderr);
         fputs("./programa-principal - Interactive mode\n", stderr);

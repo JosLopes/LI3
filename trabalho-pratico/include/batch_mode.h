@@ -15,19 +15,30 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the test program.
+ * @file  batch_mode.h
+ * @brief Batch mode (read a batch of queries from a file)
+ *
+ * @anchor batch_mode_examples
+ * ### Examples
+ * See main.c.
  */
 
-#include <stdio.h>
+#ifndef BATCH_MODE_H
+#define BATCH_MODE_H
 
 /**
- * @brief The entry point to the test program.
- * @details Tests for query parsing.
+ * @brief Starts batch mode.
+ *
+ * @param dataset_dir     Path to the directory containing the dataset.
+ * @param query_file_path Path to the file containing the queries
+ *
  * @retval 0 Success
- * @retval 1 Insuccess
+ * @retval 1 Fatal failure (allocation / file IO errors). A message will also be printed to
+ *         `stderr`.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref batch_mode_examples).
  */
-int main(void) {
-    printf("Hello, world!");
-    return 0;
-}
+int batch_mode_run(const char *dataset_dir, const char *query_file_path);
+
+#endif

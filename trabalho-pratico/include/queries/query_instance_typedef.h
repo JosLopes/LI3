@@ -15,19 +15,19 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the test program.
+ * @file    query_instance_typedef.h
+ * @brief   See query_instance.h.
+ * @details This file exists to solve a fake circular dependency, as query_type.h only needs to
+ *          know ::query_instance_t is a valid type (to define its callbacks), but does not need to
+ *          interact with it (that's left to the callback implementation in q1.h through q10.h).
  */
 
-#include <stdio.h>
+#ifndef QUERY_INSTANCE_TYPEDEF_H
+#define QUERY_INSTANCE_TYPEDEF_H
 
 /**
- * @brief The entry point to the test program.
- * @details Tests for query parsing.
- * @retval 0 Success
- * @retval 1 Insuccess
+ * @brief Instance of a query in a query file / inputted by the user.
  */
-int main(void) {
-    printf("Hello, world!");
-    return 0;
-}
+typedef struct query_instance query_instance_t;
+
+#endif

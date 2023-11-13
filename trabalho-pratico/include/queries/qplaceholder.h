@@ -15,19 +15,21 @@
  */
 
 /**
- * @file test.c
- * @brief Contains the entry point to the test program.
+ * @file    qplaceholder.h
+ * @brief   A placeholder query.
+ * @details TODO - Remove when all queries are done
  */
 
-#include <stdio.h>
+#ifndef QPLACEHOLDER_H
+#define QPLACEHOLDER_H
+
+#include "queries/query_type.h"
 
 /**
- * @brief The entry point to the test program.
- * @details Tests for query parsing.
- * @retval 0 Success
- * @retval 1 Insuccess
+ * @brief   Initializes the definition of this placeholder query.
+ * @details This is done automatically in ::query_type_list_init.
+ * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
  */
-int main(void) {
-    printf("Hello, world!");
-    return 0;
-}
+query_type_t *qplaceholder_create(void);
+
+#endif
