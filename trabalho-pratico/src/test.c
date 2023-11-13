@@ -19,41 +19,95 @@
  * @brief Contains the entry point to test the program.
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 
-#include "utils/single_pool_id_linked_list.h"
+#include "database/user_manager.h"
+#include "dataset/dataset_loader.h"
+#include "types/user.h"
+#include "utils/pool.h"
+
+/**
+ * @brief Callback called for every user in the database, that prints it to the screen.
+ *
+ * @param user_data `NULL`.
+ * @param user      User to be printed to `stdout`.
+ *
+ * @retval Always `0`, as this cannot fail.
+ */
+int iter_callback(void *user_data, user_t *user) {
+    user_manager_t *manager = (user_manager_t *) user_data;
+
+    const char *id       = user_get_const_id(user);
+    const char *name     = user_get_const_name(user);
+    const char *passport = user_get_const_passport(user);
+
+    char country_code[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
+    country_code_sprintf(country_code, user_get_country_code(user));
+
+    char birth_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
+    date_sprintf(birth_date, user_get_birth_date(user));
+
+    const char *account_status =
+        user_get_account_status(user) == ACCOUNT_STATUS_INACTIVE ? "inactive" : "active";
+
+    char account_creation_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
+    date_and_time_sprintf(account_creation_date, user_get_account_creation_date(user));
+
+    printf("--- USER ---\nid: %s\nname: %s\npassport: %s\ncountry_code: %s\nbirth_date: "
+           "%s\naccount_status: %s\naccount_creation_date: %s\n",
+           id,
+           name,
+           passport,
+           country_code,
+           birth_date,
+           account_status,
+           account_creation_date);
+
+    printf("flights: ");
+    single_pool_id_linked_list_t *flights =
+        user_manager_get_flights_by_id(manager, user_get_const_id(user));
+
+    while (flights) {
+        printf("%010" PRIu64 " ", single_pool_id_linked_list_get_value(flights));
+        flights = single_pool_id_linked_list_get_next(flights);
+    }
+    putchar('\n');
+
+    printf("reservations: ");
+    single_pool_id_linked_list_t *reservations =
+        user_manager_get_reservations_by_id(manager, user_get_const_id(user));
+
+    while (reservations) {
+        printf("Book%010" PRIu64 " ", single_pool_id_linked_list_get_value(reservations));
+        reservations = single_pool_id_linked_list_get_next(reservations);
+    }
+
+    printf("\n\n");
+    return 0;
+}
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for linked lists.
+ * @details Tests for dataset parsing.
 
  * @retval 0 Success
- * @retval 1 Failure
+ * @retval 1 Insuccess
  */
 int main(void) {
-    /* Block size should be higher in practice */
-    pool_t *ll_pool = single_pool_id_linked_list_create_pool(20);
-    if (!ll_pool) {
-        fputs("Allocation failure!\n", stderr);
+    database_t *database = database_create();
+    if (!database) {
+        fprintf(stderr, "Failed to allocate database!");
         return 1;
     }
 
-    single_pool_id_linked_list_t *ll = single_pool_id_linked_list_create();
-
-    for (int i = 10; i >= 1; --i) {
-        ll = single_pool_id_linked_list_append_beginning(ll_pool, ll, i);
-        if (!ll) {
-            fputs("Allocation failure!\n", stderr);
-            return 1;
-        }
+    if (dataset_loader_load(database, "/home/voidbert/Uni/3/LI3/dataset/data")) {
+        fputs("Failed to open dataset to be parsed.\n", stderr);
+        return 1;
     }
 
-    single_pool_id_linked_list_t *iter_ll = ll;
-    while (iter_ll != NULL) {
-        printf("%" PRIu64 "\n", single_pool_id_linked_list_get_value(iter_ll));
-        iter_ll = single_pool_if_linked_list_get_next(iter_ll);
-    }
+    user_manager_iter(database_get_users(database), iter_callback, database_get_users(database));
 
-    pool_free(ll_pool);
+    database_free(database);
     return 0;
 }
