@@ -320,7 +320,12 @@ int __reservations_loader_after_parse_line(void *loader_data, int retval) {
         *loader->user_id_terminator    = '\0';
         *loader->hotel_name_terminator = '\0';
 
+        /* Ignore allocation errors */
         reservation_manager_add_reservation(loader->reservations, loader->current_reservation);
+        user_manager_add_user_reservation_association(
+            loader->users,
+            reservation_get_const_user_id(loader->current_reservation),
+            reservation_get_id(loader->current_reservation));
     }
     return 0;
 }

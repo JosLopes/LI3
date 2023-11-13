@@ -96,6 +96,7 @@
 #define USER_MANAGER_H
 
 #include "types/user.h"
+#include "utils/single_pool_id_linked_list.h"
 
 /**
  * @brief A data type that contains and manages all users in a database.
@@ -133,6 +134,33 @@ user_manager_t *user_manager_create(void);
 user_t *user_manager_add_user(user_manager_t *manager, const user_t *user);
 
 /**
+ * @brief Adds a user-flight relation to the user manager.
+ *
+ * @param manager   User manager to add @p flight_id to.
+ * @param user_id   Identifier of the user to add @p flight_id to.
+ * @param flight_id Identifier of the flight to be associated with @p user_id.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation failure or user not found.
+ */
+int user_manager_add_user_flight_association(user_manager_t *manager,
+                                             const char     *user_id,
+                                             uint64_t        flight_id);
+/**
+ * @brief Adds a reservation-flight relation to the user manager.
+ *
+ * @param manager        User manager to add @p reservation_id to.
+ * @param user_id        Identifier of the user to add @p reservation_id to.
+ * @param reservation_id Identifier of the reservation to be associated with @p user_id.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation failure or user not found.
+ */
+int user_manager_add_user_reservation_association(user_manager_t *manager,
+                                                  const char     *user_id,
+                                                  uint64_t        reservation_id);
+
+/**
  * @brief Gets a user stored in @p manager by its identifier.
  *
  * @param manager User manager where to perform the lookup.
@@ -141,6 +169,28 @@ user_t *user_manager_add_user(user_manager_t *manager, const user_t *user);
  * @return A ::user_t if it's found, `NULL` if it's not.
  */
 user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id);
+
+/**
+ * @brief Gets the flights a user travelled in, given a user's identifier.
+ *
+ * @param manager User manager where to perform the lookup.
+ * @param id      Identifier of the user to find.
+ *
+ * @return A linked list of flight IDs if it's found, `NULL` if it's not.
+ */
+single_pool_id_linked_list_t *user_manager_get_flights_by_id(const user_manager_t *manager,
+                                                             const char           *id);
+
+/**
+ * @brief Gets the bookings a user was involved in, given a user's identifier.
+ *
+ * @param manager User manager where to perform the lookup.
+ * @param id      Identifier of the user to find.
+ *
+ * @return A linked list of reservation IDs if it's found, `NULL` if it's not.
+ */
+single_pool_id_linked_list_t *user_manager_get_reservations_by_id(const user_manager_t *manager,
+                                                                  const char           *id);
 
 /**
  * @brief Iterates through every **valid** user in a user manager, calling @p callback for each one.

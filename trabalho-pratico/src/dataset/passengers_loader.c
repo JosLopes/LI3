@@ -150,9 +150,14 @@ void __passengers_loader_commit_flight_list(passengers_loader_t *loader) {
             sprintf(print_buffer, "%010" PRIu64 ";%s", loader->commit_buffer_flight, user_id);
             dataset_loader_report_passengers_error(loader->dataset, print_buffer);
         }
+    } else {
+        uint64_t flight_id = flight_get_id(flight);
+        for (size_t i = 0; i < loader->commit_buffer->len; ++i) {
+            const char *user_id = g_ptr_array_index(loader->commit_buffer, i);
+            /* Ignore allocation errors */
+            user_manager_add_user_flight_association(loader->users, user_id, flight_id);
+        }
     }
-
-    /* TODO - add passengers to database, when that's ready */
 }
 
 /** @brief Places a parsed passenger in the database and handles errors */
