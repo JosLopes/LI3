@@ -18,6 +18,7 @@
 #define POOL_H
 
 #include <inttypes.h>
+#include <stddef.h>
 
 /**
  * @file    pool.h
