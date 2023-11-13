@@ -16,82 +16,44 @@
 
 /**
  * @file test.c
- * @brief Contains the entry point to the program.
+ * @brief Contains the entry point to test the program.
  */
 
 #include <stdio.h>
 
-#include "database/reservation_manager.h"
-#include "dataset/dataset_loader.h"
-
-/**
- * @brief Callback called for every reservation in the database, that prints it to the screen.
- *
- * @param user_data   `NULL`.
- * @param reservation reservation to be printed to `stdout`.
- *
- * @retval Always `0`, as this cannot fail.
- */
-int iter_callback(void *user_data, reservation_t *reservation) {
-    (void) user_data;
-
-    const char *user_id         = reservation_get_const_user_id(reservation);
-    const char *hotel_name      = reservation_get_const_hotel_name(reservation);
-    size_t      id              = reservation_get_id(reservation);
-    int         rating          = reservation_get_rating(reservation);
-    int         hotel_id        = reservation_get_hotel_id(reservation);
-    int         hotel_stars     = reservation_get_hotel_stars(reservation);
-    int         city_tax        = reservation_get_city_tax(reservation);
-    int         price_per_night = reservation_get_price_per_night(reservation);
-
-    char includes_breakfast[INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE];
-    includes_breakfast_sprintf(includes_breakfast, reservation_get_includes_breakfast(reservation));
-
-    char begin_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
-    date_sprintf(begin_date, reservation_get_begin_date(reservation));
-
-    char end_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
-    date_sprintf(end_date, reservation_get_end_date(reservation));
-
-    printf(
-        "--- reservation ---\nuser_id: %s\nhotel_name: %s\nincludes_breakfast: %s\n"
-        "begin_date: %s\nend_date: %s\nid: BOOK%zu\nrating: %d\nhotel_id: HTL%d\nhotel_stars: %d\n"
-        "city_tax: %d\nprice_per_night: %d\n\n",
-        user_id,
-        hotel_name,
-        includes_breakfast,
-        begin_date,
-        end_date,
-        id,
-        rating,
-        hotel_id,
-        hotel_stars,
-        city_tax,
-        price_per_night);
-    return 0;
-}
+#include "utils/single_pool_id_linked_list.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for dataset parsing.
+ * @details Tests for linked lists.
 
  * @retval 0 Success
  * @retval 1 Failure
  */
 int main(void) {
-    database_t *database = database_create();
-    if (!database) {
-        fprintf(stderr, "Failed to allocate database!");
+    /* Block size should be higher in practice */
+    pool_t *ll_pool = single_pool_id_linked_list_create_pool(20);
+    if (!ll_pool) {
+        fputs("Allocation failure!\n", stderr);
         return 1;
     }
 
-    if (dataset_loader_load(database, "/home/voidbert/Uni/3/LI3/dataset/data")) {
-        fputs("Failed to open dataset to be parsed.\n", stderr);
-        return 1;
+    single_pool_id_linked_list_t *ll = single_pool_id_linked_list_create();
+
+    for (int i = 10; i >= 1; --i) {
+        ll = single_pool_id_linked_list_append_beginning(ll_pool, ll, i);
+        if (!ll) {
+            fputs("Allocation failure!\n", stderr);
+            return 1;
+        }
     }
 
-    reservation_manager_iter(database_get_reservations(database), iter_callback, NULL);
+    single_pool_id_linked_list_t *iter_ll = ll;
+    while (iter_ll != NULL) {
+        printf("%" PRIu64 "\n", single_pool_id_linked_list_get_value(iter_ll));
+        iter_ll = single_pool_if_linked_list_get_next(iter_ll);
+    }
 
-    database_free(database);
+    pool_free(ll_pool);
     return 0;
 }
