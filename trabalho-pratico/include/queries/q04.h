@@ -17,7 +17,7 @@
 /**
   * @file    q04.h
   * @brief   List hotel reservations, ordered by start date (from most recent to oldest).
-  * @details If two reservations have the same date, the reservation identifier must 
+  * @details If two reservations have the same date, the reservation identifier must
   *          be used as a tiebreaker (in ascending order).
   *
   * ### Examples
