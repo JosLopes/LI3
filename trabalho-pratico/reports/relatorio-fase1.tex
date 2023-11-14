@@ -74,6 +74,20 @@ O \emph{parsing} de \emph{queries} requer um \emph{tokenizador} separado para li
 argumentos são válidos (\texttt{query\_parser}), e um \emph{parser} de um ficheiro com várias
 \emph{queries} em várias linhas (\texttt{query\_file\_parser}).
 
+\subsection{Entidades}
+
+\begin{center}
+	\includegraphics[scale=0.2]{res/entities.png}
+\end{center}
+
+O nosso projeto define três entidades (\texttt{user\_t}, \texttt{reservation\_t} e
+\texttt{flight\_t}), correspondentes às definidas no enunciado do trabalho, juntamente com módulos
+de estruturas de dados auxiliares. Os campos destas entidades formam um subconjunto dos campos
+definidos no enunciado do trabalho (não armazenamos campos nunca pedidos por \emph{queries}). A
+única exceção ocorre nos voos, onde adicionamos um campo relativo ao número de passageiros, devido
+à sua grande utilidade tanto para a validação do \emph{dataset} como para a execução de
+\emph{queries}.
+
 \section{Otimização do uso de memória}
 
 Dado que os \emph{datasets} da 2.ª fase serão de maior dimensão, preocupámo-nos desde já com a
