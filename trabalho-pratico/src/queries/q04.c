@@ -173,7 +173,7 @@ int __q04_execute(database_t       *database,
                             (price_per_night * reservation_days * 0.01) * city_tax;
 
         fprintf(output,
-                "Book%zu;%s;%s;%s;%d;%.3f\n",
+                "Book%010zu;%s;%s;%s;%d;%.3f\n",
                 current_reservation_id,
                 begin_date_str,
                 end_date_str,
