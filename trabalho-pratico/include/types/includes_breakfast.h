@@ -25,7 +25,7 @@
 /**
  * @brief Indicates if breakfast is included for a ::reservation_t.
  */
-typedef enum includes_breakfast {
+typedef enum {
     INCLUDES_BREAKFAST_FALSE, /**< @brief Breakfast not included. */
     INCLUDES_BREAKFAST_TRUE   /**< @brief Breakfast included. */
 } includes_breakfast_t;
