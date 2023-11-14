@@ -102,25 +102,24 @@ int __q09_execute_iter_callback(void *user_data, user_t *user) {
  * @return A `char *` to be used with `strcmp` that must later be `free`'d.
  */
 char *__q9_prepare_for_comparison(const char *str) {
-    char *str_down = g_utf8_strdown(str, -1);
+    /*
+     * NOTE: in the future, it may be possible to calculate these comparison strings ahead of time,
+     *       and then use each one multiple times for sorting, reducing the number of this very
+     *       expensive operation
+     */
 
-    char *str_norm = g_utf8_normalize(str_down, -1, G_NORMALIZE_DEFAULT);
-    g_free(str_down);
-
-    char *str_out  = malloc(strlen(str_norm) + 1);
-
-    gunichar *str_utf32 = g_utf8_to_ucs4_fast(str_norm, -1, NULL);
-    g_free(str_norm);
+    char     *str_out  = malloc(strlen(str) + 1);
+    gunichar *str_utf32 = g_utf8_to_ucs4_fast(str, -1, NULL);
 
     char     *write = str_out;
     gunichar *read  = str_utf32;
     while (*read) {
-        if (*read == ' ' || *read == '-') {
-            /* Skip spaces and hyphens */
-        } else if (0x300 <= *read && *read <= 0x36F) {
-            /* Skip combining diacritics */
+        if (*read == ' ' || *read == '-' || (0x300 <= *read && *read <= 0x36F)) {
+            /* Skip spaces, hyphens and diacritics */
         } else {
-            write += g_unichar_to_utf8(*read, write);
+            gunichar decomposed[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
+            g_unichar_fully_decompose(*read, FALSE, decomposed, G_UNICHAR_MAX_DECOMPOSITION_LENGTH);
+            write += g_unichar_to_utf8(tolower(decomposed[0]), write);
         }
 
         read++;
