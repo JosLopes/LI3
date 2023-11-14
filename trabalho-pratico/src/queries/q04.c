@@ -172,14 +172,27 @@ int __q04_execute(database_t       *database,
         float total_price      = price_per_night * reservation_days +
                             (price_per_night * reservation_days * 0.01) * city_tax;
 
-        fprintf(output,
-                "Book%010zu;%s;%s;%s;%d;%.3f\n",
-                current_reservation_id,
-                begin_date_str,
-                end_date_str,
-                user_id,
-                rating,
-                total_price);
+        if (query_instance_get_formatted(instance)) {
+            fprintf(output,
+                    "--- %ld ---\nid: Book%010zu\nbegin_date: %s\nend_date: %s\nuser_id: "
+                    "%s\nrating: %d\ntotal_price: %.3f\n\n",
+                    i + 1,
+                    current_reservation_id,
+                    begin_date_str,
+                    end_date_str,
+                    user_id,
+                    rating,
+                    total_price);
+        } else {
+            fprintf(output,
+                    "Book%010zu;%s;%s;%s;%d;%.3f\n",
+                    current_reservation_id,
+                    begin_date_str,
+                    end_date_str,
+                    user_id,
+                    rating,
+                    total_price);
+        }
     }
 
     return 0;
