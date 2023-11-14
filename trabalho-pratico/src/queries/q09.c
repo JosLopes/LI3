@@ -83,7 +83,8 @@ int __q09_execute_iter_callback(void *user_data, user_t *user) {
     q09_execute_callback_user_data_t *execute_data = (q09_execute_callback_user_data_t *) user_data;
 
     if (strncmp(execute_data->needle, user_get_const_name(user), execute_data->needle_length) ==
-            0 && user_get_account_status(user) == ACCOUNT_STATUS_ACTIVE) {
+            0 &&
+        user_get_account_status(user) == ACCOUNT_STATUS_ACTIVE) {
 
         g_ptr_array_add(execute_data->matches, user);
     }
@@ -108,7 +109,7 @@ char *__q9_prepare_for_comparison(const char *str) {
      *       expensive operation
      */
 
-    char     *str_out  = malloc(strlen(str) + 1);
+    char     *str_out   = malloc(strlen(str) + 1);
     gunichar *str_utf32 = g_utf8_to_ucs4_fast(str, -1, NULL);
 
     char     *write = str_out;
