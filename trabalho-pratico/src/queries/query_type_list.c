@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "queries/q02.h"
 #include "queries/q03.h"
 #include "queries/q09.h"
 #include "queries/qplaceholder.h"
@@ -50,7 +51,7 @@ query_type_list_t *query_type_list_create(void) {
         return NULL;
 
     query_type_t *(*constructors[QUERY_TYPE_LIST_COUNT])(void) = {qplaceholder_create,
-                                                                  qplaceholder_create,
+                                                                  q02_create,
                                                                   q03_create,
                                                                   qplaceholder_create,
                                                                   qplaceholder_create,
