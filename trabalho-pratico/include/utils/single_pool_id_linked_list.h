@@ -119,4 +119,11 @@ uint64_t single_pool_id_linked_list_get_value(const single_pool_id_linked_list_t
 single_pool_id_linked_list_t *
     single_pool_id_linked_list_get_next(const single_pool_id_linked_list_t *list);
 
+/**
+ * @brief  Gets the length of a ::single_pool_id_linked_list_t.
+ * @param  list List to get length from.
+ * @return The length of the @p list.
+ */
+uint64_t single_pool_id_linked_list_length(const single_pool_id_linked_list_t *list);
+
 #endif

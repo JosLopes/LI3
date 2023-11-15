@@ -64,3 +64,18 @@ single_pool_id_linked_list_t *
 
     return list->next;
 }
+
+uint64_t single_pool_id_linked_list_length (const single_pool_id_linked_list_t *list) {
+    uint64_t counter=0;
+    if (!list){
+        return counter;
+    }
+    counter ++;
+
+    single_pool_id_linked_list_t *next_id = list->next;
+    while (next_id) {
+        next_id = next_id->next;
+        counter ++;
+    }
+    return counter;
+}
