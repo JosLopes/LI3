@@ -39,7 +39,7 @@
 #include "queries/query_type.h"
 
 /**
-  * @brief   Initializes the definition of the fourth query.
+  * @brief   Initializes the definition of the sixth query.
   * @details This is done automatically in ::query_type_list_create.
   * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
   */
