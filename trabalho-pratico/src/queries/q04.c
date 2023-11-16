@@ -181,6 +181,7 @@ void *__q04_generate_statistics(database_t *database, query_instance_t *instance
         return NULL;
     }
 
+    g_array_free(hotels_to_hash, TRUE);
     return hotel_reservations;
 }
 
