@@ -17,6 +17,47 @@
 /**
  * @file    q01.h
  * @brief   Implementation of query 1.
+ *
+ * ### Examples
+ *
+ * ```text
+ * 1 JéssiTavares910
+ * 1 DGarcia429
+ * 1 LGarcia1208
+ * 1 BSimões1222
+ * 1 AdriaBranco1042
+ * 1 CarAssunção255
+ * 1 EdSousa
+ * 1 0000000029
+ * 1 0000000444
+ * 1 0000000946
+ * 1 0000000296
+ * 1 0000000678
+ * 1 Book0000000048
+ * 1 Book0000033110
+ * 1 Book0000000156
+ * 1 Book0000020828
+ * 1 Book0000001504
+ * 1 Book0000024352
+ * 1F JéssiTavares910
+ * 1F DGarcia429
+ * 1F LGarcia1208
+ * 1F BSimões1222
+ * 1F AdriaBranco1042
+ * 1F CarAssunção255
+ * 1F EdSousa
+ * 1F 0000000029
+ * 1F 0000000444
+ * 1F 0000000946
+ * 1F 0000000296
+ * 1F 0000000678
+ * 1F Book0000000048
+ * 1F Book0000033110
+ * 1F Book0000000156
+ * 1F Book0000020828
+ * 1F Book0000001504
+ * 1F Book0000024352
+ * ```
  */
 
 #ifndef Q1_H
@@ -26,7 +67,7 @@
 
 /**
  * @brief   Initializes the definition of query 1.
- * @details This is done automatically in ::query_type_list_init.
+ * @details This is done automatically in ::query_type_list_create.
  * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
  */
 query_type_t *q01_create(void);
