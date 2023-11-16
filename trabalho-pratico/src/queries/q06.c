@@ -317,6 +317,7 @@ void *__q06_generate_statistics(database_t *database, query_instance_t *instance
                          __q06_generate_statistics_foreach_year,
                          years_airport_count_array);
 
+    g_array_free(years_to_account, TRUE);
     g_hash_table_destroy(years_airport_count);
     return years_airport_count_array;
 }
