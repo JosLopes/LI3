@@ -157,7 +157,7 @@ int __q01_execute_user_entity(database_t       *database,
 
     single_pool_id_linked_list_t *reservation_list =
         user_manager_get_reservations_by_id(user_manager, id);
-    uint64_t number_of_flights      =
+    uint64_t number_of_flights =
         single_pool_id_linked_list_length(user_manager_get_flights_by_id(user_manager, id));
     uint64_t number_of_reservations = single_pool_id_linked_list_length(reservation_list);
 
@@ -244,7 +244,7 @@ int __q01_execute_reservation_entity(database_t       *database,
     int64_t nights          = date_diff(end_date, begin_date);
     int     price_per_night = reservation_get_price_per_night(reservation);
     int     city_tax        = reservation_get_city_tax(reservation);
-    double  total_price = price_per_night * nights * (1 + 0.01 * city_tax);
+    double  total_price     = price_per_night * nights * (1 + 0.01 * city_tax);
 
     if (query_instance_get_formatted(instance)) {
         fprintf(output,
@@ -308,7 +308,8 @@ int __q01_execute_flight_entity(database_t       *database,
     char scheduled_arrival_str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
     date_and_time_sprintf(scheduled_arrival_str, flight_get_schedule_arrival_date(flight));
 
-    int64_t delay = date_and_time_diff(flight_get_real_departure_date(flight), schedule_departure_date);
+    int64_t delay =
+        date_and_time_diff(flight_get_real_departure_date(flight), schedule_departure_date);
 
     if (query_instance_get_formatted(instance)) {
         fprintf(output,
@@ -358,7 +359,7 @@ int __q01_execute(database_t       *database,
     (void) statistics;
 
     q01_parsed_arguments_t *arguments = query_instance_get_argument_data(instance);
-    void                   *id  = arguments->parsed_id;
+    void                   *id        = arguments->parsed_id;
 
     switch (arguments->id_entity) {
         case ID_ENTITY_USER:
@@ -369,7 +370,8 @@ int __q01_execute(database_t       *database,
             return __q01_execute_flight_entity(database, id, instance, output);
         default:
             return 1; /* unreachable */
-    }}
+    }
+}
 
 query_type_t *q01_create(void) {
     return query_type_create(__q01_parse_arguments,
