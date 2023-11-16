@@ -66,30 +66,37 @@ void __q04_free_query_instance_argument_data(void *argument_data) {
 }
 
 /**
-  * @struct q04_foreach_reservation_data_t
-  * @brief  Data needed while iterating over reservations.
-  *
-  * @var q04_foreach_reservation_data_t::reservation_ids
-  *     @brief Array of reservations booked in hotel_id, that will be sorted by date.
-  * @var q04_foreach_reservation_data_t::hotel_id
-  *     @brief Hotel ID to be used to filter reservations.
+  * @brief   Data passed to ::__q04_generate_statistics_foreach_reservation.
+  * @details Auxiliary method for ::__q04_generate_statistics.
   */
 typedef struct {
-    GArray   *reservation_ids;
-    uint64_t *hotel_id;
+    GArray     *hotels_to_hash;
+    GHashTable *hotel_reservations;
 } q04_foreach_reservation_data_t;
 
 /**
-  * @brief   A comparison function for sorting a `GArray` of reservation IDs by date.
+  * @brief Frees a `GArray` of reservations.
+  * @param data `GArray` to be freed.
+  */
+void __q04_free_reservations_array(gpointer data) {
+    g_array_free((GArray *) data, TRUE);
+}
+
+/**
+ * @brief   A comparison function for sorting an `GArray` of `uint64_t`s.
+ * @details Auxiliary method for ::__q04_generate_statistics.
+ */
+gint __q04_generate_statistics_uint64_compare_func(gconstpointer a, gconstpointer b) {
+    return ((int64_t) * (uint64_t *) a) - ((int64_t) * (uint64_t *) b);
+}
+
+/**
+  * @brief   A comparison function for sorting a `GArray` of reservations by date.
   * @details Auxiliary method for ::__q04_execute.
   */
-gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b, gpointer user_data) {
-    uint64_t               reservation_a_id = *((uint64_t *) a);
-    uint64_t               reservation_b_id = *((uint64_t *) b);
-    reservation_manager_t *manager          = (reservation_manager_t *) user_data;
-
-    reservation_t *reservation_a = reservation_manager_get_by_id(manager, reservation_a_id);
-    reservation_t *reservation_b = reservation_manager_get_by_id(manager, reservation_b_id);
+gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b) {
+    reservation_t *reservation_a = *((reservation_t **) a);
+    reservation_t *reservation_b = *((reservation_t **) b);
 
     if (date_diff(reservation_get_begin_date(reservation_a),
                   reservation_get_begin_date(reservation_b)) == 0) {
@@ -101,70 +108,131 @@ gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b, gpointer 
 }
 
 /**
-  * @brief   Callback function for ::reservation_manager_iter.
-  * @details Fills a `GArray` with reservation IDs that match the hotel ID.
+  * @brief   Callback for every reservation in the database.
+  * @details Auxiliary method for ::__q04_generate_statistics.
+  *
+  * @param user_data    A ::q04_foreach_reservation_data_t.
+  * @param reservation  A ::reservation_t in the database.
+  *
+  * @return `0` on success, `1` on allocation failure.
   */
-int __q04_fill_array_with_reservations(void *user_data, reservation_t *reservation) {
+int __q04_generate_statistics_foreach_reservation(void *user_data, reservation_t *reservation) {
     q04_foreach_reservation_data_t *foreach_data = (q04_foreach_reservation_data_t *) user_data;
 
-    uint64_t reservation_id = reservation_get_id(reservation);
+    uint64_t hotel_id = reservation_get_hotel_id(reservation);
 
-    if (reservation_get_hotel_id(reservation) == *((int *) foreach_data->hotel_id))
-        g_array_append_val(foreach_data->reservation_ids, reservation_id);
+    if (!g_array_binary_search(foreach_data->hotels_to_hash,
+                               &hotel_id,
+                               __q04_generate_statistics_uint64_compare_func,
+                               NULL))
+        return 0; /* This hotel wasn't mentioned in queries */
 
+    GArray *reservations =
+        g_hash_table_lookup(foreach_data->hotel_reservations, GUINT_TO_POINTER(hotel_id));
+
+    if (!reservations) {
+        reservations = g_array_new(FALSE, FALSE, sizeof(reservation_t *));
+        if (!reservations)
+            return 1; /* Allocation failure */
+
+        g_hash_table_insert(foreach_data->hotel_reservations,
+                            GUINT_TO_POINTER(hotel_id),
+                            reservations);
+    }
+
+    g_array_append_val(reservations, reservation);
     return 0;
 }
 
 /**
-  * @brief Method called to execute a query of type 4.
+  * @brief Generates statistical data for queries of type 4.
   *
-  * @param database   Database to get data from.
-  * @param statistics Statistical data (not used, as it isn't needed in this query).
-  * @param instance   Query instance to be executed.
-  * @param output     Where to write the query's result to.
+  * @param database   Database, to iterate through reservations.
+  * @param instances  Instances of the query.
+  * @param n          Number of instances.
   *
-  * @retval 0 Success
-  * @retval 1 Fatal failure
+  * @return A `GHashTable` associating hotel identifiers to `GArray`s of `reservation_t`s.
   */
+void *__q04_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+    (void) instances;
+    (void) n;
+
+    GArray *hotels_to_hash = g_array_new(FALSE, FALSE, sizeof(uint64_t));
+    for (size_t i = 0; i < n; ++i) {
+        uint64_t *hotel_id = (uint64_t *) query_instance_get_argument_data(instances);
+        g_array_append_val(hotels_to_hash, *hotel_id);
+        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
+    }
+    g_array_sort(hotels_to_hash, __q04_generate_statistics_uint64_compare_func);
+
+    GHashTable *hotel_reservations =
+        g_hash_table_new_full(g_direct_hash,
+                              g_direct_equal,
+                              NULL,
+                              (GDestroyNotify) __q04_free_reservations_array);
+    q04_foreach_reservation_data_t callback_data = {.hotels_to_hash     = hotels_to_hash,
+                                                    .hotel_reservations = hotel_reservations};
+
+    if (reservation_manager_iter(database_get_reservations(database),
+                                 __q04_generate_statistics_foreach_reservation,
+                                 &callback_data)) { /* Allocation failure */
+
+        g_hash_table_destroy(hotel_reservations);
+        return NULL;
+    }
+
+    return hotel_reservations;
+}
+
+/**
+ * @brief Frees statistical data generated by ::__q04_generate_statistics.
+ * @param statistics Data generated by ::__q04_generate_statistics.
+ */
+void __q04_free_statistics(void *statistics) {
+    g_hash_table_destroy(statistics);
+}
+
+/**
+ * @brief Method called to execute a query of type 4.
+ *
+ * @param database   Database to get data from (not used, as all data is collected in
+ *                   ::__q04_generate_statistics).
+ * @param statistics Statistical data generated by ::__q04_generate_statistics.
+ * @param instance   Query instance to be executed.
+ * @param output     Where to write the query's result to.
+ *
+ * @retval 0 Success
+ * @retval 1 Fatal failure.
+ */
 int __q04_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
                   FILE             *output) {
-    (void) statistics;
+    (void) database;
 
-    GArray   *reservation_ids = g_array_new(FALSE, FALSE, sizeof(uint64_t));
-    uint64_t *hotel_id        = (uint64_t *) query_instance_get_argument_data(instance);
+    uint64_t    hotel_id           = *((uint64_t *) query_instance_get_argument_data(instance));
+    GHashTable *hotel_reservations = (GHashTable *) statistics;
 
-    q04_foreach_reservation_data_t callback_data = {.reservation_ids = reservation_ids,
-                                                    .hotel_id        = hotel_id};
+    GArray *reservations = g_hash_table_lookup(hotel_reservations, GUINT_TO_POINTER(hotel_id));
+    g_array_sort(reservations, __q04_sort_reservations_by_date);
 
-    if (reservation_manager_iter(database_get_reservations(database),
-                                 __q04_fill_array_with_reservations,
-                                 &callback_data)) {
+    for (size_t i = 0; i < reservations->len; i++) {
+        reservation_t *reservation = g_array_index(reservations, reservation_t *, i);
 
-        g_array_free(reservation_ids, TRUE);
-        return 1;
-    }
+        if (!reservation)
+            return 1; /* Fatal failure */
 
-    g_array_sort_with_data(reservation_ids,
-                           __q04_sort_reservations_by_date,
-                           (gpointer *) database_get_reservations(database));
+        uint64_t    reservation_id  = reservation_get_id(reservation);
+        date_t      begin_date      = reservation_get_begin_date(reservation);
+        date_t      end_date        = reservation_get_end_date(reservation);
+        const char *user_id         = reservation_get_const_user_id(reservation);
+        int         rating          = reservation_get_rating(reservation);
+        int         price_per_night = reservation_get_price_per_night(reservation);
+        int         city_tax        = reservation_get_city_tax(reservation);
 
-    for (size_t i = 0; i < reservation_ids->len; i++) {
-        uint64_t       current_reservation_id = g_array_index(reservation_ids, uint64_t, i);
-        reservation_t *current_reservation =
-            reservation_manager_get_by_id(database_get_reservations(database),
-                                          current_reservation_id);
+        char begin_date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
+        char end_date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
 
-        date_t      begin_date      = reservation_get_begin_date(current_reservation);
-        date_t      end_date        = reservation_get_end_date(current_reservation);
-        const char *user_id         = reservation_get_const_user_id(current_reservation);
-        int         rating          = reservation_get_rating(current_reservation);
-        int         price_per_night = reservation_get_price_per_night(current_reservation);
-        int         city_tax        = reservation_get_city_tax(current_reservation);
-
-        char begin_date_str[11];
-        char end_date_str[11];
         date_sprintf(begin_date_str, begin_date);
         date_sprintf(end_date_str, end_date);
 
@@ -177,7 +245,7 @@ int __q04_execute(database_t       *database,
                     "--- %ld ---\nid: Book%010zu\nbegin_date: %s\nend_date: %s\nuser_id: "
                     "%s\nrating: %d\ntotal_price: %.3f\n\n",
                     i + 1,
-                    current_reservation_id,
+                    reservation_id,
                     begin_date_str,
                     end_date_str,
                     user_id,
@@ -186,7 +254,7 @@ int __q04_execute(database_t       *database,
         } else {
             fprintf(output,
                     "Book%010zu;%s;%s;%s;%d;%.3f\n",
-                    current_reservation_id,
+                    reservation_id,
                     begin_date_str,
                     end_date_str,
                     user_id,
@@ -201,7 +269,7 @@ int __q04_execute(database_t       *database,
 query_type_t *q04_create(void) {
     return query_type_create(__q04_parse_arguments,
                              __q04_free_query_instance_argument_data,
-                             NULL,
-                             NULL,
+                             __q04_generate_statistics,
+                             __q04_free_statistics,
                              __q04_execute);
 }
