@@ -88,6 +88,35 @@ definidos no enunciado do trabalho (não armazenamos campos nunca pedidos por \e
 à sua grande utilidade tanto para a validação do \emph{dataset} como para a execução de
 \emph{queries}.
 
+\subsection{Catálogos}
+
+\begin{center}
+	\includegraphics[scale=0.19]{res/database.png}
+\end{center}
+
+Antes de definirmos uma base de dados, começámos por definir estruturas que permitem melhorar a
+eficiência espacial e a velocidade das alocações na aplicação: um alocador em \texttt{pool} para
+objetos todos do mesmo tamanho, e uma \texttt{string\_pool} para \emph{strings}. Uma
+\texttt{single\_pool\_id\_linked\_list} é uma implementação de uma lista ligada na qual que várias
+listas podem partilhar a mesma \texttt{pool} para armazenamento de nodos, contribuindo para um
+menor uso de memória em \emph{overheads} de alocação.
+
+No módulo \texttt{database}, definimos uma estrutura de dados que contém os três \emph{managers} na
+aplicação: o \texttt{reservation\_manager}, que gere reservas, o \texttt{flight\_manager}, que gere
+voos, e o \texttt{user\_manager}, que gere utilizadores, ligando também cada utilizador aos
+identificadores de voos e reservas a ele associados. Todos estes \emph{managers} consistem numa
+\texttt{pool} para alocação de entidades, uma \texttt{string\_pool} para alocação de \emph{strings},
+e uma tabela de \emph{hash}, para a associação de identificadores de entidades às entidades em si.
+O \texttt{user\_manager} surge como exceção, onde cada identificador de um \texttt{user} se
+encontra também associado a listas ligadas com os IDs dos voos e reservas associados a esse
+utilizador.
+
+
+
+
+
+
+
 \section{Otimização do uso de memória}
 
 Dado que os \emph{datasets} da 2.ª fase serão de maior dimensão, preocupámo-nos desde já com a
