@@ -23,9 +23,9 @@
 #include <stdio.h> /* For testing purposes */
 #include <string.h>
 
+#include "dataset/dataset_parser.h"
 #include "dataset/flights_loader.h"
 #include "types/flight.h"
-#include "utils/dataset_parser.h"
 #include "utils/int_utils.h"
 
 /** @brief Table header for `flights_errors.csv` */

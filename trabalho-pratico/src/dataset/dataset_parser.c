@@ -16,16 +16,15 @@
 
 /**
  * @file  dataset_parser.c
- * @brief Implementation of methods in include/utils/dataset_parser.h
+ * @brief Implementation of methods in include/dataset/dataset_parser.h
  *
  * ### Examples
  * See [the header file's documentation](@ref dataset_parser_examples).
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/dataset_parser.h"
+#include "dataset/dataset_parser.h"
 #include "utils/stream_utils.h"
 
 /**
