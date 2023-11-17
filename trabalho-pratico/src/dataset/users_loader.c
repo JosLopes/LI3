@@ -22,9 +22,9 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "dataset/dataset_parser.h"
 #include "dataset/users_loader.h"
 #include "types/email.h"
-#include "utils/dataset_parser.h"
 #include "utils/date.h"
 #include "utils/date_and_time.h"
 

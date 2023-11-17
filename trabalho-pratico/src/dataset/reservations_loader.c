@@ -24,9 +24,9 @@
 #include <string.h>
 
 #include "database/reservation_manager.h"
+#include "dataset/dataset_parser.h"
 #include "dataset/reservations_loader.h"
 #include "types/reservation.h"
-#include "utils/dataset_parser.h"
 #include "utils/int_utils.h"
 
 /** @brief Table header for `reservations_errors.csv` */

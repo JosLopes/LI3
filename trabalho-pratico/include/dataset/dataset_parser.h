@@ -44,7 +44,7 @@
  * #include <stdlib.h>
  * #include <string.h>
  *
- * #include "utils/dataset_parser.h"
+ * #include "dataset/dataset_parser.h"
  * #include "utils/fixed_n_delimiter_parser.h"
  * #include "utils/string_utils.h"
  *
@@ -185,6 +185,8 @@
 
 #ifndef DATASET_PARSER_H
 #define DATASET_PARSER_H
+
+#include <stdio.h>
 
 #include "utils/fixed_n_delimiter_parser.h"
 
