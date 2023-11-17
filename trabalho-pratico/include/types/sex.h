@@ -39,4 +39,23 @@ typedef enum {
  */
 int sex_from_string(sex_t *output, const char *input);
 
+/**
+ * @brief The minimum number of characters (including null terminator) needed to write a sex tag
+ *        to a buffer using ::sex_sprintf.
+ * @details
+ *
+ * | F | \0 |
+ * | - | -- |
+ * | 1 | 2  |
+ */
+#define SEX_SPRINTF_MIN_BUFFER_SIZE 2
+
+/**
+ * @brief Prints a sex tag to a buffer.
+ *
+ * @param output Where to print the sex tag to. Must be at least ::SEX_SPRINTF_MIN_BUFFER_SIZE long.
+ * @param sex    Sex to be printed.
+ */
+void sex_sprintf(char *output, sex_t sex);
+
 #endif

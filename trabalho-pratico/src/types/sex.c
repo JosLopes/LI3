@@ -34,3 +34,12 @@ int sex_from_string(sex_t *output, const char *input) {
         return 1;
     }
 }
+
+void sex_sprintf(char *output, sex_t sex) {
+    if (sex == SEX_M) {
+        *output = 'M';
+    } else {
+        *output = 'F';
+    }
+    output[1] = '\0';
+}
