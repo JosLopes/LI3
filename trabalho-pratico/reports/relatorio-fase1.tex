@@ -186,9 +186,6 @@ Retornando à descrição de cada módulo, uma \texttt{query\_instance} refere-s
 Por último, o \texttt{query\_dispatcher} é o módulo responsável por executar uma lista de
 \emph{queries} dada uma base de dados e os ficheiros de \emph{output} de cada \emph{query}.
 
-
-
-
 \section{Otimização do uso de memória}
 
 Dado que os \emph{datasets} da 2.ª fase serão de maior dimensão, preocupámo-nos desde já com a
@@ -248,5 +245,27 @@ destas \emph{pools}. Para endereçar este problema, adicionámos um método \tex
 entidade que pretendíamos colocar em \emph{pools} (ex: \texttt{user\_sizeof}). A implementação
 deste método, no ficheiro C, tem acesso à \texttt{struct} interna, podendo simplesmente ser
 implementado como \texttt{return sizeof(user\_t);}.
+
+\section{Destaques e aspetos a melhorar}
+
+Estamos satisfeitos com o nível de modularidade e abstração que atingimos nesta primeira fase.
+Dada a estrutura modular do projeto, é importante que a interface de cada módulo apresente um
+comportamento bem documentado. Por isso, todos os métodos e estruturas de dados encontram-se
+fartamente documentados, com a inclusão de exemplos de utilização! Utilizando \emph{Doxygen},
+podemos formar páginas HTML com a documentação formatada, como visível na figura abaixo:
+
+\begin{center}
+    \includegraphics[scale=0.3]{res/doxygen.png}
+\end{center}
+
+Por outro lado, temos noção de que é possível ainda melhorar a modularidade, com a construção de
+abstrações sobre algumas estruturas de dados da \emph{glib}. No área do encapsulamento, apesar de
+termos definido \emph{getters} e \emph{setters}, fomos recentemente informados pelos docentes que
+deveríamos estar a criar cópias dos valores devolvidos, sendo o uso de \texttt{const}, a nossa
+solução atual, desaconselhado. Pretendemos implementar essa recomendação para a segunda fase de
+entrega.
+
+Por último, apesar de sermos o grupo com o trabalho completo com o menor uso de memória na
+plataforma de testes, ainda temos algumas ideias de como o melhorar para a próxima fase.
 
 \end{document}
