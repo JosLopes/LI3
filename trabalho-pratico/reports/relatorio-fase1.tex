@@ -4,14 +4,15 @@
 \usepackage{setspace}
 \usepackage[portuguese]{babel}
 \usepackage{graphicx}
+\usepackage{hyperref}
 
 \chardef\_=`_
 
 \title{\textbf{LI3 - Relatório da Fase I - Grupo 12}}
 \author{
-	Humberto Gomes (A104348) \\
-	José Lopes     (A104541) \\
-	José Matos     (A100612) \\
+    Humberto Gomes (A104348) \\
+    José Lopes     (A104541) \\
+    José Matos     (A100612) \\
 }
 \date{novembro de 2023}
 
@@ -41,15 +42,16 @@ dependência, mas apenas as mais relevantes.
 A nossa convenção gráfica é a seguinte:
 
 \begin{itemize}
-	\item Um retângulo representa um módulo;
-	\item Um retângulo com cantos arredondados representa uma estrutura de dados;
-	\item $A \rightarrow B$ significa que o módulo $A$ depende do módulo $B$.
+    \item Um retângulo representa um módulo;
+    \item Um retângulo com cantos arredondados representa uma estrutura de dados;
+    \item $A \rightarrow B$ significa que o módulo $A$ depende do módulo $B$.
 \end{itemize}
 
-\subsection{Subsistema de \emph{parsing}}
+\subsection{Subsistema de \emph{Parsing}}
+\label{sec:parsing}
 
 \begin{center}
-	\includegraphics[scale=0.17]{res/parsing.png}
+    \includegraphics[scale=0.17]{res/parsing.png}
 \end{center}
 
 O nosso sistema de \emph{parsing} começa com \emph{tokenizadores}, que separam \emph{strings} e
@@ -77,7 +79,7 @@ argumentos são válidos (\texttt{query\_parser}), e um \emph{parser} de um fich
 \subsection{Entidades}
 
 \begin{center}
-	\includegraphics[scale=0.2]{res/entities.png}
+    \includegraphics[scale=0.2]{res/entities.png}
 \end{center}
 
 O nosso projeto define três entidades (\texttt{user\_t}, \texttt{reservation\_t} e
@@ -91,7 +93,7 @@ definidos no enunciado do trabalho (não armazenamos campos nunca pedidos por \e
 \subsection{Catálogos}
 
 \begin{center}
-	\includegraphics[scale=0.19]{res/database.png}
+    \includegraphics[scale=0.19]{res/database.png}
 \end{center}
 
 Antes de definirmos uma base de dados, começámos por definir estruturas que permitem melhorar a
@@ -111,8 +113,78 @@ O \texttt{user\_manager} surge como exceção, onde cada identificador de um \te
 encontra também associado a listas ligadas com os IDs dos voos e reservas associados a esse
 utilizador.
 
+\subsection{\emph{Queries}}
 
+\begin{center}
+    \includegraphics[scale=0.19]{res/queries.png}
+\end{center}
 
+O \emph{parsing} de \emph{queries} já foi descrito na secção \nameref{sec:parsing}. No sistema de
+\emph{queries}, começámos por definir um \texttt{query\_type}, um conjunto de \emph{callbacks} que
+define uma \emph{query}, de modo a se simular polimorfismo em C. Definir uma \emph{query} resume-se
+a a definir uma função para cada \emph{callback}, e adicioná-la à \texttt{query\_type\_list}, a
+lista de todas as \emph{queries} conhecidas.
+
+Antes de enumerar as \emph{queries} implementadas, devemos mencionar como geramos dados estatísticos
+para uma \emph{query}. Ao contrário do sugerido no enunciado no projeto, não utilizamos um módulo
+para estatísticas, dado que implementá-lo seria uma quebra do modularidade da aplicação: implementar
+uma nova \emph{query} implicaria edições consideráveis a vários módulos. Sendo assim, optámos por um
+modelo em que dados estatísticos são gerados por cada tipo (número) de \emph{query}, e são
+partilhados por todas as \emph{queries} do mesmo tipo. Por exemplo, torna-se possível fazer uma
+única iteração da base de dados para todas as \emph{queries} do tipo 3, em vez de uma iteração para
+cada \emph{query} deste tipo. Assim, temos uma solução mais modular, mas com pior desempenho do que
+um módulo de estatísticas globais (que faria uma única iteração pelos dados).
+
+Estas são as \emph{queries} que implementámos nesta primeira fase:
+
+\begin{itemize}
+    \item \textbf{Q01} - Consulta de uma entidade pelo seu identificador. A sua implementação foi
+                         trivial: começa-se por determinar o tipo da entidade com base no formato
+                         do seu identificador, processo seguido da consulta direta do \emph{manager}
+                         correto na base de dados.
+
+    \item \textbf{Q02} - Listagem de voos e / ou reservas de um utilizador. Também de implementação
+                         trivial, esta \emph{query} pede a lista de reservas / voos (ou ambas) de um
+                         utilizador ao \texttt{user\_manager} (consulta direta), seguida da consulta
+                         também direta do \emph{manager} adequado para cada voo / reserva, para a
+                         obtenção de informação sobre data do evento.
+
+    \item \textbf{Q03} - Apresentação da classificação média de um hotel. Numa única iteração
+                         estatística pelas reservas, calcula-se a média de todos os hotéis
+                         mencionados nas \emph{queries} de tipo 3. A execução de cada \emph{query}
+                         resume-se então à consulta direta dos dados estatísticos, formados por uma
+                         tabela de \emph{hash} que associa o identificador de um hotel à sua média.
+
+    \item \textbf{Q04} - Listagem das reservas de um hotel. Tal como a Q03, faz-se uma única
+                         iteração estatística da lista de reservas, mas em vez de se calcular uma
+                         média com cada reserva, adiciona-se a reserva a um \emph{array} associado
+                         a esse hotel através de uma tabela de \emph{hash}. Após se ordenar cada
+                         \emph{array}, pode-se proceder à execução de cada \emph{query}, uma
+                         consulta direta dos dados estatísticos.
+
+    \item \textbf{Q06} - Listagem dos $N$ aeroportos com mais passageiros num dado ano. Com uma
+                         única iteração estatística pelo \texttt{flight\_manager}, forma-se uma
+                         tabela de \emph{hash}, que associa anos a outras tabelas de \emph{hash},
+                         que por sua vez associam aeroportos a números de passageiros. Cada uma
+                         destas segundas tabelas de \emph{hash} é convertida para um \emph{array}
+                         ordenado de pares aeroporto-passageiros. Assim, a execução de uma
+                         \emph{query} limita-se à escolha do \emph{array} de pares corretos e à
+                         apresentação dos seus primeiros $N$ elementos.
+
+    \item \textbf{Q09} - Listagem de todos os utilizadores cujo nome tenha como prefixo o argumento
+                         desta \emph{query}. De momento, devido ao breve prazo de entrega,
+                         implementámos esta \emph{query} ineficientemente, com uma iteração do
+                         gestor de utilizadores e filtragem dos nomes por cada \emph{query} no
+                         ficheiro de \emph{input}. Segue-se a ordernação e apresentação dos
+                         resultados. Pretendemos melhorar esta \emph{query} na segunda fase,
+                         adicionando uma árvore binária de procura com os nomes dos utilizadores
+                         ao \texttt{user\_manager}.
+\end{itemize}
+
+Retornando à descrição de cada módulo, uma \texttt{query\_instance} refere-se à ocorrência de uma
+\emph{query} (num ficheiro, por exemplo), e uma \texttt{query\_instance\_list} a uma lista destas.
+Por último, o \texttt{query\_dispatcher} é o módulo responsável por executar uma lista de
+\emph{queries} dada uma base de dados e os ficheiros de \emph{output} de cada \emph{query}.
 
 
 
@@ -152,9 +224,9 @@ datas:
     \begin{tabular}{ |l|l| }
         \hline
         \emph{include/utils/date.h}: & \emph{src/utils/date.c}: \\
-		& \\
-		\texttt{typedef int32\_t date\_t;} & \texttt{typedef union \{} \\
-										   & \texttt{\hspace{0.5cm}date\_t date;} \\
+        & \\
+        \texttt{typedef int32\_t date\_t;} & \texttt{typedef union \{} \\
+                                           & \texttt{\hspace{0.5cm}date\_t date;} \\
                                            & \texttt{} \\
                                            & \texttt{\hspace{0.5cm}struct \{} \\
                                            & \texttt{\hspace{1cm}uint16\_t year;} \\
