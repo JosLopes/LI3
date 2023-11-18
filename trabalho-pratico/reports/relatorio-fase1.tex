@@ -298,4 +298,15 @@ completas, com um \emph{Makefile} com geração automática de dependências (pa
 compilação), e \emph{scripts} para verificação de \emph{memory leaks} (com supressões), formatação
 automática de código, e \emph{profiling}.
 
+\section{Conclusão}
+
+Em suma, nesta primeira fase, procurámos criar alicerces sólidos para a estrutura da nossa
+aplicação, sobre os quais poderemos facilmente desenvolver a segunda fase, tirando proveito da
+extensibilidade que o desenvolvimento modular tem para oferecer. Estamos confiantes de que o
+\emph{dataset} de maior dimensão da 2.ª fase será capaz de caber em memória com as nossas estruturas
+de dados, mas temos noção de que vamos ter um elevado crescimento no tempo de execução do programa:
+além do aumento (possivelmente linear) devido ao maior \emph{dataset}, o desempenho diminuirá
+consideravelmente após implementarmos algumas melhorias ao encapsulamento, nomeadamente o uso de
+\emph{clones} de estruturas de dados em \emph{getters}.
+
 \end{document}
