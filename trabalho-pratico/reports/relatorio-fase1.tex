@@ -50,14 +50,18 @@ todas as relações de dependência, mas apenas as mais relevantes. Segue-se a n
           de um nome de um tipo opaco.
 \end{itemize}
 
-\newpage
-TODO - inserir esquema global aqui
-\newpage
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.10]{res/full_dependency_graph.png}
+    \caption{Diagrama de dependências de toda a aplicação. Cores são utilizadas apenas para
+             facilitar a leitura.}
+    \label{fig:diagram}
+\end{figure}
 
 \subsection{\emph{Parsing}}
 \label{sec:parsing}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[scale=0.17]{res/parsing.png}
     \caption{Diagrama de dependências do subsistema de \emph{parsing}}
@@ -91,7 +95,7 @@ seus argumentos são válidos (\texttt{query\_parser}), e um \emph{parser} de um
 \subsection{Entidades}
 \label{sec:entities}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[scale=0.2]{res/entities.png}
     \caption{Diagrama de dependências das entidades da aplicação}
@@ -116,7 +120,7 @@ uma \texttt{single\_pool\_id\_linked\_list}, uma implementação de uma lista li
 várias listas podem partilhar a mesma \texttt{pool} para armazenamento de nodos, contribuindo para
 um menor uso de memória em \emph{overheads} de alocação.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[scale=0.2]{res/database.png}
     \caption{Diagrama de dependências dos catálogos na aplicação}
@@ -153,7 +157,7 @@ cada \emph{query} deste tipo. Assim, temos uma solução mais modular, mas com p
 um módulo de estatísticas globais (que faria uma única iteração pelos dados, gerando dados usados
 por todas as \emph{queries}).
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[scale=0.19]{res/queries.png}
     \caption{Diagrama de dependências do subsistema de \emph{queries}}
@@ -276,7 +280,7 @@ encontram-se fartamente documentados, incluindo até exemplos de utilização! U
 \href{https://www.doxygen.nl}{\emph{Doxygen}}, podemos formar páginas HTML com a documentação
 formatada, como visível na figura abaixo:
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[scale=0.35]{res/doxygen.png}
     \caption{Índice da documentação do ficheiro \texttt{string\_pool.h} na documentação
