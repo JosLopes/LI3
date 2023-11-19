@@ -14,9 +14,7 @@ trabalho-pratico/obj
 trabalho-pratico/programa-principal
 trabalho-pratico/programa-testes
 
-# To be removed when reports need to be published. Also, remember to allow the real files
-# (not the symlinks) in build/
-trabalho-pratico/relatorio-fase1.pdf
+# To be removed when reports need to be published.
 trabalho-pratico/relatorio-fase2.pdf
 
 # Output results

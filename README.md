@@ -9,7 +9,7 @@ project's requirements.
 
 - [GNU Make](https://www.gnu.org/software/make/) (build-time);
 - [GCC](https://www.gnu.org/software/gcc/) (build-time);
-- [GLib](https://gitlab.gnome.org/GNOME/glib) (build-time).
+- [GLib](https://gitlab.gnome.org/GNOME/glib) (run-time).
 
 Our focus is in supporting GCC + Linux, though other compilers / \*NIX systems may work, though
 not officially supported.

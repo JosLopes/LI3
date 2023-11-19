@@ -131,18 +131,17 @@ $(DOCSDIR): $(SOURCES) $(HEADERS) $(THEMES)
 
 %.pdf: reports/%.tex
 	$(eval TMP_LATEX = $(shell mktemp -d))
-
-	@mkdir -p $(BUILDDIR)
 	cd reports && pdflatex -halt-on-error -output-directory $(TMP_LATEX) $(shell basename $<)
-	@cp $(TMP_LATEX)/$@ $(BUILDDIR)/$@
-	@ln -s $(BUILDDIR)/$@ $@
+	@cp $(TMP_LATEX)/$@ $@
 	@rm -r $(TMP_LATEX)
 
 .PHONY: clean
 clean:
+	$(eval REPORT_CLEANS := $(filter-out relatorio-fase1.pdf, $(REPORTS)))
+
 	@# Reports must be removed from the "clean" rule when they're made permanent
-	rm -r $(BUILDDIR) $(DEPDIR) $(DOCSDIR) $(OBJDIR) $(REPORTS) $(MAIN_EXENAME) $(TEST_EXENAME) \
-		Resultados 2> /dev/null ; true
+	rm -r $(BUILDDIR) $(DEPDIR) $(DOCSDIR) $(OBJDIR) $(REPORT_CLEANS) $(MAIN_EXENAME) \
+		$(TEST_EXENAME) Resultados 2> /dev/null ; true
 
 install: $(BUILDDIR)/$(MAIN_EXENAME)
 	install -Dm 755 $(BUILDDIR)/$(MAIN_EXENAME) $(PREFIX)/bin
