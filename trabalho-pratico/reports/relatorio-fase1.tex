@@ -25,25 +25,26 @@
 
 \begin{abstract}
     Este relatório tem como intuito explicar a estrutura do nosso trabalho prático para a UC de LI3.
-    Como o foco principal desta UC é a modularização e o encapsulamento do código, este documento
-    descreve como tal for conseguido, justificando as nossas decisões a este nível. O objetivo do
-    projeto para a 1.ª fase é o \emph{parsing} e validação de um \emph{dataset} contendo
-    utilizadores, voos, passageiros em voos e reservas de hotéis, sobre o qual serão executadas
-    \emph{queries}, das quais implementámos seis, fornecendo informação sobre a base de dados. O
-    modo de organização e processamento destes dados também é descrito.
+    O foco principal desta UC é a modularização e o encapsulamento do código, logo, este documento
+    descreve como tal foi conseguido, justificando as nossas decisões a este nível. Esta 1.ª fase do
+    projeto foca-se no \emph{parsing} e validação de um \emph{dataset} contendo utilizadores, voos,
+    passageiros destes e, por fim, reservas de hotéis, sobre o qual serão executadas \emph{queries}.
+    Nesta fase, apenas estão implementadas seis, fornecendo informação sobre a base de dados. O
+    modo de organização e processamento destes dados também está descrito neste documento.
 \end{abstract}
 
 \section{Estrutura do trabalho}
 
-Devido à elevada complexidade e ao elevado número de módulos neste projeto, após um diagrama que
-de dependências completo, este documento separa-o em diversas secções lógicas, que têm o seu
-funcionamento descrito uma a uma. Mesmo assim, para reduzir a complexidade visual, não incluímos
-todas as relações de dependência, mas apenas as mais relevantes. Segue-se a nossa convenção gráfica:
+Devido à elevada complexidade e ao elevado número de módulos neste projeto, segue um diagrama de
+dependências completo, que será depois separado em diversas secções lógicas, que têm o seu
+funcionamento descrito uma a uma. Contudo, para reduzir a complexidade visual, não incluímos
+todas as relações de dependência, mas apenas as mais relevantes. É, então, apresentada a
+nossa convenção gráfica:
 
 \begin{itemize}
     \item Um retângulo com cantos arredondados representa uma estrutura de dados;
     \item Um retângulo sem cantos arredondados representa um módulo cuja tarefa principal é a
-          execução de código. Mesmo assim, um destes módulos pode conter estruturas de dados
+          execução de código. Porém, alguns destes módulos pode conter estruturas de dados
           auxiliares (por exemplo, uma gramática definida no módulo de um \emph{parser});
     \item $A \rightarrow B$ significa que o módulo $A$ depende do módulo $B$. $A \dashrightarrow B$
           representa uma falsa dependência, por exemplo, a necessidade de se saber da existência
@@ -72,20 +73,20 @@ O nosso sistema de \emph{parsing} começa com \emph{tokenizadores}, que separam 
 ficheiros por um delimitador (\texttt{string\_utils} e \texttt{stream\_utils}, respetivamente).
 Sobre estes é construído o caso mais específico do \texttt{fixed\_n\_delimiter\_parser}, que espera
 um número pré-determinado de \emph{tokens}, chamando um \emph{callback} diferente para cada um; uma
-gramática genérica, definível pelo programador, define estes \emph{callbacks}. Este \emph{parser}
-é utilizado para a validação de \emph{emails} (\texttt{email}) e para o \emph{parsing} de datas
-(\texttt{date}), horas de um dia (\texttt{daytime}), combinações de datas e horas
-(\texttt{date\_and\_time}), e linhas de um \emph{dataset}. \texttt{int\_utils} é um \emph{parser}
-de valores inteiros, semelhante às funções \texttt{atoi} e \texttt{strtol}, mas com deteção de erros
-mais rigorosa.
+gramática genérica, definida pelo programador, que contém estes \emph{callbacks}. Este \emph{parser}
+é utilizado tanto para a validação de \emph{emails} (\texttt{email}), como para o \emph{parsing} de
+datas (\texttt{date}), horas de um dia (\texttt{daytime}), combinações de datas e horas
+(\texttt{date\_and\_time}), e linhas de um \emph{dataset}. Por fim, \texttt{int\_utils} é um
+\emph{parser} de valores inteiros, semelhante às funções \texttt{atoi} e \texttt{strtol}, mas com
+uma melhor deteção de erros.
 
-Para a análise de um ficheiro de \emph{dataset}, o \texttt{dataset\_parser}, é responsável por
-separar o ficheiro por linhas, excluir a primeira linha (o \emph{header} da tabela CSV), e
-\emph{tokenizar} cada linha, chamando os \emph{callbacks} adequados na sua gramática também
+Para a análise dos ficheiros de um \emph{dataset}, o \texttt{dataset\_parser} é responsável por
+separar o ficheiro por linhas, excluir a primeira linha (o \emph{header} da tabela CSV) e
+\emph{tokenizar} cada linha, chamando os \emph{callbacks} adequados na sua gramática, também
 customizável. O \texttt{dataset\_loader}, não propriamente encaixado neste secção de
-\emph{parsing}, é responsável por abrir cada ficheiro do \emph{dataset}, interagir com os
-\emph{parsers} adequados (\texttt{*\_loader}), que adicionam elementos à base de dados, enquanto
-o \texttt{dataset\_loader} regista os erros reportados nos ficheiros de erro.
+\emph{parsing}, é responsável por abrir cada ficheiro do \emph{dataset} e interagir com os
+\emph{parsers} adequados (\texttt{*\_loader}), que adicionam elementos à base de dados. Ao mesmo
+tempo, o \texttt{dataset\_loader} regista os erros reportados nos ficheiros de erro.
 
 O \emph{parsing} de \emph{queries} requer um \emph{tokenizador} adicional para lidar com aspas
 (\texttt{query\_tokenizer}), um \emph{parser} para determinar o tipo de uma \emph{query} e se os
@@ -128,22 +129,22 @@ um menor uso de memória em \emph{overheads} de alocação.
 \end{figure}
 
 No módulo \texttt{database}, definimos uma estrutura de dados que contém os três \emph{managers} na
-aplicação: o \texttt{reservation\_manager}, que gere reservas, o \texttt{flight\_manager}, que gere
-voos, e o \texttt{user\_manager}, que gere utilizadores. Este último liga também cada utilizador aos
-identificadores de voos e reservas a ele associados. Todos estes \emph{managers} consistem numa
-\texttt{pool} para alocação de entidades, uma \texttt{string\_pool} para alocação de \emph{strings},
-e uma tabela de \emph{hash}, para a associação de identificadores de entidades às entidades em si.
-O \texttt{user\_manager} surge como exceção, onde cada identificador de um \texttt{user} se
-encontra também associado a listas ligadas com os IDs dos voos e reservas associados a esse
-utilizador.
+aplicação: o \texttt{reservation\_manager}, que gere as reservas; o \texttt{flight\_manager}, que
+gere voos; e o \texttt{user\_manager}, que gere utilizadores. Este último liga também cada
+utilizador aos identificadores de voos e reservas a ele associados. Todos estes \emph{managers}
+consistem numa \texttt{pool} para alocação de entidades, uma \texttt{string\_pool} para alocação de
+\emph{strings}, e uma tabela de \emph{hash}, para a associação de identificadores de entidades às
+entidades em si. O \texttt{user\_manager} surge como exceção, onde cada identificador de um
+\texttt{user} se encontra também associado a listas ligadas com os IDs dos voos e reservas
+associados a esse utilizador.
 
 \subsection{\emph{Queries}}
 \label{sec:queries}
 
 O \emph{parsing} de \emph{queries} já foi descrito na secção \nameref{sec:parsing}. No sistema de
 \emph{queries}, começámos por definir um \texttt{query\_type}, um conjunto de \emph{callbacks} que
-define um tipo de \emph{query}, de modo a se simular polimorfismo em C. Definir uma \emph{query}
-resume-se a a definir uma função para cada \emph{callback}, e adicioná-la à
+define um tipo de \emph{query}, de modo a simular polimorfismo em C. Definir uma \emph{query}
+resume-se a definir uma função para cada \emph{callback}, e adicioná-la à
 \texttt{query\_type\_list}, a lista de todas as \emph{queries} conhecidas.
 
 Antes de enumerar as \emph{queries} implementadas, devemos mencionar como geramos dados estatísticos
@@ -188,8 +189,8 @@ Estas são as \emph{queries} que implementámos nesta primeira fase:
                          iteração estatística da lista de reservas, mas em vez de se calcular uma
                          média com cada reserva, adiciona-se a reserva a um \emph{array} associado
                          a esse hotel através de uma tabela de \emph{hash}. Após se ordenar cada
-                         \emph{array}, pode-se proceder à execução de cada \emph{query}, uma
-                         consulta direta dos dados estatísticos.
+                         \emph{array}, pode-se proceder à execução de cada \emph{query}, que
+                         consiste numa consulta direta dos dados estatísticos.
 
     \item \textbf{Q06} - Listagem dos $N$ aeroportos com mais passageiros num dado ano. Com uma
                          única iteração estatística pelo \texttt{flight\_manager}, forma-se uma
@@ -223,10 +224,10 @@ significativas do nosso código.
 
 \subsection{Observação do \emph{dataset} e das \emph{queries}}
 
-Pudemos observar que alguns campos do \emph{dataset} nunca precisavam de estar presentes no
+Podemos observar que alguns campos do \emph{dataset} nunca precisavam de estar presentes no
 \emph{output} de nenhuma \emph{query} (ex: o \emph{email} de um utilizador), pelo que era escusado
 o seu armazenamento na base de dados, sendo apenas necessária a sua validação durante o
-\emph{parsing}. Ademais, por observação dos \emph{datasets} em si, pudemos concluir que é possível
+\emph{parsing}. Ademais, por observação dos \emph{datasets} em si, podemos concluir que é possível
 armazenar certos campos usando tipos de dados de menor tamanho (ex: o identificador de um voo
 pode ser armazenado como um inteiro, em vez de uma \emph{string}).
 
