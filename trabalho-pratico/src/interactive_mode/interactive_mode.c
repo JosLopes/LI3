@@ -15,30 +15,19 @@
  */
 
 /**
- * @file main.c
- * @brief Contains the entry point to main the program.
+ * @file  interactive_mode.c
+ * @brief Implementation of methods in interactive_mode.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref interactive_mode_examples).
  */
+
 #include <stdio.h>
 
-#include "batch_mode.h"
 #include "interactive_mode/interactive_mode.h"
 
-/**
- * @brief  The entry point to the main program.
- * @retval 0 Success
- * @retval 1 Insuccess
- */
-int main(int argc, char **argv) {
-    if (argc == 1) {
-        return interactive_mode_run();
-    } else if (argc == 3) {
-        return batch_mode_run(argv[1], argv[2]);
-    } else {
-        fputs("Invalid command-line arguments! Usage:\n\n", stderr);
-        fputs("./programa-principal - Interactive mode\n", stderr);
-        fputs("./programa-principal [dataset] [query file] - Batch mode\n", stderr);
-        return 1;
-    }
-
-    return 0;
+int interactive_mode_run(void) {
+    fputs("Interactive mode not yet implemented!\n", stderr);
+    fputs("We're very lucky if we manage to finish batch mode in time.\n", stderr);
+    return 1;
 }
