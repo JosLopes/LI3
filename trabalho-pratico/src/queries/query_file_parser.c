@@ -66,8 +66,10 @@ int __query_file_parser_parse_query_callback(void *user_data, char *line) {
                                            line,
                                            parser_data->query_type_list,
                                            parser_data->aux_buffer);
-    if (retval)
+    if (retval) {
+        parser_data->line_number++;
         return 0; /* Ignore parsing failures */
+    }
 
     query_instance_set_number_in_file(parser_data->aux_query, parser_data->line_number);
     query_instance_list_add(parser_data->query_instance_list, parser_data->aux_query);
