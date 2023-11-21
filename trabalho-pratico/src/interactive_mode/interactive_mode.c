@@ -22,12 +22,31 @@
  * See [the header file's documentation](@ref interactive_mode_examples).
  */
 
-#include <stdio.h>
+#define _XOPEN_SOURCE_EXTENDED
+
+#include <locale.h>
+#include <ncurses.h>
 
 #include "interactive_mode/interactive_mode.h"
 
 int interactive_mode_run(void) {
-    fputs("Interactive mode not yet implemented!\n", stderr);
-    fputs("We're very lucky if we manage to finish batch mode in time.\n", stderr);
-    return 1;
+    /* Very simple example. Do not keep */
+
+    setlocale(LC_ALL, "");
+    initscr();
+
+    char input[256];
+    while (1) {
+        printw(">>> ");
+        getnstr(input, 256);
+
+        if (!*input)
+            break;
+
+        printw("I echo your string back: \"%s\"\n", input);
+        refresh();
+    }
+
+    endwin();
+    return 0;
 }

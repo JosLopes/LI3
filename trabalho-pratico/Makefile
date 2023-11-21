@@ -1,9 +1,11 @@
 # CONFIGURATION VARIABLES
 
 CC              := gcc
-CFLAGS          := $(shell pkg-config --cflags glib-2.0) -Wall -Wextra -Werror -pedantic
+CFLAGS          := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --libs ncursesw) \
+	-Wall -Wextra -Werror -pedantic
 STANDARDS       := -std=c99 -D_POSIX_C_SOURCE=200809L
-LIBS            := -lm -lpthread $(shell pkg-config --libs glib-2.0)
+LIBS            := -lm -lpthread $(shell pkg-config --libs glib-2.0) \
+	$(shell pkg-config --libs ncursesw)
 
 DEBUG_CFLAGS    := -O0 -ggdb3
 RELEASE_CFLAGS  := -O2
