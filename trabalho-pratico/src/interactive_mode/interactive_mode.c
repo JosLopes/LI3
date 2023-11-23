@@ -26,27 +26,63 @@
 
 #include <locale.h>
 #include <ncurses.h>
+#include <stdlib.h>
 
+#include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
 
-int interactive_mode_run(void) {
-    /* Very simple example. Do not keep */
-
+/**
+ * @brief Initializes ncurses for the interactive mode.
+ *
+ * @retval 0 Success
+ * @retval 1 Failure
+ */
+int __interactive_mode_init_ncurses(void) {
     setlocale(LC_ALL, "");
-    initscr();
 
-    char input[256];
-    while (1) {
-        printw(">>> ");
-        getnstr(input, 256);
+    /* clang-format off */
 
-        if (!*input)
-            break;
+    if (initscr()            == NULL) return 1;
+    if (cbreak()             == ERR)  return 1; /* Disable line buffering */
+    if (noecho()             == ERR)  return 1; /* Don't show input on the terminal */
+    if (nl()                 == ERR)  return 1; /* Don't print carriage returns */
+    if (keypad(stdscr, 1)    == ERR)  return 1; /* Let ncurses parse escape sequences */
+    if (curs_set(0)          == ERR)  return 1; /* Hide the cursor */
 
-        printw("I echo your string back: \"%s\"\n", input);
-        refresh();
+    /* clang-format on */
+
+    /* Limit of 10ms for ncurses to give up on finding characters for escape sequences */
+    ESCDELAY = 10;
+
+    return 0;
+}
+
+/**
+ * @brief Terminates ncurses when interactive mode isn't needed anymore.
+ *
+ * @retval 0 Success
+ * @retval 1 Failure
+ */
+int __interactive_mode_terminate_ncurses(void) {
+    return endwin() == ERR; /* Restore previous terminal mode */
+}
+
+int interactive_mode_run(void) {
+    if (__interactive_mode_init_ncurses())
+        return 1;
+
+    activity_t *dataset_path_textbox        = activity_textbox_create("Enter path to dataset!");
+    void       *dataset_path_textbox_result = activity_run(dataset_path_textbox);
+    char       *dataset_path                = activity_get_output(dataset_path_textbox_result);
+    activity_free(dataset_path_textbox);
+
+    if (__interactive_mode_terminate_ncurses())
+        return 1;
+
+    if (dataset_path) {
+        printf("%s\n", dataset_path);
+        free(dataset_path);
     }
 
-    endwin();
     return 0;
 }
