@@ -330,9 +330,6 @@ void __q06_free_statistics(void *statistics) {
     g_hash_table_destroy(statistics);
 }
 
-/** @brief Gets the minimum of two numerical values */
-#define min(x, y) ((x) < (y) ? (x) : (y))
-
 /**
  * @brief   Executes a query of type 6.
  * @details Prints the top N airports with the most passangers in a given year.
