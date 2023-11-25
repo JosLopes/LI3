@@ -79,3 +79,41 @@ size_t ncurses_measure_string(const char *str) {
     g_free(utf32);
     return ret;
 }
+
+size_t ncurses_prefix_from_maximum_length(gunichar *str, size_t max, size_t *width) {
+    size_t acc_width = 0;
+
+    gunichar *iter = str;
+    while (*iter) {
+        size_t new_width = acc_width + ncurses_measure_character(*iter);
+        if (new_width > max) {
+            iter++;
+            break;
+        }
+
+        acc_width = new_width;
+        iter++;
+    }
+
+    if (width)
+        *width = acc_width;
+    return (size_t) (iter - str - 1);
+}
+
+size_t ncurses_suffix_from_maximum_length(gunichar *str, size_t len, size_t max, size_t *width) {
+    size_t acc_width = 0;
+
+    gunichar *iter = str + len - 1;
+    while (iter >= str) {
+        size_t new_width = acc_width + ncurses_measure_character(*iter);
+        if (new_width > max)
+            break;
+
+        acc_width = new_width;
+        iter--;
+    }
+
+    if (width)
+        *width = acc_width;
+    return (size_t) (str + len - iter - 1);
+}

@@ -53,8 +53,32 @@
  *  - `ncurses_measure_string("命!")` returns 3, as 命 is a double-width character;
  *
  * If you have a UTF-32 string, please use ::ncurses_measure_unicode_string.
+ *
+ * #### String width limiting
+ *
+ * Before rendering a string in a limited space, you might want to know how many characters you
+ * can draw before overflowing the drawing area. That can be done using the following methods:
+ *
+ * - ::ncurses_prefix_from_maximum_length calculates the width of the longest drawable prefix;
+ * - ::ncurses_suffix_from_maximum_length calculates the width of the longest drawable suffix.
+ *
+ * Suppose you can only draw 3 monospace characters and need to render the string `"花火!"`. We can
+ * convert it to UTF-32 in the following way:
+ *
+ * ```c
+ * glong length;
+ * size_t width;
+ * gunichar *utf32 = g_utf8_to_ucs4_fast("花火!", -1, &length);
+ * ```
+ *
+ * - `ncurses_prefix_from_maximum_length(utf32, length, &width)` will return 1, referring to the
+ *   length of the prefix `"花"`, which is 2 characters wide, value that will be written to width.
+ *
+ * - `ncurses_suffix_from_maximum_length(utf32, length, &width)` will return 2, referring to the
+ *   length of the suffix `"火!"`, which is 3 characters wide, value that will be written to width.
+ *
+ * Don't forget to call `g_free` for `utf32` in the end.
  */
-
 #include <glib.h>
 
 /**
@@ -92,13 +116,13 @@ int8_t ncurses_measure_character(gunichar c);
 /**
  * @brief   Measures the width of a null-terminated UTF-32 string for `ncurses` rendering.
  * @details This is different from the length of the string (number of codepoints), for reasons
- *          described ::ncurses_measure_character. Emoji's (or any other multi-codepoint character
+ *          described ::ncurses_measure_character. Emojis (or any other multi-codepoint character
  *          not formed by diacritics) aren't supported. Multi-line strings aren't supported as well.
  *
  *          This function is somewhat slow, as it requires lots of lookups in Unicode tables. Try to
  *          keep its use to a minimum.
  *
- * @param str UTF-32 string to have its width measured.
+ * @param str Null-terminated UTF-32 string to have its width measured.
  *
  * @return The width of @p str, in relation to a single-width character. A monospace font is
  *         assumed.
@@ -112,13 +136,13 @@ size_t ncurses_measure_unicode_string(const gunichar *str);
  * @brief   Measures the width of a null-terminated UTF-8 string for `ncurses` rendering.
  * @details This is different from the length of the string in bytes. First, there can be multi-byte
  *          characters. Secondly, it's not the same as the number of codepoints for reasons
- *          described ::ncurses_measure_character. Emoji's (or any other multi-codepoint character
+ *          described ::ncurses_measure_character. Emojis (or any other multi-codepoint character
  *          not formed by diacritics) aren't supported. Multi-line strings aren't supported as well.
  *
  *          This function is somewhat slow, as it requires allocations and lots of lookups in
  *          Unicode tables. Try to keep its use to a minimum.
  *
- * @param str UTF-8 string to have its width measured.
+ * @param str Null-terminated UTF-8 string to have its width measured.
  *
  * @return The width of @p str, in relation to a single-width character. A monospace font is
  *         assumed.
@@ -127,3 +151,40 @@ size_t ncurses_measure_unicode_string(const gunichar *str);
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
 size_t ncurses_measure_string(const char *str);
+
+/**
+ * @brief   Calculates the length of the longest prefix of @p str that can be printed without going
+ *          over a given width limit.
+ * @details Emojis (or any other multi-codepoint character not formed by diacritics) aren't
+ *          supported. Multi-line strings aren't supported as well.
+ *
+ * @param str   Null-terminated UTF-32 string to have its width limited.
+ * @param max   Maximum width limit.
+ * @param width Where the width of the longest printable prefix will be placed. Can be `NULL`.
+ *
+ * @return The length of the longest prefix of @p str that can be printed without going over the
+ *         width limit.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref ncurses_utils_examples).
+ */
+size_t ncurses_prefix_from_maximum_length(gunichar *str, size_t max, size_t *width);
+
+/**
+ * @brief   Calculates the length of the longest suffix of @p str that can be printed without going
+ *          over a given width limit.
+ * @details Emojis (or any other multi-codepoint character not formed by diacritics) aren't
+ *          supported. Multi-line strings aren't supported as well.
+ *
+ * @param str   Null-terminated UTF-32 string to have its width limited.
+ * @param len   Length of @p str.
+ * @param max   Maximum width limit.
+ * @param width Where the width of the longest printable suffix will be placed. Can be `NULL`.
+ *
+ * @return The length of the longest suffix of @p str that can be printed without going over the
+ *         width limit.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref ncurses_utils_examples).
+ */
+size_t ncurses_suffix_from_maximum_length(gunichar *str, size_t len, size_t max, size_t *width);
