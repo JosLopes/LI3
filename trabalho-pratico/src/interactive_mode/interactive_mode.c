@@ -22,11 +22,15 @@
  * See [the header file's documentation](@ref interactive_mode_examples).
  */
 
+/** @cond FALSE */
 #define _XOPEN_SOURCE_EXTENDED
+/** @endcond */
 
+#include <limits.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
@@ -71,17 +75,21 @@ int interactive_mode_run(void) {
     if (__interactive_mode_init_ncurses())
         return 1;
 
-    activity_t *dataset_path_textbox        = activity_textbox_create("Enter path to dataset!");
-    void       *dataset_path_textbox_result = activity_run(dataset_path_textbox);
-    char       *dataset_path                = activity_get_output(dataset_path_textbox_result);
-    activity_free(dataset_path_textbox);
+    char pwd[PATH_MAX];
+    if (!getcwd(pwd, PATH_MAX)) {
+        __interactive_mode_terminate_ncurses();
+        fputs("Failed to get current working directory!\n", stderr);
+        return 1;
+    }
+
+    gchar *dataset_path = activity_textbox_run("Enter path to dataset!", pwd, 80);
 
     if (__interactive_mode_terminate_ncurses())
         return 1;
 
     if (dataset_path) {
         printf("%s\n", dataset_path);
-        free(dataset_path);
+        g_free(dataset_path);
     }
 
     return 0;
