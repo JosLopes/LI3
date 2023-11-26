@@ -71,7 +71,7 @@ void reservation_set_user_id(reservation_t *reservation, char *user_id);
  * @param reservation Reservation to have its hotel name set.
  * @param hotel_name  Hotel name of the reservation.
  */
-void reservation_set_hotel_name(reservation_t *reservation, char *hotel_name);
+void reservation_set_hotel_name(reservation_t *reservation, const char *hotel_name);
 
 /**
  * @brief Sets the reservation's inclusion of breakfast.

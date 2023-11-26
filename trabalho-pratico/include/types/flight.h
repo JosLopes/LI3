@@ -59,7 +59,7 @@ flight_t *flight_create(void);
  * @param flight  Flight to have its airline set.
  * @param airline Airline of the flight.
  */
-void flight_set_airline(flight_t *flight, char *airline);
+void flight_set_airline(flight_t *flight, const char *airline);
 
 /**
  * @brief Sets the flight's plane model.
@@ -68,7 +68,7 @@ void flight_set_airline(flight_t *flight, char *airline);
  * @param flight      Flight to have its plane model set.
  * @param plane_model Plane model of the flight.
  */
-void flight_set_plane_model(flight_t *flight, char *plane_model);
+void flight_set_plane_model(flight_t *flight, const char *plane_model);
 
 /**
  * @brief Sets the flight's origin.

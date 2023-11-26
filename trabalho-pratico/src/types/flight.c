@@ -54,8 +54,8 @@
  *     @brief Number of total seats of a given flight.
  */
 struct flight {
-    char           *airline;
-    char           *plane_model;
+    const char     *airline;
+    const char     *plane_model;
     airport_code_t  origin;
     airport_code_t  destination;
     size_t          id;
@@ -70,11 +70,11 @@ flight_t *flight_create(void) {
     return malloc(sizeof(struct flight));
 }
 
-void flight_set_airline(flight_t *flight, char *airline) {
+void flight_set_airline(flight_t *flight, const char *airline) {
     flight->airline = airline;
 }
 
-void flight_set_plane_model(flight_t *flight, char *plane_model) {
+void flight_set_plane_model(flight_t *flight, const char *plane_model) {
     flight->plane_model = plane_model;
 }
 
