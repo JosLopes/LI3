@@ -28,7 +28,7 @@
 
 #include "database/flight_manager.h"
 #include "utils/pool.h"
-#include "utils/string_pool.h"
+#include "utils/string_pool_no_duplicates.h"
 
 /**
  * @struct flight_manager
@@ -36,15 +36,15 @@
  *
  * @var flight_manager::flights
  *     @brief Set of flights in the manager.
- * @var flight_manager::strings
- *     @brief Pool for any string that may need to be stored in a flight.
+ * @var flight_manager::no_dups_pool
+ *     @brief Pool for any string that may need to be stored in a flight, no duplicates are stored.
  * @var flight_manager::id_flights_rel
  *     @brief Hash table for identifier -> flights mapping.
  */
 struct flight_manager {
-    pool_t        *flights;
-    string_pool_t *strings;
-    GHashTable    *id_flights_rel;
+    pool_t                      *flights;
+    string_pool_no_duplicates_t *no_dups_pool;
+    GHashTable                  *id_flights_rel;
 };
 
 /** @brief Number of flights in each block of ::flight_manager::flights. */
@@ -64,8 +64,9 @@ flight_manager_t *flight_manager_create(void) {
         return NULL;
     }
 
-    manager->strings = string_pool_create(FLIGHT_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
-    if (!manager->strings) {
+    manager->no_dups_pool =
+        string_pool_no_duplicates_create(FLIGHT_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
+    if (!manager->no_dups_pool) {
         pool_free(manager->flights);
         free(manager);
         return NULL;
@@ -82,9 +83,10 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
         return NULL;
 
     /* Copy strings to string pool */
-    char *pool_airline = string_pool_put(manager->strings, flight_get_const_airline(flight));
-    char *pool_plane_model =
-        string_pool_put(manager->strings, flight_get_const_plane_model(flight));
+    const char *pool_airline =
+        string_pool_no_duplicates_put(manager->no_dups_pool, flight_get_const_airline(flight));
+    const char *pool_plane_model =
+        string_pool_no_duplicates_put(manager->no_dups_pool, flight_get_const_plane_model(flight));
 
     if (pool_airline && pool_plane_model) {
         flight_set_airline(pool_flight, pool_airline);
@@ -170,7 +172,7 @@ int flight_manager_iter(flight_manager_t              *manager,
 
 void flight_manager_free(flight_manager_t *manager) {
     pool_free(manager->flights);
-    string_pool_free(manager->strings);
+    string_pool_no_duplicates_free(manager->no_dups_pool);
     g_hash_table_destroy(manager->id_flights_rel);
     free(manager);
 }
