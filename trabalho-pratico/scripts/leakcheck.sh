@@ -87,6 +87,17 @@ libc_gen_suppressions() {
 	printf "\n"
 
 	printf "{\n"
+	printf "\tignore_setlocale_leaks_musl\n"
+	printf "\tMemcheck:Leak\n"
+	printf "\tmatch-leak-kinds:reachable\n"
+	printf "\n"
+	printf "\t...\n"
+	printf "\tfun:setlocale\n"
+	printf "}\n"
+	printf "\n"
+
+
+	printf "{\n"
 	printf "\tignore_ncurses_leaks\n"
 	printf "\tMemcheck:Leak\n"
 	printf "\tmatch-leak-kinds:all\n"
