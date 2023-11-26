@@ -158,6 +158,9 @@ size_t ncurses_measure_string(const char *str);
  * @details Emojis (or any other multi-codepoint character not formed by diacritics) aren't
  *          supported. Multi-line strings aren't supported as well.
  *
+ *          This function is somewhat slow, as it requires lots of lookups in Unicode tables. Try to
+ *          keep its use to a minimum.
+ *
  * @param str   Null-terminated UTF-32 string to have its width limited.
  * @param max   Maximum width limit.
  * @param width Where the width of the longest printable prefix will be placed. Can be `NULL`.
@@ -175,6 +178,9 @@ size_t ncurses_prefix_from_maximum_length(gunichar *str, size_t max, size_t *wid
  *          over a given width limit.
  * @details Emojis (or any other multi-codepoint character not formed by diacritics) aren't
  *          supported. Multi-line strings aren't supported as well.
+ *
+ *          This function is somewhat slow, as it requires lots of lookups in Unicode tables. Try to
+ *          keep its use to a minimum.
  *
  * @param str   Null-terminated UTF-32 string to have its width limited.
  * @param len   Length of @p str.

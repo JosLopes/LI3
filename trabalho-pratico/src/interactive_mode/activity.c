@@ -22,7 +22,9 @@
  * See [the header file's documentation](@ref activity_examples).
  */
 
+/** @cond FALSE */
 #define _XOPEN_SOURCE_EXTENDED
+/** @endcond */
 
 #include <ncurses.h>
 #include <stdlib.h>
@@ -32,6 +34,19 @@
 
 /* TODO - docs */
 
+/**
+ * @struct activity
+ * @brief A definition of a polymorphic TUI activity (through callbacks)
+ *
+ * @var activity::keypress_callback
+ *     @brief Callback called when the user presses a key.
+ * @var activity::render_callback
+ *     @brief Callback called to render the activity to the curses' screen.
+ * @var activity::free_data_callback
+ *     @brief Callback called from ::activity_free, to clean memory used by activity::data.
+ * @var activity::data
+ *     @brief Data passed to all callbacks, whose type is defined by the type of this activity.
+ */
 struct activity {
     activity_keypress_callback_t  keypress_callback;
     activity_render_callback_t    render_callback;
