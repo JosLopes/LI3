@@ -47,7 +47,7 @@ int __interactive_mode_init_ncurses(void) {
     /* clang-format off */
 
     if (initscr()            == NULL) return 1;
-    if (cbreak()             == ERR)  return 1; /* Disable line buffering */
+    if (raw()                == ERR)  return 1; /* Raw input */
     if (noecho()             == ERR)  return 1; /* Don't show input on the terminal */
     if (nl()                 == ERR)  return 1; /* Don't print carriage returns */
     if (keypad(stdscr, 1)    == ERR)  return 1; /* Let ncurses parse escape sequences */

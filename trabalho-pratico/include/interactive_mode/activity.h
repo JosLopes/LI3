@@ -37,7 +37,8 @@
 typedef struct activity activity_t;
 
 /**
- * @brief Activity callback called when the user presses a key.
+ * @brief   Activity callback called when the user presses a key.
+ * @details Keys pressed with Ctrl will be ignored.
  *
  * @param activity_data `activity_data` parameter in ::activity_create. Feel free to modify it.
  * @param key           Key that was pressed. May be an ncurses `KEY_*` value.

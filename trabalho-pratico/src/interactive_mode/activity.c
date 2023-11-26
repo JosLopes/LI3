@@ -86,9 +86,15 @@ void *activity_run(activity_t *activity) {
         if (is_key_code == ERR)
             break;
 
-        cb_retval = activity->keypress_callback(activity->data, input, is_key_code);
-        if (cb_retval)
-            return activity->data;
+        /*
+         * Ignore Ctrl modifier. Nevertheless, Ctrl+J and Ctrl+3 still need to pass through, as
+         * their codes are the same as a new line and escape.
+         */
+        if (input > 31 || input == '\n' || input == '\x1b' || is_key_code) {
+            cb_retval = activity->keypress_callback(activity->data, input, is_key_code);
+            if (cb_retval)
+                return activity->data;
+        }
 
         clear();
         cb_retval = activity->render_callback(activity->data);
