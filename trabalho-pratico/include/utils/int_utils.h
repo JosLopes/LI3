@@ -40,6 +40,26 @@
 #include <inttypes.h>
 
 /**
+ * @brief Determine the minimum of two numbers.
+ *
+ * @param x First number to compare.
+ * @param y Second number to compare.
+ *
+ * @return The minimum of two numbers.
+ */
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+
+/**
+ * @brief Determine the maximum of two numbers.
+ *
+ * @param x First number to compare.
+ * @param y Second number to compare.
+ *
+ * @return The maximum of two numbers.
+ */
+#define max(x, y) (((x) > (y)) ? (x) : (y))
+
+/**
  * @brief Parses an integer, failing on any characters other than decimal digits.
  * @details Unlike `atoi` and `strtol`, this function assures a positive integer and purposely
  *          fails on any whitespace or ``'+'`` / ``'-'`` characters.
