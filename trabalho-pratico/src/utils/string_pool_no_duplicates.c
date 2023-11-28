@@ -56,7 +56,7 @@ const char *string_pool_no_duplicates_put(string_pool_no_duplicates_t *pool_data
     char *data = g_hash_table_lookup(pool_data->already_stored, str);
     if (!data) {
         char *pool_string = string_pool_put(pool_data->strings, str);
-        g_hash_table_insert(pool_data->already_stored, (char *) str, pool_string);
+        g_hash_table_insert(pool_data->already_stored, pool_data->strings, pool_string);
         return pool_string;
     }
 
