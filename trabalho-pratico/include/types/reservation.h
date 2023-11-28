@@ -62,7 +62,7 @@ reservation_t *reservation_create(void);
  * @param reservation Reservation to have its user identifier set.
  * @param user_id     User identifier of the reservation.
  */
-void reservation_set_user_id(reservation_t *reservation, char *user_id);
+void reservation_set_user_id(reservation_t *reservation, const char *user_id);
 
 /**
  * @brief Sets the reservation's hotel name.
