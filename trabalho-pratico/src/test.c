@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "utils/string_pool_no_duplicates.h"
 
 /* In practice, this number should be way larger */

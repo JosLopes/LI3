@@ -80,7 +80,7 @@
  * }
  * ```
  *
- * The output of this test should display the only two strings declared in the beginning 
+ * The output of this test should display the only two strings declared in the beginning
  * (`string_0` and `string_1`) despite the amount of times we call ::string_pool_no_duplicates_put,
  * meaning that only those strings are really allocated.
  */
