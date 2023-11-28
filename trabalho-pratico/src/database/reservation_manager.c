@@ -39,13 +39,16 @@
  *     @brief Set of reservations in the manager.
  * @var reservation_manager::no_dups_pool
  *     @brief Pool for any string that may need to be stored in a reservation, no duplicates are
-              stored.
+ *            stored.
+ * @var reservation_manager::user_id_pool
+ *     @brief Pool for user id's as they never repeat themselves, so no_dups_pool is not needed.
  * @var reservation_manager::id_reservations_rel
  *     @brief Hash table for identifier -> reservations mapping.
  */
 struct reservation_manager {
     pool_t                      *reservations;
     string_pool_no_duplicates_t *no_dups_pool;
+    string_pool_t               *user_id_pool;
     GHashTable                  *id_reservations_rel;
 };
 
@@ -75,6 +78,14 @@ reservation_manager_t *reservation_manager_create(void) {
         return NULL;
     }
 
+    manager->user_id_pool = string_pool_create(RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
+    if (!manager->user_id_pool) {
+        string_pool_no_duplicates_free(manager->no_dups_pool);
+        pool_free(manager->reservations);
+        free(manager);
+        return NULL;
+    }
+
     manager->id_reservations_rel = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     return manager;
@@ -89,8 +100,7 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
 
     /* Copy strings to string pool */
     const char *pool_user_id =
-        string_pool_no_duplicates_put(manager->no_dups_pool,
-                                      reservation_get_const_user_id(reservation));
+        string_pool_put(manager->user_id_pool, reservation_get_const_user_id(reservation));
     const char *pool_hotel_name =
         string_pool_no_duplicates_put(manager->no_dups_pool,
                                       reservation_get_const_hotel_name(reservation));
@@ -170,6 +180,7 @@ int reservation_manager_iter(reservation_manager_t              *manager,
 void reservation_manager_free(reservation_manager_t *manager) {
     pool_free(manager->reservations);
     string_pool_no_duplicates_free(manager->no_dups_pool);
+    string_pool_free(manager->user_id_pool);
     g_hash_table_destroy(manager->id_reservations_rel);
     free(manager);
 }
