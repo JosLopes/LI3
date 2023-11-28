@@ -31,17 +31,15 @@
  * ### Examples
  *
  * The following example allocates multiple strings in a string pool without duplicates, and every
- * new pointer thats returned from the allocator is stored in an array. At the end, the program
- * should only print `n` strings,`n` being the quantity of different strings, all different from one
- * another.
+ * new pointer that's returned from the allocator is stored in an array. In the end, the program
+ * should only print `n` strings, `n` being the number of different strings.
  *
  * ```c
  * #include <stdio.h>
  * #include <stdlib.h>
- * #include <time.h>
  * #include "utils/string_pool_no_duplicates.h"
-
- * //In practice, this number should be way larger.
+ *
+ * // In practice, this number should be way larger.
  * #define TEST_POOL_BLOCK_SIZE 16
  *
  * #define TEST_NUM_OF_PUTS 10
@@ -50,15 +48,12 @@
  *    string_pool_no_duplicates_t *no_dups_pool =
  *        string_pool_no_duplicates_create(TEST_POOL_BLOCK_SIZE);
  *
- *    time_t t;
- *    srand((unsigned) time(&t));
- *
  *    const char *string_0 = "Very creative string!";
  *    const char *string_1 = "Hello, world!";
  *
- *    char *allocated[TEST_NUM_OF_PUTS] = {0};
+ *    const char *allocated[TEST_NUM_OF_PUTS] = {0};
  *    for (size_t i = 0; i < TEST_NUM_OF_PUTS; ++i) {
- *        int r = rand() % 2 == 1; //Choose between string or string_1.
+ *        int r = rand() % 2 == 1; // Choose between string or string_1.
  *        const char *temp = string_pool_no_duplicates_put(no_dups_pool, r ? string_0 : string_1);
  *        if (!temp) {
  *            fputs("Allocation error!\n", stderr);
@@ -69,8 +64,7 @@
  *        for (size_t j=0; j<=i; j++) {
  *            if (temp == allocated[j]) break;
  *            else if (allocated[j] == 0) {
- *                //For test purposes, we can type cast temp as a `char *`.
- *                allocated[j] = (char *) temp;
+ *                allocated[j] = temp;
  *                break;
  *            }
  *        }
@@ -83,8 +77,12 @@
  *
  *    string_pool_no_duplicates_free(no_dups_pool);
  *    return 0;
- *}
- *```
+ * }
+ * ```
+ *
+ * The output of this test should display the only two strings declared in the beginning 
+ * (`string_0` and `string_1`) despite the amount of times we call ::string_pool_no_duplicates_put,
+ * meaning that only those strings are really allocated.
  */
 typedef struct string_pool_no_duplicates string_pool_no_duplicates_t;
 
@@ -119,13 +117,6 @@ string_pool_no_duplicates_t *string_pool_no_duplicates_create(size_t block_capac
  * See [the header file's documentation](@ref string_pool_no_duplicates_examples).
  */
 const char *string_pool_no_duplicates_put(string_pool_no_duplicates_t *pool_data, const char *str);
-
-/**
- * @brief  Gets the pool of strings from a pool without duplicates.
- * @param  pool_data Pool data to get the string pool from.
- * @return The @p pool_data string pool.
- */
-string_pool_t *string_pool_no_duplicates_get_strings(string_pool_no_duplicates_t *pool_data);
 
 /**
  * @brief Frees memory allocated by a string pool without duplicates.

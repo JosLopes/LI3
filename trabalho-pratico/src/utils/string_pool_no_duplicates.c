@@ -28,12 +28,12 @@
 #include "utils/string_pool_no_duplicates.h"
 
 /**
- * @struct string_pool_no_duplicates_t
+ * @struct string_pool_no_duplicates
  * @brief A string pool with an auxiliary hash table to prevent string duplicates.
  *
- * @var string_pool_no_duplicates_t::strings
+ * @var string_pool_no_duplicates::strings
  *   @brief Pool where the strings are stored.
- * @var string_pool_no_duplicates_t::already_stored
+ * @var string_pool_no_duplicates::already_stored
  *   @brief Hash table that contains all the strings that have been stored.
  */
 struct string_pool_no_duplicates {
@@ -61,10 +61,6 @@ const char *string_pool_no_duplicates_put(string_pool_no_duplicates_t *pool_data
     }
 
     return data;
-}
-
-string_pool_t *string_pool_no_duplicates_get_strings(string_pool_no_duplicates_t *pool_data) {
-    return pool_data->strings;
 }
 
 void string_pool_no_duplicates_free(string_pool_no_duplicates_t *pool_data) {
