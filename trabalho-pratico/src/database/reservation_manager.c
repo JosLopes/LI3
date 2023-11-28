@@ -88,9 +88,9 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
         return NULL;
 
     /* Copy strings to string pool */
-    char *pool_user_id =
-        string_pool_put(string_pool_no_duplicates_get_strings(manager->no_dups_pool),
-                        reservation_get_const_user_id(reservation));
+    const char *pool_user_id =
+        string_pool_no_duplicates_put(manager->no_dups_pool,
+                                      reservation_get_const_user_id(reservation));
     const char *pool_hotel_name =
         string_pool_no_duplicates_put(manager->no_dups_pool,
                                       reservation_get_const_hotel_name(reservation));
