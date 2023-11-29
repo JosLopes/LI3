@@ -26,13 +26,11 @@
 #define _XOPEN_SOURCE_EXTENDED
 /** @endcond */
 
-#include <limits.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-#include "interactive_mode/activity_textbox.h"
+#include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/interactive_mode.h"
 
 /**
@@ -75,22 +73,8 @@ int interactive_mode_run(void) {
     if (__interactive_mode_init_ncurses())
         return 1;
 
-    char pwd[PATH_MAX];
-    if (!getcwd(pwd, PATH_MAX)) {
-        __interactive_mode_terminate_ncurses();
-        fputs("Failed to get current working directory!\n", stderr);
-        return 1;
-    }
+    char *dataset_path = activity_dataset_picker_run();
+    (void) dataset_path;
 
-    gchar *dataset_path = activity_textbox_run("Enter path to dataset!", pwd, 80);
-
-    if (__interactive_mode_terminate_ncurses())
-        return 1;
-
-    if (dataset_path) {
-        printf("%s\n", dataset_path);
-        g_free(dataset_path);
-    }
-
-    return 0;
+    return __interactive_mode_terminate_ncurses();;
 }
