@@ -20,14 +20,53 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "utils/string_pool_no_duplicates.h"
+
+/* In practice, this number should be way larger */
+#define TEST_POOL_BLOCK_SIZE 16
+
+#define TEST_NUM_OF_PUTS 10
 
 /**
  * @brief The entry point to the test program.
  * @details Tests for query parsing.
  * @retval 0 Success
- * @retval 1 Insuccess
+ * @retval 1 Failure
  */
 int main(void) {
-    printf("Hello, world!");
+    string_pool_no_duplicates_t *no_dups_pool =
+        string_pool_no_duplicates_create(TEST_POOL_BLOCK_SIZE);
+
+    const char *string_0 = "Very creative string!";
+    const char *string_1 = "Hello, world!";
+
+    const char *allocated[TEST_NUM_OF_PUTS] = {0};
+    for (size_t i = 0; i < TEST_NUM_OF_PUTS; ++i) {
+        int         r    = rand() % 2 == 1; /* Choose between string or string_1 */
+        const char *temp = string_pool_no_duplicates_put(no_dups_pool, r ? string_0 : string_1);
+        if (!temp) {
+            fputs("Allocation error!\n", stderr);
+            string_pool_no_duplicates_free(no_dups_pool);
+            return 1;
+        }
+
+        for (size_t j = 0; j <= i; j++) {
+            if (temp == allocated[j])
+                break;
+            else if (allocated[j] == 0) {
+                allocated[j] = temp;
+                break;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < TEST_NUM_OF_PUTS; ++i) {
+        if (allocated[i])
+            printf("%s\n", allocated[i]);
+    }
+
+    string_pool_no_duplicates_free(no_dups_pool);
     return 0;
 }

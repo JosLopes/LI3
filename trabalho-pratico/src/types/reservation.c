@@ -56,8 +56,8 @@
  *     @brief Price per night of a given reservation.
  */
 struct reservation {
-    char                *user_id;
-    char                *hotel_name;
+    const char          *user_id;
+    const char          *hotel_name;
     includes_breakfast_t includes_breakfast;
     date_t               begin_date;
     date_t               end_date;
@@ -73,11 +73,11 @@ reservation_t *reservation_create(void) {
     return malloc(sizeof(struct reservation));
 }
 
-void reservation_set_user_id(reservation_t *reservation, char *user_id) {
+void reservation_set_user_id(reservation_t *reservation, const char *user_id) {
     reservation->user_id = user_id;
 }
 
-void reservation_set_hotel_name(reservation_t *reservation, char *hotel_name) {
+void reservation_set_hotel_name(reservation_t *reservation, const char *hotel_name) {
     reservation->hotel_name = hotel_name;
 }
 
