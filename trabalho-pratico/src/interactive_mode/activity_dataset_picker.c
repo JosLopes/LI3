@@ -36,6 +36,7 @@
 #include <unistd.h>
 
 #include "interactive_mode/activity_dataset_picker.h"
+#include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/int_utils.h"
 
@@ -89,6 +90,9 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
         } else if (key == '\n') {
             picker->action = ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR;
             return 1;
+        } else if (key == 't' || key == 'T') {
+            picker->action = ACTIVITY_DATASET_PICKER_ACTION_TYPE_DIR;
+            return 1;
         }
 
         return 0;
@@ -124,8 +128,7 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
 int __activity_dataset_picker_render(void *activity_data) {
     activity_dataset_picker_data_t *picker = (activity_dataset_picker_data_t *) activity_data;
 
-    attroff(A_REVERSE);
-    printw("PWD:%s\n\n", picker->pwd);
+    printw("PWD: %s PID: %d\n\n", picker->pwd, getpid());
 
     for (size_t i = 0; i < picker->dir_list->len; ++i) {
         if (i == picker->chosen_option)
@@ -136,6 +139,7 @@ int __activity_dataset_picker_render(void *activity_data) {
         printw("%ls\n", (int32_t *) g_ptr_array_index(picker->dir_list, i));
     }
 
+    attroff(A_REVERSE);
     return 0;
 }
 
@@ -189,8 +193,10 @@ activity_t *__activity_dataset_picker_create(const char *path) {
     /* Load list of directories */
     DIR *dir = opendir(path);
     if (!dir) {
-        /* TODO - replace with message box */
-        fputs("Failed to get current working directory!\n", stderr);
+        /* TODO - replace by message box */
+        gchar *remove_this = activity_textbox_run("Error listing directory!", "Replace this with a message box", 30);
+        if (remove_this)
+            g_free(remove_this);
 
         g_ptr_array_unref(activity_data->dir_list);
         free(activity_data);
@@ -236,6 +242,10 @@ void __activity_dataset_picker_run_generate_next_pwd(char *pwd, const gunichar *
     if (chosen[0] != '\0' && chosen[1] != '\0' && chosen[0] == '.' && chosen[1] == '.' &&
         chosen[2] == '\0') { /* chosen == ".." */
 
+        /* Remove all slashes from the end */
+        for (size_t i = strlen(pwd) - 1; i > 0 && pwd[i] == '/'; --i)
+            pwd[i] = '\0';
+
         ssize_t last_slash = -1;
         for (ssize_t i = 0; pwd[i]; ++i) {
             if (pwd[i] == '/')
@@ -256,40 +266,62 @@ void __activity_dataset_picker_run_generate_next_pwd(char *pwd, const gunichar *
 char *activity_dataset_picker_run(void) {
     char pwd[PATH_MAX];
     if (!getcwd(pwd, PATH_MAX)) {
-        /* TODO - replace by message box */
-        fputs("Failed to get current working directory!\n", stderr);
-        return NULL;
+        strcpy(pwd, "/");
     }
 
+    int activity_is_textbox = 0;
     while (1) {
-        activity_t *activity = __activity_dataset_picker_create(pwd);
-        if (!activity)
-            return NULL;
+        if (activity_is_textbox) {
+            gchar *new_pwd = activity_textbox_run("Choose a directory", pwd, 60);
+            if (new_pwd) {
+                 /* Check if directory can be opened first */
+                DIR *dir = opendir(new_pwd);
+                if (!dir) {
+                    /* TODO - replace by message box */
+                    gchar *remove_this = activity_textbox_run("Error listing directory!", "Replace this with a message box", 30);
+                    if (remove_this)
+                        g_free(remove_this);
+                } else {
+                    strcpy(pwd, new_pwd);
+                    closedir(dir);
+                }
 
-        const activity_dataset_picker_data_t *picker =
-            (const activity_dataset_picker_data_t *) activity_run(activity);
+                g_free(new_pwd);
+            }
 
-        const gunichar *chosen =
-            (gunichar *) g_ptr_array_index(picker->dir_list, picker->chosen_option);
-        __activity_dataset_picker_run_generate_next_pwd(pwd, chosen);
-
-        switch (picker->action) {
-            case ACTIVITY_DATASET_PICKER_ACTION_ESCAPE:
-                activity_free(activity);
+            activity_is_textbox = 0;
+        } else {
+            activity_t *activity = __activity_dataset_picker_create(pwd);
+            if (!activity)
                 return NULL;
 
-            case ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR:
-                break; /* Do nothing. A activity for the new directory will be generated. */
+            const activity_dataset_picker_data_t *picker =
+                (const activity_dataset_picker_data_t *) activity_run(activity);
 
-            case ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR:
-                activity_free(activity);
-                return strdup(pwd);
+            const gunichar *chosen =
+                (gunichar *) g_ptr_array_index(picker->dir_list, picker->chosen_option);
 
-            case ACTIVITY_DATASET_PICKER_ACTION_TYPE_DIR:
-                break;
-        };
+            switch (picker->action) {
+                case ACTIVITY_DATASET_PICKER_ACTION_ESCAPE:
+                    activity_free(activity);
+                    return NULL;
 
-        activity_free(activity);
+                case ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR:
+                    __activity_dataset_picker_run_generate_next_pwd(pwd, chosen);
+                    break;
+
+                case ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR:
+                    __activity_dataset_picker_run_generate_next_pwd(pwd, chosen);
+                    activity_free(activity);
+                    return strdup(pwd);
+
+                case ACTIVITY_DATASET_PICKER_ACTION_TYPE_DIR:
+                    activity_is_textbox = 1;
+                    break;
+            };
+
+            activity_free(activity);
+        }
     }
 
     return NULL;
