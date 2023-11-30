@@ -201,7 +201,7 @@ activity_t *__activity_dataset_picker_create(const char *path) {
     while ((ent = readdir(dir)) != NULL) {
         if (*ent->d_name != '.' || (strcmp(ent->d_name, "..") == 0 && strcmp(path, "/") != 0)) {
             char full_path[PATH_MAX];
-            sprintf(full_path, "%s/%s", path, ent->d_name);
+            snprintf(full_path, PATH_MAX, "%s/%s", path, ent->d_name);
 
             struct stat statbuf;
             if (!stat(full_path, &statbuf) && S_ISDIR(statbuf.st_mode)) {
@@ -248,11 +248,7 @@ void __activity_dataset_picker_run_generate_next_pwd(char *pwd, const gunichar *
             strcpy(pwd, "/");
     } else {
         char pwd_tmp[PATH_MAX];
-
-#pragma GCC diagnostic ignored "-Wformat-overflow"
-        sprintf(pwd_tmp, "%s/%ls", pwd, (int32_t *) chosen);
-#pragma GCC diagnostic pop
-
+        snprintf(pwd_tmp, PATH_MAX, "%s/%ls", pwd, (int32_t *) chosen);
         strcpy(pwd, pwd_tmp);
     }
 }
