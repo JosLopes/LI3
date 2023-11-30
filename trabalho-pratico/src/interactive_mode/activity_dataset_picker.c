@@ -194,7 +194,8 @@ activity_t *__activity_dataset_picker_create(const char *path) {
     DIR *dir = opendir(path);
     if (!dir) {
         /* TODO - replace by message box */
-        gchar *remove_this = activity_textbox_run("Error listing directory!", "Replace this with a message box", 30);
+        gchar *remove_this =
+            activity_textbox_run("Error listing directory!", "Replace this with a message box", 30);
         if (remove_this)
             g_free(remove_this);
 
@@ -274,11 +275,13 @@ char *activity_dataset_picker_run(void) {
         if (activity_is_textbox) {
             gchar *new_pwd = activity_textbox_run("Choose a directory", pwd, 60);
             if (new_pwd) {
-                 /* Check if directory can be opened first */
+                /* Check if directory can be opened first */
                 DIR *dir = opendir(new_pwd);
                 if (!dir) {
                     /* TODO - replace by message box */
-                    gchar *remove_this = activity_textbox_run("Error listing directory!", "Replace this with a message box", 30);
+                    gchar *remove_this = activity_textbox_run("Error listing directory!",
+                                                              "Replace this with a message box",
+                                                              30);
                     if (remove_this)
                         g_free(remove_this);
                 } else {
