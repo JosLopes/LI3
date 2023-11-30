@@ -74,7 +74,16 @@ int interactive_mode_run(void) {
         return 1;
 
     char *dataset_path = activity_dataset_picker_run();
-    (void) dataset_path;
 
-    return __interactive_mode_terminate_ncurses();;
+    if (__interactive_mode_terminate_ncurses()) {
+        free(dataset_path);
+        return 1;
+    }
+
+    if (dataset_path) {
+        puts(dataset_path);
+        free(dataset_path);
+    }
+
+    return 0;
 }

@@ -32,8 +32,8 @@
 
 /**
  * @brief Runs a TUI activity for a dataset picker.
- * @return The path to the dataset on success, `NULL` on failure or user cancellation.
- *         TODO - must be freed
+ * @return The path to the dataset directory on success, `NULL` on failure or user cancellation. If
+ *         non-`NULL`, `free` must be called for the returned value.
  *
  * #### Examples
  * See [the header file's documentation](@ref activity_dataset_picker_examples).

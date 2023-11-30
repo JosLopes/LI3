@@ -32,18 +32,40 @@
 #include <ncurses.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/int_utils.h"
 
+/** @brief Possible actions that the user requests when leaving a directory. */
+typedef enum {
+    ACTIVITY_DATASET_PICKER_ACTION_ESCAPE,     /**< Leave the dataset picker */
+    ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR,  /**< Visit another directory */
+    ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR, /**< Choose a directory as a dataset */
+    ACTIVITY_DATASET_PICKER_ACTION_TYPE_DIR    /**< Type the name of a new directory to visit */
+} activity_dataset_picker_action_t;
+
 /**
  * @struct activity_dataset_picker_data_t
  * @brief  Data in a dataset picker TUI activity.
+ *
+ * @var activity_dataset_picker_data_t::dir_list
+ *     @brief An array of `gunichar *`, containing all sub-directories of
+ *            ::activity_dataset_picker_data_t::pwd.
+ * @var activity_dataset_picker_data_t::chosen_option
+ *     @brief The index of the sub-directory the cursor of the directory picker is currently on.
+ * @var activity_dataset_picker_data_t::action
+ *     @brief Set when leaving the activity to signal what the user desires to do next.
+ * @var activity_dataset_picker_data_t::pwd
+ *     @brief Current directory the user is in.
  */
 typedef struct {
-    GPtrArray *dir_list;
+    GPtrArray                       *dir_list;
+    size_t                           chosen_option;
+    activity_dataset_picker_action_t action;
+    const char                      *pwd;
 } activity_dataset_picker_data_t;
 
 /**
@@ -54,30 +76,64 @@ typedef struct {
  * @param is_key_code   If the pressed key is not a character, but an ncurses `KEY_*` value.
  *
  * @retval 0 The user didn't quit the dataset picker; continue.
- * @retval 1 The user quit the directory picker, either by choosing the dataset, wanting to move to
- *           another directory, wanting to write out the path of a new directory to visit, or by
- *           pressing escape and quitting the directory picker altogether.
+ * @retval 1 The user quit the current directory by one of the ways in
+ *           ::activity_dataset_picker_action_t.
  */
 int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_key_code) {
     activity_dataset_picker_data_t *picker = (activity_dataset_picker_data_t *) activity_data;
 
-    (void) picker;
+    if (!is_key_code) {
+        if (key == '\x1b') {
+            picker->action = ACTIVITY_DATASET_PICKER_ACTION_ESCAPE;
+            return 1;
+        } else if (key == '\n') {
+            picker->action = ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR;
+            return 1;
+        }
 
-    if (!is_key_code && key == '\x1b')
-        return 1;
+        return 0;
+    } else {
+        switch (key) {
+            case KEY_UP:
+                picker->chosen_option = max(0, (ssize_t) picker->chosen_option - 1);
+                break;
+            case KEY_DOWN:
+                picker->chosen_option = min(picker->dir_list->len - 1, picker->chosen_option + 1);
+                break;
+            case KEY_RIGHT:
+                picker->action = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
+                return 1;
+            case KEY_LEFT:
+                if (strcmp(picker->pwd, "/") != 0) { /* Choose .. and leave */
+                    picker->chosen_option = 0;
+                    picker->action        = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
+                    return 1;
+                }
+                break;
+        }
+    }
+
     return 0;
 }
 
 /**
- * @brief Renders a dataset picker activity.
- * @param activity_data Pointer to a ::activity_dataset_picker_data_t.
+ * @brief  Renders a dataset picker activity.
+ * @param  activity_data Pointer to a ::activity_dataset_picker_data_t.
  * @retval 0 Always, to continue running this activity.
  */
 int __activity_dataset_picker_render(void *activity_data) {
     activity_dataset_picker_data_t *picker = (activity_dataset_picker_data_t *) activity_data;
 
+    attroff(A_REVERSE);
+    printw("PWD:%s\n\n", picker->pwd);
+
     for (size_t i = 0; i < picker->dir_list->len; ++i) {
-        printw("%s\n", (char *) g_ptr_array_index(picker->dir_list, i));
+        if (i == picker->chosen_option)
+            attron(A_REVERSE);
+        else
+            attroff(A_REVERSE);
+
+        printw("%ls\n", (int32_t *) g_ptr_array_index(picker->dir_list, i));
     }
 
     return 0;
@@ -89,20 +145,29 @@ int __activity_dataset_picker_render(void *activity_data) {
  */
 void __activity_dataset_picker_free_data(void *activity_data) {
     activity_dataset_picker_data_t *picker = (activity_dataset_picker_data_t *) activity_data;
-    (void) picker;
 
     for (size_t i = 0; i < picker->dir_list->len; ++i)
-        free(g_ptr_array_index(picker->dir_list, i));
+        g_free(g_ptr_array_index(picker->dir_list, i));
     g_ptr_array_unref(picker->dir_list);
 
     free(picker);
 }
 
-/* TODO - docs */
+/**
+ * @brief   `GCompareFunc` for UTF-32 strings.
+ * @details Both @p a and @p b are of type `const guinchar **`. This is an auxiliary function for
+ *          ::__activity_dataset_picker_create.
+ * @return  The equivalent of `strcmp(a, b)` for UTF-32 strings.
+ * */
 gint __activity_dataset_picker_create_sort_strings(gconstpointer a, gconstpointer b) {
-    const char *string_a = * (const char **) a;
-    const char *string_b = * (const char **) b;
-    return strcmp(string_a, string_b);
+    const gunichar *string_a = *(const gunichar **) a;
+    const gunichar *string_b = *(const gunichar **) b;
+
+    size_t i;
+    for (i = 0; string_a[i] && string_b[i]; ++i)
+        if (string_a[0] != string_b[0])
+            break;
+    return string_a[i] - string_b[i];
 }
 
 /**
@@ -112,13 +177,14 @@ gint __activity_dataset_picker_create_sort_strings(gconstpointer a, gconstpointe
  *         `NULL` is also a possibility, when an allocation failure occurs.
  */
 activity_t *__activity_dataset_picker_create(const char *path) {
-    (void) path;
-
     activity_dataset_picker_data_t *activity_data = malloc(sizeof(activity_dataset_picker_data_t));
     if (!activity_data)
         return NULL;
 
-    activity_data->dir_list = g_ptr_array_new();
+    activity_data->dir_list      = g_ptr_array_new();
+    activity_data->chosen_option = 0;
+    activity_data->action        = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
+    activity_data->pwd           = path;
 
     /* Load list of directories */
     DIR *dir = opendir(path);
@@ -133,8 +199,15 @@ activity_t *__activity_dataset_picker_create(const char *path) {
 
     struct dirent *ent;
     while ((ent = readdir(dir)) != NULL) {
-        if (*ent->d_name != '.' || strcmp(ent->d_name, "..") == 0) {
-            g_ptr_array_add(activity_data->dir_list, strdup(ent->d_name));
+        if (*ent->d_name != '.' || (strcmp(ent->d_name, "..") == 0 && strcmp(path, "/") != 0)) {
+            char full_path[PATH_MAX];
+            sprintf(full_path, "%s/%s", path, ent->d_name);
+
+            struct stat statbuf;
+            if (!stat(full_path, &statbuf) && S_ISDIR(statbuf.st_mode)) {
+                g_ptr_array_add(activity_data->dir_list,
+                                g_utf8_to_ucs4_fast(ent->d_name, -1, NULL));
+            }
         }
     }
     closedir(dir);
@@ -147,6 +220,43 @@ activity_t *__activity_dataset_picker_create(const char *path) {
                            activity_data);
 }
 
+/**
+ * @brief   Generates the next directory to visit, after closing a dataset picker activity.
+ * @details This will handle visits to previous directories by removing text after the last slash,
+ *          instead of appending `"/.."` to the end. This way, paths won't quickly grow over the
+ *          operating system's limit.
+ *
+ * @param pwd    Previous visited directory (e.g.: `"/usr"`). The final result will be written to
+ *               this address.
+ * @param chosen The chosen directory to be visited next, a value relative to @p pwd (e.g.: if
+ *               this parameter in `"bin"``, provided the example value of @p pwd, @p pwd will
+ *               become ``"/usr/bin"``).
+ */
+void __activity_dataset_picker_run_generate_next_pwd(char *pwd, const gunichar *chosen) {
+    if (chosen[0] != '\0' && chosen[1] != '\0' && chosen[0] == '.' && chosen[1] == '.' &&
+        chosen[2] == '\0') { /* chosen == ".." */
+
+        ssize_t last_slash = -1;
+        for (ssize_t i = 0; pwd[i]; ++i) {
+            if (pwd[i] == '/')
+                last_slash = i;
+        }
+
+        if (last_slash > 0)
+            pwd[last_slash] = '\0';
+        else if (last_slash == 0)
+            strcpy(pwd, "/");
+    } else {
+        char pwd_tmp[PATH_MAX];
+
+#pragma GCC diagnostic ignored "-Wformat-overflow"
+        sprintf(pwd_tmp, "%s/%ls", pwd, (int32_t *) chosen);
+#pragma GCC diagnostic pop
+
+        strcpy(pwd, pwd_tmp);
+    }
+}
+
 char *activity_dataset_picker_run(void) {
     char pwd[PATH_MAX];
     if (!getcwd(pwd, PATH_MAX)) {
@@ -155,12 +265,36 @@ char *activity_dataset_picker_run(void) {
         return NULL;
     }
 
-    activity_t *activity = __activity_dataset_picker_create(pwd);
-    if (!activity)
-        return NULL;
+    while (1) {
+        activity_t *activity = __activity_dataset_picker_create(pwd);
+        if (!activity)
+            return NULL;
 
-    activity_run(activity);
+        const activity_dataset_picker_data_t *picker =
+            (const activity_dataset_picker_data_t *) activity_run(activity);
 
-    activity_free(activity);
+        const gunichar *chosen =
+            (gunichar *) g_ptr_array_index(picker->dir_list, picker->chosen_option);
+        __activity_dataset_picker_run_generate_next_pwd(pwd, chosen);
+
+        switch (picker->action) {
+            case ACTIVITY_DATASET_PICKER_ACTION_ESCAPE:
+                activity_free(activity);
+                return NULL;
+
+            case ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR:
+                break; /* Do nothing. A activity for the new directory will be generated. */
+
+            case ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR:
+                activity_free(activity);
+                return strdup(pwd);
+
+            case ACTIVITY_DATASET_PICKER_ACTION_TYPE_DIR:
+                break;
+        };
+
+        activity_free(activity);
+    }
+
     return NULL;
 }
