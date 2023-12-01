@@ -112,7 +112,7 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
                 picker->action = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
                 return 1;
             case KEY_LEFT:
-                if (!(picker->pwd[0] != '\0' && picker->pwd[0] == '/' && picker->pwd[1] == '\0')) {
+                if (wcscmp((wchar_t *) picker->pwd, L"/") != 0) {
                     /* Choose .. and leave */
                     picker->chosen_option = 0;
                     picker->action        = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
@@ -134,17 +134,19 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
  * @param window_height Window height set by `getmaxyx`.
  */
 void __activity_dataset_picker_render_help_text(int window_width, int window_height) {
-    const char *const help_strings[] = {"Use \u2191 and \u2193 to cycle through directories",
-                                        "Use \u2192 to visit the selected directory",
-                                        "Use \u2190 to go back",
-                                        "Use ESC to leave the dataset picker",
-                                        "Use Return to load the selected dataset"};
+    const wchar_t *const help_strings[] = {L"Use \u2191 and \u2193 to cycle through directories",
+                                           L"Use \u2192 to visit the selected directory",
+                                           L"Use \u2190 to go back",
+                                           L"Use ESC to leave the dataset picker",
+                                           L"Use Return to load the selected dataset"};
 
     for (size_t i = 0; i < ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT; ++i) {
-        int width = strlen(help_strings[i]); /* All characters are single-width */
+        /* All characters are single-width, so width = length */
+
+        int width = min((int) wcslen(help_strings[i]), window_width - 4);
         move(window_height - ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT - 1 + i,
              (window_width - width) / 2);
-        addstr(help_strings[i]);
+        addnwstr(help_strings[i], width);
     }
 }
 
@@ -157,7 +159,7 @@ void __activity_dataset_picker_render_file_box(const activity_dataset_picker_dat
                                                int                                   window_width,
                                                int window_height) {
 
-    int box_width  = min(60, window_width - 2);
+    int box_width  = min(60, window_width - 4);
     int box_height = window_height - ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT - 5;
 
     int box_x = (window_width - box_width) / 2;
@@ -171,13 +173,19 @@ void __activity_dataset_picker_render_file_box(const activity_dataset_picker_dat
                                                               max(box_width - 2, 0),
                                                               NULL);
     move(box_y - 1, box_x + 1);
-    printw("%ls", (int32_t *) picker->pwd + picker->pwd_len - pwd_print_len);
+    addwstr((wchar_t *) picker->pwd + picker->pwd_len - pwd_print_len);
 
     /* Render files */
     ssize_t i0_y  = box_y + (box_height) / 2 - picker->chosen_option; /* Y coordinate for i = 0 */
     size_t  i_min = max(0, (ssize_t) picker->chosen_option - (box_height) / 2);
-    size_t  i_max = min(picker->dir_list->len, picker->chosen_option + (box_height) / 2 + 1);
 
+    size_t complement_box_height;
+    if (box_height % 2)
+        complement_box_height = box_height / 2 + 1;
+    else
+        complement_box_height = box_height / 2;
+
+    size_t i_max = min(picker->dir_list->len, picker->chosen_option + complement_box_height);
     for (size_t i = i_min; i < i_max; ++i) {
         move(i0_y + i, box_x + 1);
 
@@ -190,7 +198,9 @@ void __activity_dataset_picker_render_file_box(const activity_dataset_picker_dat
         } else
             attroff(A_REVERSE);
 
-        printw("%ls", (int32_t *) g_ptr_array_index(picker->dir_list, i));
+        const gunichar *dirname = g_ptr_array_index(picker->dir_list, i);
+        size_t drawable_chars   = ncurses_prefix_from_maximum_length(dirname, box_width - 2, NULL);
+        addnwstr((wchar_t *) dirname, drawable_chars);
     }
 
     attroff(A_REVERSE);
@@ -206,6 +216,9 @@ int __activity_dataset_picker_render(void *activity_data) {
 
     int window_width, window_height;
     getmaxyx(stdscr, window_height, window_width);
+
+    if (window_width < 44 || window_height < 13)
+        return 0;
 
     __activity_dataset_picker_render_file_box(picker, window_width, window_height);
     __activity_dataset_picker_render_help_text(window_width, window_height);
@@ -356,6 +369,7 @@ char *activity_dataset_picker_run(void) {
         switch (picker->action) {
             case ACTIVITY_DATASET_PICKER_ACTION_ESCAPE:
                 activity_free(activity);
+                g_free(chosen);
                 return NULL;
 
             case ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR:
@@ -365,6 +379,7 @@ char *activity_dataset_picker_run(void) {
             case ACTIVITY_DATASET_PICKER_ACTION_CHOOSE_DIR:
                 path_concat(pwd, chosen);
                 activity_free(activity);
+                g_free(chosen);
                 return strdup(pwd);
 
             case ACTIVITY_DATASET_PICKER_ACTION_TYPE_DIR:
