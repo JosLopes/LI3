@@ -23,6 +23,23 @@
  *
  * Creating a dataset is as simple as calling ::activity_dataset_picker_run. It will return the
  * path to the selected dataset, or `NULL` if the user didn't choose one.
+ *
+ * The dataset picker will look like the following on screen:
+ *
+ * ```text
+ * +-/dir/path---+
+ * |             |
+ * | Sub dir 1   |
+ * | Sub dir 2   |
+ * | SELECTED    |
+ * | Sub dir 3   |
+ * | Sub dir 4   |
+ * | Sub dir 5   |
+ * |             |
+ * +-------------+
+ *
+ *   Usage  tips
+ * ```
  */
 
 #ifndef ACTIVITY_DATASET_PICKER_H
