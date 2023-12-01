@@ -60,13 +60,16 @@ typedef enum {
  * @var activity_dataset_picker_data_t::action
  *     @brief Set when leaving the activity to signal what the user desires to do next.
  * @var activity_dataset_picker_data_t::pwd
- *     @brief Current directory the user is in.
+ *     @brief Current directory the user is in (UTF-32 null-terminated string).
+ * @var activity_dataset_picker_data_t::pwd_len
+ *     @brief Length of ::activity_dataset_picker_data_t::pwd.
  */
 typedef struct {
     GPtrArray                       *dir_list;
     size_t                           chosen_option;
     activity_dataset_picker_action_t action;
-    const char                      *pwd;
+    gunichar                        *pwd;
+    size_t                           pwd_len;
 } activity_dataset_picker_data_t;
 
 /**
@@ -108,7 +111,8 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
                 picker->action = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
                 return 1;
             case KEY_LEFT:
-                if (strcmp(picker->pwd, "/") != 0) { /* Choose .. and leave */
+                if (!(picker->pwd[0] != '\0' && picker->pwd[0] == '/' && picker->pwd[1] == '\0')) {
+                    /* Choose .. and leave */
                     picker->chosen_option = 0;
                     picker->action        = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
                     return 1;
@@ -120,6 +124,77 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
     return 0;
 }
 
+/** @brief Number of help lines rendered by ::__activity_dataset_picker_render_help_text. */
+#define ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT 5
+
+/**
+ * @brief Renders help messages in the bottom of the screen.
+ * @param window_width  Window width set by `getmaxyx`.
+ * @param window_height Window height set by `getmaxyx`.
+ */
+void __activity_dataset_picker_render_help_text(int window_width, int window_height) {
+    const char *const help_strings[] = {"Use \u2191 and \u2193 to cycle through directories",
+                                        "Use \u2192 to visit the selected directory",
+                                        "Use \u2190 to go back",
+                                        "Use ESC to leave the dataset picker",
+                                        "Use Return to load the selected dataset"};
+
+    for (size_t i = 0; i < ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT; ++i) {
+        int width = strlen(help_strings[i]); /* No double-width characters */
+        move(window_height - ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT - 1 + i,
+             (window_width - width) / 2);
+        addstr(help_strings[i]);
+    }
+}
+
+/**
+ * @brief Renders the files in the current directory and the box that contains them.
+ * @param window_width  Window width set by `getmaxyx`.
+ * @param window_height Window height set by `getmaxyx`.
+ */
+void __activity_dataset_picker_render_file_box(const activity_dataset_picker_data_t *picker,
+                                               int                                   window_width,
+                                               int window_height) {
+
+    int box_width  = min(60, window_width - 2);
+    int box_height = window_height - ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT - 5;
+
+    int box_x = (window_width - box_width) / 2;
+    int box_y = 2;
+
+    ncurses_render_rectangle(box_x, box_y, box_width, box_height);
+
+    /* Render directory name */
+    size_t pwd_print_len = ncurses_suffix_from_maximum_length(picker->pwd,
+                                                              picker->pwd_len,
+                                                              max(box_width - 2, 0),
+                                                              NULL);
+    move(box_y - 1, box_x + 1);
+    printw("%ls", (int32_t *) picker->pwd + picker->pwd_len - pwd_print_len);
+
+    /* Render files */
+    ssize_t i0_y  = box_y + (box_height) / 2 - picker->chosen_option;
+    size_t  i_min = max(0, (ssize_t) picker->chosen_option - (box_height) / 2);
+    size_t  i_max = min(picker->dir_list->len, picker->chosen_option + (box_height) / 2 + 1);
+
+    for (size_t i = i_min; i < i_max; ++i) {
+        move(i0_y + i, box_x + 1);
+
+        if (i == picker->chosen_option) {
+            /* Print white line */
+            attron(A_REVERSE);
+            for (int i = 0; i < box_width - 2; ++i)
+                addch(' ');
+            move(i0_y + i, box_x + 1);
+        } else
+            attroff(A_REVERSE);
+
+        printw("%ls", (int32_t *) g_ptr_array_index(picker->dir_list, i));
+    }
+
+    attroff(A_REVERSE);
+}
+
 /**
  * @brief  Renders a dataset picker activity.
  * @param  activity_data Pointer to a ::activity_dataset_picker_data_t.
@@ -128,6 +203,15 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
 int __activity_dataset_picker_render(void *activity_data) {
     activity_dataset_picker_data_t *picker = (activity_dataset_picker_data_t *) activity_data;
 
+    int window_width, window_height;
+    getmaxyx(stdscr, window_height, window_width);
+
+    __activity_dataset_picker_render_file_box(picker, window_width, window_height);
+    __activity_dataset_picker_render_help_text(window_width, window_height);
+
+    (void) picker;
+
+    /*
     printw("PWD: %s PID: %d\n\n", picker->pwd, getpid());
 
     for (size_t i = 0; i < picker->dir_list->len; ++i) {
@@ -138,8 +222,8 @@ int __activity_dataset_picker_render(void *activity_data) {
 
         printw("%ls\n", (int32_t *) g_ptr_array_index(picker->dir_list, i));
     }
+    */
 
-    attroff(A_REVERSE);
     return 0;
 }
 
@@ -154,6 +238,7 @@ void __activity_dataset_picker_free_data(void *activity_data) {
         g_free(g_ptr_array_index(picker->dir_list, i));
     g_ptr_array_unref(picker->dir_list);
 
+    g_free(picker->pwd);
     free(picker);
 }
 
@@ -185,10 +270,12 @@ activity_t *__activity_dataset_picker_create(const char *path) {
     if (!activity_data)
         return NULL;
 
+    glong pwd_len;
     activity_data->dir_list      = g_ptr_array_new();
     activity_data->chosen_option = 0;
     activity_data->action        = ACTIVITY_DATASET_PICKER_ACTION_VISIT_DIR;
-    activity_data->pwd           = path;
+    activity_data->pwd           = g_utf8_to_ucs4_fast(path, -1, &pwd_len);
+    activity_data->pwd_len       = pwd_len;
 
     /* Load list of directories */
     DIR *dir = opendir(path);
@@ -199,6 +286,7 @@ activity_t *__activity_dataset_picker_create(const char *path) {
         if (remove_this)
             g_free(remove_this);
 
+        g_free(activity_data->pwd);
         g_ptr_array_unref(activity_data->dir_list);
         free(activity_data);
         return NULL;
