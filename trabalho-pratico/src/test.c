@@ -29,7 +29,7 @@
  * @brief The entry point to the test program.
  * @details Tests for path utilities.
  * @retval 0 Success
- * @retval 1 Insuccess
+ * @retval 1 Failure
  */
 int main(void) {
     const char *test_paths[18] = {/* .. and . in absolute paths */
@@ -67,6 +67,5 @@ int main(void) {
         path_normalize(path);
         printf("%25s -> %s\n", test_paths[i], path);
     }
-
     return 0;
 }

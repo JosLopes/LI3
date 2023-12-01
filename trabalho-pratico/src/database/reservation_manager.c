@@ -29,7 +29,7 @@
 #include "database/reservation_manager.h"
 #include "types/reservation.h"
 #include "utils/pool.h"
-#include "utils/string_pool.h"
+#include "utils/string_pool_no_duplicates.h"
 
 /**
  * @struct reservation_manager
@@ -37,21 +37,28 @@
  *
  * @var reservation_manager::reservations
  *     @brief Set of reservations in the manager.
- * @var reservation_manager::strings
- *     @brief Pool for any string that may need to be stored in a reservation.
+ * @var reservation_manager::hotel_name_pool
+ *     @brief Pool for any string that may need to be stored in a reservation, no duplicates are
+ *            stored.
+ * @var reservation_manager::user_id_pool
+ *     @brief Pool for user IDs, as they never repeat themselves.
  * @var reservation_manager::id_reservations_rel
  *     @brief Hash table for identifier -> reservations mapping.
  */
 struct reservation_manager {
-    pool_t        *reservations;
-    string_pool_t *strings;
-    GHashTable    *id_reservations_rel;
+    pool_t                      *reservations;
+    string_pool_no_duplicates_t *hotel_name_pool;
+    string_pool_t               *user_id_pool;
+    GHashTable                  *id_reservations_rel;
 };
 
 /** @brief Number of reservations in each block of ::reservation_manager::reservations. */
 #define RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY 50000
 
-/** @brief Number of characters in each block of ::reservation_manager::strings. */
+/**
+ * @brief Number of characters in each block of ::reservation_manager::hotel_name_pool and in
+ *        ::reservation_manager::user_id_pool.
+ */
 #define RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY 100000
 
 reservation_manager_t *reservation_manager_create(void) {
@@ -66,8 +73,17 @@ reservation_manager_t *reservation_manager_create(void) {
         return NULL;
     }
 
-    manager->strings = string_pool_create(RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
-    if (!manager->strings) {
+    manager->hotel_name_pool =
+        string_pool_no_duplicates_create(RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
+    if (!manager->hotel_name_pool) {
+        pool_free(manager->reservations);
+        free(manager);
+        return NULL;
+    }
+
+    manager->user_id_pool = string_pool_create(RESERVATION_MANAGER_STRINGS_POOL_BLOCK_CAPACITY);
+    if (!manager->user_id_pool) {
+        string_pool_no_duplicates_free(manager->hotel_name_pool);
         pool_free(manager->reservations);
         free(manager);
         return NULL;
@@ -86,10 +102,11 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
         return NULL;
 
     /* Copy strings to string pool */
-    char *pool_user_id =
-        string_pool_put(manager->strings, reservation_get_const_user_id(reservation));
-    char *pool_hotel_name =
-        string_pool_put(manager->strings, reservation_get_const_hotel_name(reservation));
+    const char *pool_user_id =
+        string_pool_put(manager->user_id_pool, reservation_get_const_user_id(reservation));
+    const char *pool_hotel_name =
+        string_pool_no_duplicates_put(manager->hotel_name_pool,
+                                      reservation_get_const_hotel_name(reservation));
 
     if (pool_user_id && pool_hotel_name) {
         reservation_set_user_id(pool_reservation, pool_user_id);
@@ -165,7 +182,8 @@ int reservation_manager_iter(reservation_manager_t              *manager,
 
 void reservation_manager_free(reservation_manager_t *manager) {
     pool_free(manager->reservations);
-    string_pool_free(manager->strings);
+    string_pool_no_duplicates_free(manager->hotel_name_pool);
+    string_pool_free(manager->user_id_pool);
     g_hash_table_destroy(manager->id_reservations_rel);
     free(manager);
 }
