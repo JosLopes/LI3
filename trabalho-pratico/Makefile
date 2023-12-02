@@ -1,8 +1,8 @@
 # CONFIGURATION VARIABLES
 
 CC              := gcc
-CFLAGS          := $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --libs ncursesw) \
-	-Wall -Wextra -Werror -pedantic
+CFLAGS          := -Wall -Wextra -Werror -pedantic -Iinclude $(shell pkg-config --cflags glib-2.0) \
+	$(shell pkg-config --cflags ncursesw)
 STANDARDS       := -std=c99 -D_POSIX_C_SOURCE=200809L
 LIBS            := -lm -lpthread $(shell pkg-config --libs glib-2.0) \
 	$(shell pkg-config --libs ncursesw)
@@ -84,12 +84,12 @@ $(DEPDIR)/%.d: src/%.c Makefile
 	$(eval OBJ := $(patsubst src/%.c, $(OBJDIR)/%.o, $<))
 
 	$(eval RULE_CMD_MKDIR = @mkdir -p $(shell dirname $(OBJ)))
-	$(eval RULE_CMD_CC = $(CC) -MMD -MT "$(OBJ)" -MF $@2 -c -o $(OBJ) $< $(CFLAGS) -Iinclude)
+	$(eval RULE_CMD_CC = $(CC) -MMD -MT "$(OBJ)" -MF $@2 -c -o $(OBJ) $< $(CFLAGS))
 	$(eval RULE_CMD_SCRIPT = @./scripts/makefilehelper.sh $@)
 
 	@# Create the dependency file for the first time, adding all the commands.
 	@mkdir -p $(shell dirname $@)
-	$(CC) -MM $< -MT $(OBJ) -MF $@ -Iinclude
+	$(CC) -MM $< -MT $(OBJ) -MF $@ $(CFLAGS)
 
 	@printf "\t%s\n" "$(RULE_CMD_MKDIR)" >> $@
 	@printf "\t%s\n" "$(RULE_CMD_CC)" >> $@
