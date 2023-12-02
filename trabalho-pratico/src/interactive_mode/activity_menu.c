@@ -125,7 +125,7 @@ int __activity_menu_render(void *activity_data) {
     /* Reference diagram for positions and sizes: see header file */
 
     size_t title_max_chars =
-        ncurses_prefix_from_maximum_length(menu->title, max(window_width - 2, 0), NULL) + 1;
+        ncurses_prefix_from_maximum_length(menu->title, max(window_width - 2, 0), NULL);
     size_t max_string_size = title_max_chars;
 
     for (int i = 0; i < menu->number_of_options; i++) {
@@ -168,7 +168,7 @@ int __activity_menu_render(void *activity_data) {
         }
 
         size_t option_max_chars =
-            ncurses_prefix_from_maximum_length(menu->options[i], menu_width - 1, NULL) + 1;
+            ncurses_prefix_from_maximum_length(menu->options[i], menu_width - 1, NULL);
         addnwstr((wchar_t *) menu->options[i], option_max_chars);
         move(++placement_y, max(placement_x, 1));
     }
