@@ -116,6 +116,11 @@ define Doxyfile
 	PROJECT_NAME           = LI3
 	USE_MDFILE_AS_MAINPAGE = ../README.md
 
+	ENABLE_PREPROCESSING   = YES
+	MACRO_EXPANSION        = YES
+	EXPAND_ONLY_PREDEF     = YES
+	PREDEFINED             = __attribute__(x)=
+
 	OUTPUT_DIRECTORY       = $(DOCSDIR)
 	GENERATE_HTML          = YES
 	GENERATE_LATEX         = NO
