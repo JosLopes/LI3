@@ -299,14 +299,25 @@ void flights_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
 
     fixed_n_delimiter_parser_grammar_t *line_grammar =
         fixed_n_delimiter_parser_grammar_new(';', 13, token_callbacks);
+    if (!line_grammar) {
+        flight_free(data.current_flight);
+        return;
+    }
 
     dataset_parser_grammar_t *grammar =
         dataset_parser_grammar_new('\n',
                                    line_grammar,
                                    __flights_loader_before_parse_line,
                                    __flights_loader_after_parse_line);
+    if (!grammar) {
+        flight_free(data.current_flight);
+        fixed_n_delimiter_parser_grammar_free(line_grammar);
+        return;
+    }
 
     dataset_parser_parse(stream, grammar, &data);
+
+    fixed_n_delimiter_parser_grammar_free(line_grammar);
     dataset_parser_grammar_free(grammar);
     flight_free(data.current_flight);
 }

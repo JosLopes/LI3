@@ -281,14 +281,14 @@ void passengers_loader_load(dataset_loader_t *dataset_loader,
 
     data.commit_buffer_id_pool = string_pool_create(PASSENGERS_LOADER_ID_POOL_BLOCK_CAPACITY);
     if (!data.commit_buffer_id_pool) { /* Allocation failure */
-        g_ptr_array_free(data.commit_buffer, TRUE);
+        g_ptr_array_unref(data.commit_buffer);
         return;
     }
 
     data.invalid_flight_ids =
         pool_create(uint64_t, PASSENGERS_LOADER_INVALID_FLIGHTS_POOL_CAPACITY);
     if (!data.invalid_flight_ids) { /* Allocation failure */
-        g_ptr_array_free(data.commit_buffer, TRUE);
+        g_ptr_array_unref(data.commit_buffer);
         string_pool_free(data.commit_buffer_id_pool);
         return;
     }
@@ -299,20 +299,34 @@ void passengers_loader_load(dataset_loader_t *dataset_loader,
 
     fixed_n_delimiter_parser_grammar_t *line_grammar =
         fixed_n_delimiter_parser_grammar_new(';', 2, token_callbacks);
+    if (!line_grammar) {
+        g_ptr_array_unref(data.commit_buffer);
+        string_pool_free(data.commit_buffer_id_pool);
+        pool_free(data.invalid_flight_ids);
+        return;
+    }
 
     dataset_parser_grammar_t *grammar =
         dataset_parser_grammar_new('\n',
                                    line_grammar,
                                    __passengers_loader_before_parse_line,
                                    __passengers_loader_after_parse_line);
+    if (!grammar) {
+        fixed_n_delimiter_parser_grammar_free(line_grammar);
+        g_ptr_array_unref(data.commit_buffer);
+        string_pool_free(data.commit_buffer_id_pool);
+        pool_free(data.invalid_flight_ids);
+        return;
+    }
 
     dataset_parser_parse(passengers_stream, grammar, &data);
     if (data.commit_buffer->len > 0) /* Don't fail on empty files */
         __passengers_loader_commit_flight_list(&data);
     __passengers_loader_report_erroneous_flights(&data, flights_stream);
 
-    g_ptr_array_free(data.commit_buffer, TRUE);
+    g_ptr_array_unref(data.commit_buffer);
     string_pool_free(data.commit_buffer_id_pool);
     pool_free(data.invalid_flight_ids);
+    fixed_n_delimiter_parser_grammar_free(line_grammar);
     dataset_parser_grammar_free(grammar);
 }
