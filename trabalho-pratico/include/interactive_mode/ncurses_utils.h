@@ -171,7 +171,7 @@ size_t ncurses_measure_string(const char *str);
  * #### Examples
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
-size_t ncurses_prefix_from_maximum_length(gunichar *str, size_t max, size_t *width);
+size_t ncurses_prefix_from_maximum_length(const gunichar *str, size_t max, size_t *width);
 
 /**
  * @brief   Calculates the length of the longest suffix of @p str that can be printed without going
@@ -193,4 +193,5 @@ size_t ncurses_prefix_from_maximum_length(gunichar *str, size_t max, size_t *wid
  * #### Examples
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
-size_t ncurses_suffix_from_maximum_length(gunichar *str, size_t len, size_t max, size_t *width);
+size_t
+    ncurses_suffix_from_maximum_length(const gunichar *str, size_t len, size_t max, size_t *width);
