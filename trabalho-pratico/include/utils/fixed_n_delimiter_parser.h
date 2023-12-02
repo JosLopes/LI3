@@ -129,7 +129,8 @@
  * @param user_data Pointer provided to ::fixed_n_delimiter_parser_parse_string (or
  *                  ::fixed_n_delimiter_parser_parse_string_const), so that this callback can
  *                  modify the program's state.
- * @param token     The token that was read.
+ * @param token     The token that was read. In case you want to store @p token (or part of it) in
+ *                  @p user_data, copy it first, as its lifetime is limited to this function.
  * @param ntoken    The number of the current token. May be useful when the same parser function is
  *                  associated with multiple data points.
  *
@@ -143,11 +144,10 @@ typedef int (*fixed_n_delimiter_parser_iter_callback_t)(void  *user_data,
                                                         size_t ntoken);
 
 /**
- * @brief   The grammar definition for a parser for strings with a known number of data points,
- *          separated by a single-character delimiter.
- * @details It's an opaque type.
+ * @brief The grammar definition for a parser for strings with a known number of data points,
+ *        separated by a single-character delimiter.
  */
-typedef struct fixed_n_delimiter_parser_grammar_t fixed_n_delimiter_parser_grammar_t;
+typedef struct fixed_n_delimiter_parser_grammar fixed_n_delimiter_parser_grammar_t;
 
 /**
  * @brief Creates a parser grammar definition.
@@ -169,6 +169,17 @@ fixed_n_delimiter_parser_grammar_t *
     fixed_n_delimiter_parser_grammar_new(char                                     delimiter,
                                          size_t                                   n,
                                          fixed_n_delimiter_parser_iter_callback_t callbacks[n]);
+
+/**
+ * @brief  Creates a deep clone of a grammar for this type of parser.
+ *
+ * @param  grammar Grammar to be cloned.
+ *
+ * @return A `malloc`-allocated pointer to a new ::fixed_n_delimiter_parser_grammar_t, that must be
+ *         deleted using ::fixed_n_delimiter_parser_grammar_free. `NULL` is possible on failure.
+ */
+fixed_n_delimiter_parser_grammar_t *
+    fixed_n_delimiter_parser_grammar_clone(const fixed_n_delimiter_parser_grammar_t *grammar);
 
 /**
  * @brief Frees memory allocated by ::fixed_n_delimiter_parser_grammar_new.
@@ -201,8 +212,8 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
 /**
  * @brief Parses a **MODIFIABLE** string using a parser defined by @p grammar.
  *
- * @param input     String to parse, that that will be modified for this function to work, but then
- *                  restored to its original form.
+ * @param input     String to parse, that that will be modified during parsing, but then restored to
+ *                  its original form.
  * @param grammar   Grammar that defines the parser to be used.
  * @param user_data Pointer passed to every callback in @p grammar, so that they can edit the
  *                  program's state.
@@ -216,9 +227,9 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
  * #### Examples
  * See [the header file's documentation](@ref fixed_n_delimiter_parser_examples).
  */
-int fixed_n_delimiter_parser_parse_string(char                               *input,
-                                          fixed_n_delimiter_parser_grammar_t *grammar,
-                                          void                               *user_data);
+int fixed_n_delimiter_parser_parse_string(char                                     *input,
+                                          const fixed_n_delimiter_parser_grammar_t *grammar,
+                                          void                                     *user_data);
 
 /**
  * @brief Parses a string using a parser defined by @p grammar.
@@ -241,8 +252,8 @@ int fixed_n_delimiter_parser_parse_string(char                               *in
  * #### Examples
  * See [the header file's documentation](@ref fixed_n_delimiter_parser_examples).
  */
-int fixed_n_delimiter_parser_parse_string_const(const char                         *input,
-                                                fixed_n_delimiter_parser_grammar_t *grammar,
-                                                void                               *user_data);
+int fixed_n_delimiter_parser_parse_string_const(const char                               *input,
+                                                const fixed_n_delimiter_parser_grammar_t *grammar,
+                                                void *user_data);
 
 #endif
