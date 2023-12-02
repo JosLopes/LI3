@@ -37,7 +37,8 @@
  * Humberto Gomes;19;175
  * ```
  *
- * This module was purposely built for this task:
+ * This module was purposely built for this task. Keep in mind that we don't check for allocation
+ * failures in this example.
  *
  * ```c
  * #include <stdio.h>

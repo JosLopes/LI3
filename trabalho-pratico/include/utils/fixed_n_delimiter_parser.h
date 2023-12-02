@@ -29,7 +29,8 @@
  * @p input must be modifiable.
  *
  * A complete example of ::fixed_n_delimiter_parser_parse_string_const follows. Suppose we want to
- * parse information about a person in a CSV string.
+ * parse information about a person in a CSV string. Keep in mind that we don't check for allocation
+ * failures in this example.
  *
  * ```
  * #define PERSON_DATA "José Silva,60,176" // Name, age and height
