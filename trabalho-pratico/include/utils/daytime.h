@@ -67,13 +67,11 @@
 
 #include <stdint.h>
 
-/**
- * @brief A time containing hours, minutes and seconds.
- */
+/** @brief A time containing hours, minutes and seconds. */
 typedef int32_t daytime_t;
 
 /**
- * @brief Creates a time from @p hours, @p minute and @p second.
+ * @brief Creates a time from @p hours, @p minutes and @p seconds.
  *
  * @param output  Where the created time will be placed.
  * @param hours   Hours of the time (between 0 and 23)
@@ -89,7 +87,8 @@ int daytime_from_values(daytime_t *output, uint8_t hours, uint8_t minutes, uint8
  * @brief Parses a **MODIFIABLE** string containing a time.
  *
  * @param output Where the parsed time is placed. Won't be modified on failure.
- * @param input  String to parse, that won't be modified. Must be in the format `"HH:MM:SS"`.
+ * @param input  String to parse, that will be modified during parsing, but then restored to its
+ *               original form. Must be in the format `"HH:MM:SS"`.
  *
  * @retval 0 Parsing success.
  * @retval 1 Parsing failure.

@@ -23,22 +23,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/date.h"
+#include "utils/date_and_time.h"
 
-void *pthread_callback(void * arg) { /* Parse the same date 2^15 times */
+void *pthread_callback(void *arg) { /* Parse the same date 2^15 times */
     (void) arg;
 
-    char parse[256] = "2023/12/02";
-    date_t date;
+    char            parse[256] = "2023/12/02 14:43:02";
+    date_and_time_t date;
     for (int i = 0; i < (1 << 15); ++i)
-        date_from_string(&date, parse);
+        date_and_time_from_string(&date, parse);
 
     return NULL;
 }
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for date grammar thread safety.
+ * @details Tests for date and time grammar thread safety.
  * @retval 0 Success
  * @retval 1 Failure
  */

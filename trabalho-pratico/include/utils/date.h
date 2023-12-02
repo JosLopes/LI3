@@ -78,9 +78,7 @@
 
 #include <stdint.h>
 
-/**
- * @brief A date containing a year, a month a day.
- */
+/** @brief A date containing a year, a month a day. */
 typedef int32_t date_t;
 
 /**
