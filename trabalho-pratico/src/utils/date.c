@@ -31,12 +31,6 @@
 #include "utils/int_utils.h"
 #include "utils/string_utils.h"
 
-/**
- * @brief Grammar for parsing dates.
- * @details Shall not be modified apart from its creation.
- */
-fixed_n_delimiter_parser_grammar_t *date_grammar = NULL;
-
 /** @brief Date with `union`, to easily extract fields from a date integer. */
 typedef union {
     date_t date;
@@ -77,9 +71,7 @@ int date_from_values(date_t *output, uint16_t year, uint8_t month, uint8_t day) 
     return 0;
 }
 
-/**
- * @brief Auxiliary method for ::date_from_string. Parses any of the integers in a date.
- */
+/** @brief Auxiliary method for ::date_from_string. Parses any of the integers in a date. */
 int __date_from_string_parse_field(void *date_data, char *token, size_t ntoken) {
     date_union_helper_t *date = (date_union_helper_t *) date_data;
 
@@ -117,30 +109,28 @@ int __date_from_string_parse_field(void *date_data, char *token, size_t ntoken) 
 }
 
 /**
- * @brief Method used with `atexit` to free the grammar created by ::date_from_string.
+ * @brief   Grammar for parsing dates.
+ * @details Shall not be modified apart from its creation.
  */
-void __date_from_string_free_grammar(void) {
-    free(date_grammar);
+fixed_n_delimiter_parser_grammar_t *__date_grammar;
+
+/** @brief Automatically initializes ::__date_grammar when the program starts. */
+void __attribute__((constructor)) __date_grammar_create(void) {
+    fixed_n_delimiter_parser_iter_callback_t callbacks[3] = {__date_from_string_parse_field,
+                                                             __date_from_string_parse_field,
+                                                             __date_from_string_parse_field};
+
+    __date_grammar = fixed_n_delimiter_parser_grammar_new('/', 3, callbacks);
+}
+
+/** @brief Automatically frees ::__date_grammar when the program terminates */
+void __attribute__((destructor)) __date_grammar_free(void) {
+    fixed_n_delimiter_parser_grammar_free(__date_grammar);
 }
 
 int date_from_string(date_t *output, char *input) {
-    /* Create grammar if needed */
-    if (!date_grammar) {
-        fixed_n_delimiter_parser_iter_callback_t callbacks[3] = {__date_from_string_parse_field,
-                                                                 __date_from_string_parse_field,
-                                                                 __date_from_string_parse_field};
-
-        /* NOTE - Make thread-safe if multithreading gets implemented */
-        date_grammar = fixed_n_delimiter_parser_grammar_new('/', 3, callbacks);
-        if (!date_grammar) {
-            return 1;
-        }
-        atexit(__date_from_string_free_grammar);
-    }
-
-    /* Actually parse date */
     date_union_helper_t tmp_date;
-    int retval = fixed_n_delimiter_parser_parse_string(input, date_grammar, &tmp_date);
+    int retval = fixed_n_delimiter_parser_parse_string(input, __date_grammar, &tmp_date);
     if (retval) {
         return retval;
     } else {
