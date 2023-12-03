@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
 
@@ -82,15 +83,13 @@ int interactive_mode_run(void) {
         return 1;
     }
 
-    gchar *dataset_path = activity_textbox_run("Enter path to dataset!", pwd, 80);
+    int retval = activity_messagebox_run("This is a message box!", 60);
 
     if (__interactive_mode_terminate_ncurses())
         return 1;
 
-    if (dataset_path) {
-        printf("%s\n", dataset_path);
-        g_free(dataset_path);
-    }
+    if (retval)
+        return 1;
 
     return 0;
 }
