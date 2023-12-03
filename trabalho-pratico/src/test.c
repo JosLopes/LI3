@@ -45,7 +45,7 @@ int main(void) {
 
     char *allocated[TEST_NUM_ITEMS] = {0};
     for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        int r = rand() % 2 == 1; /* Choose randomly between the small and large string */
+        int r        = rand() % 2 == 1; /* Choose randomly between the small and large string */
         allocated[i] = string_pool_put(pool, r ? short_string : long_string);
 
         if (!allocated[i]) {
