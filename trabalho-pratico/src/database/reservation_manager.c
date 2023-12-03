@@ -67,7 +67,8 @@ reservation_manager_t *reservation_manager_create(void) {
         return NULL;
 
     manager->reservations =
-        pool_create_from_size(reservation_sizeof(), RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY);
+        pool_create_from_size(reservation_sizeof(),
+                              RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY);
     if (!manager->reservations) {
         free(manager);
         return NULL;

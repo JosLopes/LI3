@@ -109,7 +109,8 @@ gint __q04_generate_statistics_uint64_compare_func(gconstpointer a, gconstpointe
   *
   * @retval `0` Always successful.
   */
-int __q04_generate_statistics_foreach_reservation(void *user_data, const reservation_t *reservation) {
+int __q04_generate_statistics_foreach_reservation(void                *user_data,
+                                                  const reservation_t *reservation) {
     q04_foreach_reservation_data_t *foreach_data = (q04_foreach_reservation_data_t *) user_data;
 
     /* TODO - fix reservation missing consts in getters */

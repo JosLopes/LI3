@@ -58,7 +58,8 @@ flight_manager_t *flight_manager_create(void) {
     if (!manager)
         return NULL;
 
-    manager->flights = pool_create_from_size(flight_sizeof(), FLIGHT_MANAGER_FLIGHTS_POOL_BLOCK_CAPACITY);
+    manager->flights =
+        pool_create_from_size(flight_sizeof(), FLIGHT_MANAGER_FLIGHTS_POOL_BLOCK_CAPACITY);
     if (!manager->flights) {
         free(manager);
         return NULL;
