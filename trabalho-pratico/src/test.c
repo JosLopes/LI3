@@ -24,17 +24,13 @@
 #include <stdlib.h>
 
 #include "utils/date_and_time.h"
+#include "utils/pool.h"
 
-void *pthread_callback(void *arg) { /* Parse the same date 2^15 times */
-    (void) arg;
+// Number of items in a pool block
+#define TEST_POOL_BLOCK_SIZE 1024
 
-    char            parse[256] = "2023/12/02 14:43:02";
-    date_and_time_t date;
-    for (int i = 0; i < (1 << 15); ++i)
-        date_and_time_from_string(&date, parse);
-
-    return NULL;
-}
+// Number of pool items to be allocated
+#define TEST_NUM_ITEMS 100000
 
 /**
  * @brief The entry point to the test program.
@@ -43,12 +39,22 @@ void *pthread_callback(void *arg) { /* Parse the same date 2^15 times */
  * @retval 1 Failure
  */
 int main(void) {
-    pthread_t threads[8];
+    pool_t *pool = pool_create(int, TEST_POOL_BLOCK_SIZE);
 
-    for (int i = 0; i < 8; ++i)
-        pthread_create(threads + i, NULL, pthread_callback, NULL);
-    for (int i = 0; i < 8; ++i)
-        pthread_join(threads[i], NULL);
+    int *allocated[TEST_NUM_ITEMS] = {0};
+    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
+        allocated[i] = pool_put_item(int, pool, &i);
+        if (!allocated[i]) {
+            fputs("Allocation error!\n", stderr);
+            pool_free(pool);
+            return 1;
+        }
+    }
 
+    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
+        printf("%d\n", *allocated[i]);
+    }
+
+    pool_free(pool);
     return 0;
 }

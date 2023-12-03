@@ -81,9 +81,9 @@
  * when you can iterate through the pool:
  *
  * ```c
- * int callback(void *user_data, void *item) {
+ * int callback(void *user_data, const void *item) {
  *     (void) user_data;
- *     printf("%d\n", * (int *) item);
+ *     printf("%d\n", * (const int *) item);
  *     return 0; // Another value can be returned to stop iteration
  * }
  *
@@ -99,7 +99,7 @@
  *          there's no need for a large reallocation, and thus there are no memory peaks nor
  *          the risk of dangling pointers, as a new block simply needs to be allocated.
  */
-typedef struct pool_t pool_t;
+typedef struct pool pool_t;
 
 /**
  * @brief   Callback type for pool iterations.
@@ -107,7 +107,8 @@ typedef struct pool_t pool_t;
  *
  * @param user_data Argument passed to ::pool_iter that is passed to every callback, so that this
  *                  method can change the program's state.
- * @param item      Item in the pool. You must convert it to its correct type.
+ * @param item      Item in the pool. You must convert it to its correct type (type provided to
+ *                  ::pool_create).
  *
  * @return `0` on success, or any other value to order pool iteration to stop.
  */
@@ -189,11 +190,12 @@ void *__pool_put_item(pool_t *pool, const void *item_location);
  * @param type Type of the items in the pool. It's expected to be the same type used in
  *             ::pool_create. Otherwise, this will result in undefined behavior.
  * @param pool A `pool_t *` to add the item to.
- * @param item_location Location of the item to be allocated and copied. It must be a `type *`,
+ * @param item_location Pointer to the item to be allocated and copied. It must be a `const type *`,
  *                      where `type` is the type provided to ::pool_create. Otherwise, this will
  *                      result in undefined behavior.
  *
- * @return The pointer to the allocated and copied item, `NULL` on failure.
+ * @return The pointer to the allocated and copied item, `NULL` on failure. The returned value will
+ *         result from a **shallow copy** of @p item_location to the pool.
  *
  * #### Examples
  * See [the header file's documentation](@ref pool_examples).
@@ -213,7 +215,17 @@ void *__pool_put_item(pool_t *pool, const void *item_location);
  * #### Examples
  * See [the header file's documentation](@ref pool_examples).
  */
-int pool_iter(pool_t *pool, pool_iter_callback_t callback, void *user_data);
+int pool_iter(const pool_t *pool, pool_iter_callback_t callback, void *user_data);
+
+/**
+ * @brief   Removes all elements from @p pool.
+ * @details Keep in mind that all values allocated using @p pool will no longer be valid. This
+ *          should only be used when you want to allocate temporary data and free it many times
+ *          over. This method allows you to reduce the number of pool creations (thus, allocations).
+ *
+ * @p pool Pool to have all its elements removed from it.
+ */
+void pool_empty(pool_t *pool);
 
 /**
  * @brief Frees memory allocated by a pool.
