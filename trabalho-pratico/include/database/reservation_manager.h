@@ -119,7 +119,7 @@ typedef struct reservation_manager reservation_manager_t;
  *
  * @return `0` on success, or any other value to order iteration to stop.
  */
-typedef int (*reservation_manager_iter_callback_t)(void *user_data, reservation_t *reservation);
+typedef int (*reservation_manager_iter_callback_t)(void *user_data, const reservation_t *reservation);
 
 /**
  * @brief   Instantiates a new ::reservation_manager_t.

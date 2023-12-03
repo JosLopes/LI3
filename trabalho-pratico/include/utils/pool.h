@@ -112,12 +112,13 @@ typedef struct pool pool_t;
  *
  * @return `0` on success, or any other value to order pool iteration to stop.
  */
-typedef int (*pool_iter_callback_t)(void *user_data, void *item);
+typedef int (*pool_iter_callback_t)(void *user_data, const void *item);
 
 /**
- * @brief   Creates a pool from the size of its elements. **Use ::pool_create instead.**
- * @details This method needs to be exposed so that the ::pool_create macro works. The returned
- *          value is owned by the caller, and should be freed with ::pool_free.
+ * @brief   Creates a pool from the size of its elements.
+ * @details Unless you are using opaque types with a `*_sizeof` function exposed
+ *          (e.g.: ::user_sizeof), **use ::pool_create instead.** The returned value is owned by the
+ *          caller, and should be freed with ::pool_free.
  *
  * @param item_size      The size (in bytes) of the type of item to be allocated in this pool. For
  *                       example, this should be `sizeof(int)` for a pool of `int`s.
@@ -125,7 +126,7 @@ typedef int (*pool_iter_callback_t)(void *user_data, void *item);
  *
  * @return The allocated pool, or `NULL` on failure.
  */
-pool_t *__pool_create(size_t item_size, size_t block_capacity);
+pool_t *pool_create_from_size(size_t item_size, size_t block_capacity);
 
 /**
  * @brief   Creates a pool.
@@ -139,7 +140,7 @@ pool_t *__pool_create(size_t item_size, size_t block_capacity);
  * #### Examples
  * See [the header file's documentation](@ref pool_examples).
  */
-#define pool_create(type, block_capacity) __pool_create(sizeof(type), block_capacity)
+#define pool_create(type, block_capacity) pool_create_from_size(sizeof(type), block_capacity)
 
 /**
  * @brief   Allocates space for an item in a pool. **Use ::pool_alloc_item instead.**

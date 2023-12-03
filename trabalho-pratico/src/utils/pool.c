@@ -64,7 +64,7 @@ int __pool_allocate_block(pool_t *pool) {
     return 0;
 }
 
-pool_t *__pool_create(size_t item_size, size_t block_capacity) {
+pool_t *pool_create_from_size(size_t item_size, size_t block_capacity) {
     pool_t *pool = malloc(sizeof(pool_t));
     if (!pool)
         return NULL;

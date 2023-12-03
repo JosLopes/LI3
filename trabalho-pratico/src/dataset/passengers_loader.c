@@ -240,7 +240,7 @@ int __passengers_loader_check_line_for_erroneous_flight(void *user_data, char *l
  * @param user_data A pointer to a ::passengers_loader_erroneous_flight_callback_data_t.
  * @param item      A pointer to the flight's identifier (`uint64_t`).
  */
-int __passengers_loader_report_erroneous_flight(void *user_data, void *item) {
+int __passengers_loader_report_erroneous_flight(void *user_data, const void *item) {
     passengers_loader_erroneous_flight_callback_data_t *data =
         (passengers_loader_erroneous_flight_callback_data_t *) user_data;
 

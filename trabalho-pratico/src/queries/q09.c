@@ -79,14 +79,15 @@ typedef struct {
  *
  * @retval 0 Always successful.
  */
-int __q09_execute_iter_callback(void *user_data, user_t *user) {
+int __q09_execute_iter_callback(void *user_data, const user_t *user) {
     q09_execute_callback_user_data_t *execute_data = (q09_execute_callback_user_data_t *) user_data;
 
     if (strncmp(execute_data->needle, user_get_const_name(user), execute_data->needle_length) ==
             0 &&
         user_get_account_status(user) == ACCOUNT_STATUS_ACTIVE) {
 
-        g_ptr_array_add(execute_data->matches, user);
+        /* TODO - find a way of not keeping the const */
+        g_ptr_array_add(execute_data->matches, (user_t *) user);
     }
 
     return 0;

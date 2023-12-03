@@ -34,7 +34,7 @@
  * #include "types/flight.h"
  * #include "utils/pool.h"
  *
- * int iter_callback(void *user_data, flight_t *flight) {
+ * int iter_callback(void *user_data, const flight_t *flight) {
  *     (void) user_data;
  *
  *     size_t      id          = flight_get_id(flight);
@@ -98,9 +98,7 @@
 
 #include "types/flight.h"
 
-/**
- * @brief A data type that contains and manages all flights in a database.
- */
+/** @brief A data type that contains and manages all flights in a database. */
 typedef struct flight_manager flight_manager_t;
 
 /**
@@ -113,7 +111,7 @@ typedef struct flight_manager flight_manager_t;
  *
  * @return `0` on success, or any other value to order iteration to stop.
  */
-typedef int (*flight_manager_iter_callback_t)(void *user_data, flight_t *flight);
+typedef int (*flight_manager_iter_callback_t)(void *user_data, const flight_t *flight);
 
 /**
  * @brief   Creates a new flight manager.

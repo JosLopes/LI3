@@ -58,7 +58,7 @@ flight_manager_t *flight_manager_create(void) {
     if (!manager)
         return NULL;
 
-    manager->flights = __pool_create(flight_sizeof(), FLIGHT_MANAGER_FLIGHTS_POOL_BLOCK_CAPACITY);
+    manager->flights = pool_create_from_size(flight_sizeof(), FLIGHT_MANAGER_FLIGHTS_POOL_BLOCK_CAPACITY);
     if (!manager->flights) {
         free(manager);
         return NULL;
@@ -150,11 +150,11 @@ typedef struct {
  *
  * @return The return value of the target callback, or `0` for filtered-out items.
  */
-int __flight_manager_iter_callback(void *user_data, void *item) {
-    if (flight_is_valid((flight_t *) item) == 0) {
+int __flight_manager_iter_callback(void *user_data, const void *item) {
+    if (flight_is_valid((const flight_t *) item) == 0) {
         flight_manager_iter_flight_data_t *helper_data =
             (flight_manager_iter_flight_data_t *) user_data;
-        return helper_data->callback(helper_data->original_user_data, (flight_t *) item);
+        return helper_data->callback(helper_data->original_user_data, (const flight_t *) item);
     }
 
     return 0;

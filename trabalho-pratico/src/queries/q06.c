@@ -155,7 +155,7 @@ gboolean __q06_generate_statistics_equal_uint16(gconstpointer a, gconstpointer b
  *
  * @retval 0 Always successful
  */
-int __q06_generate_statistics_foreach_flight(void *user_data, flight_t *flight) {
+int __q06_generate_statistics_foreach_flight(void *user_data, const flight_t *flight) {
     q06_foreach_flight_user_data *iter_data = (q06_foreach_flight_user_data *) user_data;
 
     uint16_t year =

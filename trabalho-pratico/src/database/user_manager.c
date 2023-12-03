@@ -83,7 +83,7 @@ user_manager_t *user_manager_create(void) {
     if (!manager)
         return NULL;
 
-    manager->users = __pool_create(user_sizeof(), USER_MANAGER_USERS_POOL_BLOCK_CAPACITY);
+    manager->users = pool_create_from_size(user_sizeof(), USER_MANAGER_USERS_POOL_BLOCK_CAPACITY);
     if (!manager->users) {
         free(manager);
         return NULL;
@@ -239,10 +239,10 @@ typedef struct {
  *
  * @return The return value of the target callback, or `0` for filtered-out items.
  */
-int __user_manager_iter_callback(void *user_data, void *item) {
-    if (user_is_valid((user_t *) item) == 0) {
+int __user_manager_iter_callback(void *user_data, const void *item) {
+    if (user_is_valid((const user_t *) item) == 0) {
         user_manager_iter_user_data_t *helper_data = (user_manager_iter_user_data_t *) user_data;
-        return helper_data->callback(helper_data->original_user_data, (user_t *) item);
+        return helper_data->callback(helper_data->original_user_data, (const user_t *) item);
     }
 
     return 0;
