@@ -21,7 +21,7 @@
  * @anchor activity_messagebox_examples
  * ### Examples
  *
- * Creating a message box is as simple as calling ::activity_messagebox_run. Just provide 
+ * Creating a message box is as simple as calling ::activity_messagebox_run. Just provide
  * a message, and how wide you'd like the message box to be.
  *
  * The message box will look like the following on screen:

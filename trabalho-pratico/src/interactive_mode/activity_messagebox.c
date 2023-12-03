@@ -37,7 +37,7 @@
 /**
  * @struct activity_messagebox_data_t
  * @brief Data for the messagebox TUI activity.
- * 
+ *
  * @var activity_messagebox_data_t::message
  *    @brief Null-terminated UTF-32 string for the message to display.
  * @var activity_messagebox_data_t::text_field_width
