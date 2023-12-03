@@ -19,46 +19,53 @@
  * @brief Contains the entry point to the test program.
  */
 
+#include <limits.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
-#include "utils/string_pool.h"
-
-/* Number of characters in a pool block. In practice, this should be way larger. */
-#define TEST_POOL_BLOCK_SIZE 32
-
-/* Number of pool items to be allocated */
-#define TEST_NUM_ITEMS 100000
+#include "utils/path_utils.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for the new implementation of string pools.
+ * @details Tests for path utilities.
  * @retval 0 Success
  * @retval 1 Failure
  */
 int main(void) {
-    string_pool_t *pool = string_pool_create(TEST_POOL_BLOCK_SIZE);
+    const char *test_paths[18] = {/* .. and . in absolute paths */
+                                  "/abc/def/..",
+                                  "/abc/def/.",
 
-    const char *long_string =
-        "This string is longer than a single block, but the pool can still handle it!";
-    const char *short_string = "Hello, world!";
+                                  /* .. in absolute and relative paths */
+                                  "/abc/def/../../..",
+                                  "abc/def/../../..",
+                                  "./abc/def/../../..",
+                                  "././abc/def/../../..",
+                                  "./../abc/def/../../..",
 
-    char *allocated[TEST_NUM_ITEMS] = {0};
-    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        int r        = rand() % 2 == 1; /* Choose randomly between the small and large string */
-        allocated[i] = string_pool_put(pool, r ? short_string : long_string);
+                                  /* Relative paths with parent directory */
+                                  "../abc",
+                                  "../../abc",
+                                  "../..//abc",
+                                  "/../../abc",
 
-        if (!allocated[i]) {
-            fputs("Allocation error!\n", stderr);
-            string_pool_free(pool);
-            return 1;
-        }
+                                  /* Multiple . and .. */
+                                  "/.",
+                                  "/././../.",
+                                  "././../.",
+                                  "/..",
+
+                                  /* Others */
+                                  "/",
+                                  "////",
+                                  ""};
+
+    for (size_t i = 0; i < 18; ++i) {
+        char path[PATH_MAX];
+        strcpy(path, test_paths[i]);
+
+        path_normalize(path);
+        printf("%25s -> %s\n", test_paths[i], path);
     }
-
-    for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        printf("%s\n", allocated[i]);
-    }
-
-    string_pool_free(pool);
     return 0;
 }

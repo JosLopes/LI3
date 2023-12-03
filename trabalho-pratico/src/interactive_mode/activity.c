@@ -32,8 +32,6 @@
 
 #include "interactive_mode/activity.h"
 
-/* TODO - docs */
-
 /**
  * @struct activity
  * @brief A definition of a polymorphic TUI activity (through callbacks)
@@ -75,6 +73,7 @@ activity_t *activity_create(activity_keypress_callback_t  keypress_callback,
 void *activity_run(activity_t *activity) {
     int cb_retval;
 
+    clear();
     cb_retval = activity->render_callback(activity->data);
     if (cb_retval)
         return activity->data;
