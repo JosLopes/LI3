@@ -136,7 +136,7 @@ int __activity_textbox_render(void *activity_data) {
     textbox->title[title_max_chars + 1] = '\0';
 
     move(textbox_y + 1, textbox_x + (textbox_width - title_width) / 2);
-    printw("%ls", (int32_t *) textbox->title);
+    printw("%ls", (wchar_t *) textbox->title);
 
     textbox->title[title_max_chars + 1] = deleted;
 
@@ -151,7 +151,7 @@ int __activity_textbox_render(void *activity_data) {
                                            max(textfield_width - 1, 0),
                                            NULL);
     printw("%ls",
-           (int32_t *) textbox->input_codepoints->data +
+           (wchar_t *) textbox->input_codepoints->data +
                (textbox->input_codepoints->len - max_text_chars));
 
     return 0;
