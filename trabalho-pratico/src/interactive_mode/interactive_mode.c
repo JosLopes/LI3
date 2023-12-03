@@ -26,14 +26,13 @@
 #define _XOPEN_SOURCE_EXTENDED
 /** @endcond */
 
-#include <limits.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_textbox.h"
+#include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/interactive_mode.h"
 
 /**
@@ -76,19 +75,21 @@ int interactive_mode_run(void) {
     if (__interactive_mode_init_ncurses())
         return 1;
 
-    char pwd[PATH_MAX];
-    if (!getcwd(pwd, PATH_MAX)) {
-        __interactive_mode_terminate_ncurses();
-        fputs("Failed to get current working directory!\n", stderr);
+    char *dataset_path = activity_dataset_picker_run();
+
+    if (__interactive_mode_terminate_ncurses()) {
+        free(dataset_path);
         return 1;
+    }
+
+    if (dataset_path) {
+        puts(dataset_path);
+        free(dataset_path);
     }
 
     int retval = activity_messagebox_run("This is a message box!", 60);
 
-    if (__interactive_mode_terminate_ncurses())
-        return 1;
-
-    if (retval)
+    if (!retval)
         return 1;
 
     return 0;

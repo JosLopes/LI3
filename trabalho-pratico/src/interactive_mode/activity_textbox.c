@@ -131,14 +131,8 @@ int __activity_textbox_render(void *activity_data) {
         title_max_chars = ncurses_prefix_from_maximum_length(textbox->title,
                                                              max(textbox_width - 3, 0),
                                                              &title_width);
-
-    int32_t deleted                     = textbox->title[title_max_chars + 1];
-    textbox->title[title_max_chars + 1] = '\0';
-
     move(textbox_y + 1, textbox_x + (textbox_width - title_width) / 2);
-    printw("%ls", (wchar_t *) textbox->title);
-
-    textbox->title[title_max_chars + 1] = deleted;
+    addnwstr((wchar_t *) textbox->title, title_max_chars);
 
     /* Render text field and input text */
     int textfield_width = textbox_width - 4;
@@ -150,9 +144,8 @@ int __activity_textbox_render(void *activity_data) {
                                            textbox->input_codepoints->len,
                                            max(textfield_width - 1, 0),
                                            NULL);
-    printw("%ls",
-           (wchar_t *) textbox->input_codepoints->data +
-               (textbox->input_codepoints->len - max_text_chars));
+    addwstr((wchar_t *) textbox->input_codepoints->data +
+            (textbox->input_codepoints->len - max_text_chars));
 
     return 0;
 }
