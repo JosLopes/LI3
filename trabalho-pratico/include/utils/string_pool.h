@@ -85,7 +85,7 @@
  *          blocks, there's no need for a large reallocation, and thus there are no memory peaks
  *          nor the risk of dangling pointers, as a new block simply needs to be allocated.
  */
-typedef struct string_pool_t string_pool_t;
+typedef struct string_pool string_pool_t;
 
 /**
  * @brief   Creates a string pool.
@@ -129,6 +129,16 @@ char *string_pool_allocate(string_pool_t *pool, size_t length);
  * See [the header file's documentation](@ref string_pool_examples).
  */
 char *string_pool_put(string_pool_t *pool, const char *str);
+
+/**
+ * @brief   Removes all strings from @p pool.
+ * @details Keep in mind that all values allocated using @p pool will no longer be valid. This
+ *          should only be used when you want to allocate temporary data and free it many times
+ *          over. This method allows you to reduce the number of pool creations (thus, allocations).
+ *
+ * @p pool String pool to have all its strings removed from it.
+ */
+void string_pool_empty(string_pool_t *pool);
 
 /**
  * @brief Frees memory allocated by a string pool.

@@ -19,42 +19,46 @@
  * @brief Contains the entry point to the test program.
  */
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "utils/date_and_time.h"
-#include "utils/pool.h"
+#include "utils/string_pool.h"
 
-// Number of items in a pool block
-#define TEST_POOL_BLOCK_SIZE 1024
+/* Number of characters in a pool block. In practice, this should be way larger. */
+#define TEST_POOL_BLOCK_SIZE 32
 
-// Number of pool items to be allocated
+/* Number of pool items to be allocated */
 #define TEST_NUM_ITEMS 100000
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for date and time grammar thread safety.
+ * @details Tests for the new implementation of string pools.
  * @retval 0 Success
  * @retval 1 Failure
  */
 int main(void) {
-    pool_t *pool = pool_create(int, TEST_POOL_BLOCK_SIZE);
+    string_pool_t *pool = string_pool_create(TEST_POOL_BLOCK_SIZE);
 
-    int *allocated[TEST_NUM_ITEMS] = {0};
+    const char *long_string =
+        "This string is longer than a single block, but the pool can still handle it!";
+    const char *short_string = "Hello, world!";
+
+    char *allocated[TEST_NUM_ITEMS] = {0};
     for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        allocated[i] = pool_put_item(int, pool, &i);
+        int r = rand() % 2 == 1; /* Choose randomly between the small and large string */
+        allocated[i] = string_pool_put(pool, r ? short_string : long_string);
+
         if (!allocated[i]) {
             fputs("Allocation error!\n", stderr);
-            pool_free(pool);
+            string_pool_free(pool);
             return 1;
         }
     }
 
     for (size_t i = 0; i < TEST_NUM_ITEMS; ++i) {
-        printf("%d\n", *allocated[i]);
+        printf("%s\n", allocated[i]);
     }
 
-    pool_free(pool);
+    string_pool_free(pool);
     return 0;
 }

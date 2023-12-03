@@ -50,7 +50,10 @@ struct pool {
 };
 
 /**
- * @brief  Adds a new block to the top of the pool.
+ * @brief Adds a new block to the top of the pool.
+ *
+ * @param pool Pool to add block to.
+ *
  * @retval 0 Success
  * @retval 1 Allocation failure
  */
@@ -61,6 +64,26 @@ int __pool_allocate_block(pool_t *pool) {
 
     g_ptr_array_add(pool->blocks, block);
     pool->top_block_used = 0;
+    return 0;
+}
+
+/**
+ * @brief   Adds a new block to the middle of a pool, that will only be used for storing a single
+ *          array of items.
+ * @details Auxiliary method for ::__pool_alloc_items. Used when `n > pool->block_capacity`.
+ *
+ * @param pool Pool to add block to.
+ * @param n    Number of elements to allocate.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation failure
+ */
+int __pool_allocate_single_use_block(pool_t *pool, size_t n) {
+    uint8_t *block = malloc(pool->item_size * n);
+    if (!block)
+        return 1;
+
+    g_ptr_array_insert(pool->blocks, pool->blocks->len - 1, block);
     return 0;
 }
 
@@ -95,12 +118,40 @@ void *__pool_alloc_item(pool_t *pool) {
     return retval;
 }
 
+void *__pool_alloc_items(pool_t *pool, size_t n) {
+    if (n > pool->block_capacity) { /* Very large array */
+        if (__pool_allocate_single_use_block(pool, n))
+            return NULL;
+
+        return g_ptr_array_index(pool->blocks, pool->blocks->len - 2);
+    } else {
+        size_t block_left = pool->block_capacity - pool->top_block_used;
+        if (n > block_left)
+            if (__pool_allocate_block(pool))
+                return NULL;
+
+        uint8_t *retval = (uint8_t *) g_ptr_array_index(pool->blocks, pool->blocks->len - 1) +
+                          pool->item_size * pool->top_block_used;
+        pool->top_block_used += n;
+        return retval;
+    }
+}
+
 void *__pool_put_item(pool_t *pool, const void *item_location) {
     void *dest = __pool_alloc_item(pool);
     if (!dest)
         return NULL;
 
     memcpy(dest, item_location, pool->item_size);
+    return dest;
+}
+
+void *__pool_put_items(pool_t *pool, const void *items_location, size_t n) {
+    void *dest = __pool_alloc_items(pool, n);
+    if (!dest)
+        return NULL;
+
+    memcpy(dest, items_location, pool->item_size * n);
     return dest;
 }
 
@@ -123,7 +174,7 @@ int pool_iter(const pool_t *pool, pool_iter_callback_t callback, void *user_data
 }
 
 void pool_empty(pool_t *pool) {
-    for (size_t i = 0; i < pool->blocks->len; ++i)
+    for (size_t i = 1; i < pool->blocks->len; ++i)
         free(g_ptr_array_index(pool->blocks, i));
     g_ptr_array_set_size(pool->blocks, 1);
     pool->top_block_used = 0;
