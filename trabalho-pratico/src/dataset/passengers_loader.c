@@ -175,13 +175,8 @@ int __passengers_loader_after_parse_line(void *loader_data, int retval) {
 
         __passengers_loader_commit_flight_list(loader);
 
-        string_pool_free(loader->commit_buffer_id_pool);
-        loader->commit_buffer_id_pool =
-            string_pool_create(PASSENGERS_LOADER_ID_POOL_BLOCK_CAPACITY);
-        if (!loader->commit_buffer_id_pool)
-            return 1; /* Allocation failure */
-
-        loader->commit_buffer->len = 0;
+        string_pool_empty(loader->commit_buffer_id_pool);
+        g_ptr_array_set_size(loader->commit_buffer, 0);
     }
 
     /* Still the same flight */
