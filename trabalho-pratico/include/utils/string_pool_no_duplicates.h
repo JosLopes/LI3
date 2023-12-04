@@ -93,7 +93,7 @@ typedef struct string_pool_no_duplicates string_pool_no_duplicates_t;
  *
  * @param block_capacity The number of characters of each block in a pool.
  *
- * @return An allocated pool, or `NULL` on failure.
+ * @return An allocated pool, or `NULL` on allocation failure.
  *
  * #### Examples
  * See [the header file's documentation](@ref string_pool_no_duplicates_examples).
@@ -112,7 +112,8 @@ string_pool_no_duplicates_t *string_pool_no_duplicates_create(size_t block_capac
  *
  * @return The pointer an already existing string if @p str equals other string already in the pool;
  *         the pointer to a newly allocated string if @p str is new to the pull, or `NULL` on
- *         failure.
+ *         allocation failure.
+ *
  * #### Examples
  * See [the header file's documentation](@ref string_pool_no_duplicates_examples).
  */
