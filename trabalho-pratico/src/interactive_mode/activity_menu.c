@@ -1,0 +1,226 @@
+/*
+ * Copyright 2023 Humberto Gomes, José Lopes, José Matos
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file  activity_menu.c
+ * @brief Implementation of methods in activity_menu.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref activity_menu_examples).
+ */
+
+/** @cond FALSE */
+#define _XOPEN_SOURCE_EXTENDED
+/** @endcond */
+
+#include <ncurses.h>
+#include <stdlib.h>
+
+#include "interactive_mode/activity_menu.h"
+#include "interactive_mode/ncurses_utils.h"
+#include "utils/int_utils.h"
+
+/**
+ * @struct activity_menu_data_t
+ * @brief  Data in a menu TUI activity.
+ *
+ * @var activity_menu_data_t::options
+ *     @brief An Array of null-terminated UTF-32 strings for menu options.
+ * @var activity_menu_data_t::title
+ *     @brief Null-terminated UTF-32 string for the title of the menu.
+ * @var activity_menu_data_t::widest_string_width
+ *     @brief Width of the widest string (either the title or one of the options).
+ * @var activity_menu_data_t::number_of_options
+ *     @brief Number of options to display on the menu.
+ * @var activity_menu_data_t::current_option
+ *     @brief Current highlighted option (`-1` when the user presses escape).
+ */
+typedef struct {
+    gunichar **options;
+    gunichar  *title;
+
+    size_t  widest_string_width;
+    size_t  number_of_options;
+    ssize_t current_option;
+} activity_menu_data_t;
+
+/**
+ * @brief   Responds to user input in a menu activity.
+ * @details Handles user input to navigate the menu and select one of multiple possible options.
+ *
+ * @param activity_data Pointer to a ::activity_menu_data_t.
+ * @param key           Key that was pressed. May be an ncurses `KEY_*` value.
+ * @param is_key_code   If the pressed key is not a character, but an ncurses `KEY_*` value.
+ *
+ * @retval 0 The user didn't quit the menu; continue.
+ * @retval 1 The user quit the menu using either `\n` (Enter key) or `\x1b` (Escape key).
+ */
+int __activity_menu_keypress(void *activity_data, wint_t key, int is_key_code) {
+    activity_menu_data_t *menu = (activity_menu_data_t *) activity_data;
+
+    if (!is_key_code) {
+        if (key == '\x1b') {
+            menu->current_option = -1;
+            return 1;
+        } else if (key == '\n') {
+            return 1;
+        }
+    } else {
+        switch (key) {
+            case KEY_UP:
+                if (menu->current_option > 0)
+                    menu->current_option--;
+
+                return 0;
+            case KEY_DOWN:
+                if (menu->current_option < (ssize_t) menu->number_of_options - 1)
+                    menu->current_option++;
+
+                return 0;
+        }
+    }
+    return 0;
+}
+
+/**
+ * @brief Renders a menu activity.
+ * @param activity_data Pointer to a ::activity_menu_data_t.
+ * @retval 0 Always, to continue running this activity.
+ */
+int __activity_menu_render(void *activity_data) {
+    activity_menu_data_t *menu = (activity_menu_data_t *) activity_data;
+
+    int window_width, window_height;
+    getmaxyx(stdscr, window_height, window_width);
+
+    if (window_width < 4 || window_height < (int) (2 * menu->number_of_options + 5))
+        return 0; /* Don't attempt rendering on small windows */
+
+    /* Reference diagram for positions and sizes: see header file */
+
+    int menu_width  = min((size_t) window_width - 4, menu->widest_string_width + 2);
+    int menu_height = min((size_t) window_height - 4, (ssize_t) 2 * menu->number_of_options + 1);
+
+    int menu_y = (window_height - menu_height) / 2;
+    int menu_x = (window_width - menu_width) / 2;
+
+    /* Render menu box */
+    ncurses_render_rectangle(menu_x, menu_y, menu_width, menu_height);
+
+    /* Render title */
+    size_t title_width,
+        title_max_chars =
+            ncurses_prefix_from_maximum_length(menu->title, max(menu_width - 3, 0), &title_width);
+
+    move(menu_y - 1, menu_x + (menu_width - title_width) / 2);
+    addnwstr((wchar_t *) menu->title, title_max_chars);
+
+    /* Render options */
+    for (size_t i = 0; i < menu->number_of_options; i++) {
+        move(menu_y + i * 2 + 1, menu_x + 1);
+
+        if ((ssize_t) i == menu->current_option) {
+            attron(A_REVERSE);
+        }
+
+        size_t option_max_chars =
+            ncurses_prefix_from_maximum_length(menu->options[i], menu_width - 3, NULL);
+        addnwstr((wchar_t *) menu->options[i], option_max_chars);
+        attroff(A_REVERSE);
+
+        move(menu_y, menu_x);
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Frees a menu activity, generated by ::__activity_menu_create.
+ * @param activity_data Pointer to a ::activity_menu_data_t.
+ */
+void __activity_menu_free_data(void *activity_data) {
+    activity_menu_data_t *menu = (activity_menu_data_t *) activity_data;
+
+    for (size_t i = 0; i < menu->number_of_options; i++) {
+        g_free(menu->options[i]);
+    }
+    free(menu->options);
+    g_free(menu->title);
+    free(menu);
+}
+
+/**
+ * @brief   Creates an ::activity_t for a menu.
+ * @details See ::activity_menu_run for parameter information.
+ * @return  An ::activity_t for a menu, that must be deleted using ::activity_free. `NULL` is
+ *          also a possibility, when an allocation failure occurs.
+ */
+activity_t *__activity_menu_create(const char  *title,
+                                   const char **screen_options,
+                                   size_t       number_of_options) {
+
+    activity_menu_data_t *activity_data = malloc(sizeof(activity_menu_data_t));
+    if (!activity_data)
+        return NULL;
+
+    activity_data->options = malloc(sizeof(gunichar *) * number_of_options);
+    if (!activity_data->options) {
+        free(activity_data);
+        return NULL;
+    }
+
+    size_t max_width = 0;
+    for (size_t i = 0; i < number_of_options; i++) {
+        activity_data->options[i] = g_utf8_to_ucs4_fast(screen_options[i], -1, NULL);
+
+        size_t string_size = ncurses_measure_unicode_string(activity_data->options[i]);
+        if (string_size > max_width) {
+            max_width = string_size;
+        }
+    }
+    activity_data->title = g_utf8_to_ucs4_fast(title, -1, NULL);
+    size_t title_size    = ncurses_measure_unicode_string(activity_data->title);
+    if (title_size > max_width)
+        max_width = title_size;
+
+    activity_data->widest_string_width = max_width;
+    activity_data->number_of_options   = number_of_options;
+    activity_data->current_option      = 0;
+
+    return activity_create(__activity_menu_keypress,
+                           __activity_menu_render,
+                           __activity_menu_free_data,
+                           activity_data);
+}
+
+ssize_t
+    activity_menu_run(const char *title, const char **screen_options, size_t number_of_options) {
+    activity_t *activity = __activity_menu_create(title, screen_options, number_of_options);
+    if (!activity)
+        return -1;
+
+    void *run_result = activity_run(activity);
+
+    if (run_result) {
+        activity_menu_data_t *menu          = (activity_menu_data_t *) run_result;
+        ssize_t               chosen_option = menu->current_option;
+
+        activity_free(activity);
+        return chosen_option;
+    }
+
+    return -1;
+}
