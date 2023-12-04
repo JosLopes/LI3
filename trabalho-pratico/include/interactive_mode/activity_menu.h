@@ -27,16 +27,15 @@
  * The menu will look like the following on screen:
  *
  * ```text
- *    TITLE
- * +------------+
- * | Option_0   |
- * | Option_1   |
- * | Option_2   |
- * | (...)      |
- * +------------+
+ * +--TITLE---+
+ * |          |
+ * | Option 0 |
+ * | Option 1 |
+ * | Option 2 |
+ * |  (...)   |
+ * |          |
+ * +----------+
  * ```
- * If the window is not big enough, the options that wont fit the screen can still be accessed by
- * the user, as this menu supports scrolling by using `KEY_DOWN` when at the bottom the menu.
  */
 #ifndef ACTIVITY_MENU_H
 #define ACTIVITY_MENU_H
@@ -53,11 +52,11 @@
  * @param number_of_options The number of options (strings) in @p screen_options.
  *
  * @return The index of the user selected option. `-1` in case the user escaped the menu by using
- *         `\x1b` (Escape key), or if an error occurred.
+ *         Escape, or if an error occurred.
  *
  * #### Examples
  * See [the header file's documentation](@ref activity_menu_examples).
  */
-int activity_menu_run(const char *title, const char **screen_options, size_t number_of_options);
+ssize_t activity_menu_run(const char *title, const char **screen_options, size_t number_of_options);
 
 #endif
