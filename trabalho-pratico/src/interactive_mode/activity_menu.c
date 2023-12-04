@@ -138,28 +138,27 @@ int __activity_menu_render(void *activity_data) {
     int menu_width  = min(window_width - 2, (int) (max_string_size + 8));
     int menu_height = min(window_height - 3, menu->number_of_options + 2);
 
-    int placement_y = max(2, (window_height - menu_height) / 2);
-    int placement_x = (window_width - max_string_size) / 2;
+    int options_y = max(2, (window_height - menu_height)/2) +1;
+    int options_x = (window_width - max_string_size)/2;
 
     /* Render title */
     attroff(A_REVERSE);
-    move(max(0, placement_y - 4), placement_x + (max_string_size - title_max_chars) / 2);
+    move(max(0, options_y - 5), options_x + (max_string_size - title_max_chars) / 2);
     addnwstr((wchar_t *) menu->title, title_max_chars);
 
     /* Render menu box */
-    ncurses_render_rectangle(max(placement_x - 4, 1), placement_y, menu_width, menu_height);
+    ncurses_render_rectangle(max(options_x - 4, 1), options_y -1, menu_width, menu_height);
 
     /* Set parameters to display the correct options, dependent on display size */
     int max_on_screen_options = min(menu_height - 2, menu->number_of_options);
     int scroll_menu_number    = menu->current_option / max_on_screen_options;
-    int i                     = scroll_menu_number * max_on_screen_options;
     int set_of_options =
         min(max_on_screen_options * scroll_menu_number + menu_height - 2, menu->number_of_options);
 
     /* Render options */
-    placement_y++;
-    for (; i < set_of_options; i++) {
-        move(placement_y, max(placement_x, 1));
+    options_x = max(options_x, 1);
+    for (int i = scroll_menu_number * max_on_screen_options; i < set_of_options; i++) {
+        move(options_y, options_x);
 
         if (i == menu->current_option) {
             attron(A_REVERSE);
@@ -170,7 +169,7 @@ int __activity_menu_render(void *activity_data) {
         size_t option_max_chars =
             ncurses_prefix_from_maximum_length(menu->options[i], menu_width - 1, NULL);
         addnwstr((wchar_t *) menu->options[i], option_max_chars);
-        move(++placement_y, max(placement_x, 1));
+        options_y++;
     }
 
     return 0;
