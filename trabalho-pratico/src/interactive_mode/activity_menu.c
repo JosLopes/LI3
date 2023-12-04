@@ -138,8 +138,8 @@ int __activity_menu_render(void *activity_data) {
     int menu_width  = min(window_width - 2, (int) (max_string_size + 8));
     int menu_height = min(window_height - 3, menu->number_of_options + 2);
 
-    int options_y = max(2, (window_height - menu_height)/2) +1;
-    int options_x = (window_width - max_string_size)/2;
+    int options_y = max(2, (window_height - menu_height) / 2) + 1;
+    int options_x = (window_width - max_string_size) / 2;
 
     /* Render title */
     attroff(A_REVERSE);
@@ -147,7 +147,7 @@ int __activity_menu_render(void *activity_data) {
     addnwstr((wchar_t *) menu->title, title_max_chars);
 
     /* Render menu box */
-    ncurses_render_rectangle(max(options_x - 4, 1), options_y -1, menu_width, menu_height);
+    ncurses_render_rectangle(max(options_x - 4, 1), options_y - 1, menu_width, menu_height);
 
     /* Set parameters to display the correct options, dependent on display size */
     int max_on_screen_options = min(menu_height - 2, menu->number_of_options);
