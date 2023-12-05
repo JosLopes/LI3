@@ -110,9 +110,6 @@ int __activity_messagebox_render(void *activity_data) {
 
     move(messagebox_y + (messagebox_height / 2),
          messagebox_x + (messagebox_width - message_width) / 2);
-    printw("%ls", (wchar_t *) messagebox->message);
-
-    messagebox->message[message_max_chars + 1] = deleted;
 
     return 0;
 }
