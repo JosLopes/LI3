@@ -106,8 +106,7 @@ int __activity_messagebox_render(void *activity_data) {
                                                                max(messagebox_width - 3, 0),
                                                                &message_width);
 
-    int32_t deleted                            = messagebox->message[message_max_chars + 1];
-    messagebox->message[message_max_chars + 1] = '\0';
+    addnwstr((wchar_t *) messagebox->message, message_max_chars);
 
     move(messagebox_y + (messagebox_height / 2),
          messagebox_x + (messagebox_width - message_width) / 2);
