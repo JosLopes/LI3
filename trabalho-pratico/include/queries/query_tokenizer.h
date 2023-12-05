@@ -20,7 +20,6 @@
  * @details This parser is very limited, as it supports only the bare minimum to get queries
  *          working. The following items aren't supported:
  *
- *          - Empty arguments in quotes aren't allowed (``""``);
  *          - There is no quote escaping;
  *          - Quotes must be preceded and proceded by spaces (e.g.: ``Hello "a b c" Goodbye``).
  *

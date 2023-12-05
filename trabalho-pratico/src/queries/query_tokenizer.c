@@ -60,6 +60,9 @@ int __query_tokenizer_handle_space_split(void *tokenizer_data, char *token) {
     if (*token == '\0') /* Skip empty tokens */
         return 0;
 
+    if (*token == '"')
+        tokenizer->quote_token = token + 1;
+
     if (tokenizer->quote_token) {
         size_t token_length = strlen(token);
         if (token[token_length - 1] == '"') {
@@ -73,8 +76,6 @@ int __query_tokenizer_handle_space_split(void *tokenizer_data, char *token) {
             if (cb_result)
                 return cb_result;
         }
-    } else if (*token == '"') {
-        tokenizer->quote_token = token + 1;
     } else {
         int cb_result = tokenizer->callback(tokenizer->user_data, token);
         if (cb_result)
