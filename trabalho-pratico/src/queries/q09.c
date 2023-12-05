@@ -21,6 +21,7 @@
 
 #include <ctype.h>
 #include <glib.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,67 +94,16 @@ int __q09_execute_iter_callback(void *user_data, const user_t *user) {
     return 0;
 }
 
-/**
- * @brief Creates a copy of a string that can correctly be compared, for user ordering purposes.
- * @details Spaces, hyphens and accents are removed, and all letters are made lower-case. This
- *          exists because, despite my best efforts, I could not replicate the required ordering
- *          using `strcoll`, as suggested by professors.
- *
- * @param str String to convert.
- *
- * @return A `char *` to be used with `strcmp` that must later be `free`'d.
- */
-char *__q9_prepare_for_comparison(const char *str) {
-    /*
-     * NOTE: in the future, it may be possible to calculate these comparison strings ahead of time,
-     *       and then use each one multiple times for sorting, reducing the number of this very
-     *       expensive operation
-     */
-
-    char     *str_out   = malloc(strlen(str) + 1);
-    gunichar *str_utf32 = g_utf8_to_ucs4_fast(str, -1, NULL);
-
-    char     *write = str_out;
-    gunichar *read  = str_utf32;
-    while (*read) {
-        if (*read == ' ' || *read == '-' || (0x300 <= *read && *read <= 0x36F)) {
-            /* Skip spaces, hyphens and diacritics */
-        } else {
-            gunichar decomposed[G_UNICHAR_MAX_DECOMPOSITION_LENGTH];
-            g_unichar_fully_decompose(*read, FALSE, decomposed, G_UNICHAR_MAX_DECOMPOSITION_LENGTH);
-            write += g_unichar_to_utf8(tolower(decomposed[0]), write);
-        }
-
-        read++;
-    }
-    *write = '\0';
-
-    g_free(str_utf32);
-    return str_out;
-}
-
 /** @brief User comparison function for user ordering for final output. */
 gint __q09_sort_compare_callback(gconstpointer a, gconstpointer b) {
     const user_t *user_a = *(const user_t **) a;
     const user_t *user_b = *(const user_t **) b;
 
-    char *cmp_str_a = __q9_prepare_for_comparison(user_get_const_name(user_a));
-    char *cmp_str_b = __q9_prepare_for_comparison(user_get_const_name(user_b));
-
-    gint crit1 = strcmp(cmp_str_a, cmp_str_b);
-    free(cmp_str_a);
-    free(cmp_str_b);
-
+    gint crit1 = strcoll(user_get_const_name(user_a), user_get_const_name(user_b));
     if (crit1)
         return crit1;
 
-    cmp_str_a = __q9_prepare_for_comparison(user_get_const_id(user_a));
-    cmp_str_b = __q9_prepare_for_comparison(user_get_const_id(user_b));
-
-    gint crit2 = strcmp(cmp_str_a, cmp_str_b);
-    free(cmp_str_a);
-    free(cmp_str_b);
-
+    gint crit2 = strcoll(user_get_const_id(user_a), user_get_const_id(user_b));
     return crit2;
 }
 
@@ -173,6 +123,9 @@ int __q09_execute(database_t       *database,
                   query_instance_t *instance,
                   FILE             *output) {
     (void) statistics;
+
+    char *old_locale = strdup(setlocale(LC_COLLATE, NULL));
+    setlocale(LC_COLLATE, "en_US.UTF-8");
 
     GPtrArray                       *matches   = g_ptr_array_new();
     q09_execute_callback_user_data_t user_data = {
@@ -204,6 +157,12 @@ int __q09_execute(database_t       *database,
     }
 
     g_ptr_array_free(matches, TRUE);
+
+    if (old_locale) {
+        setlocale(LC_COLLATE, old_locale);
+        free(old_locale);
+    }
+
     return 0;
 }
 
