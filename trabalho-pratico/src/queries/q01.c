@@ -223,12 +223,6 @@ int __q01_execute_reservation_entity(database_t       *database,
     if (!reservation)
         return 0;
 
-    const char     *user_id      = reservation_get_const_user_id(reservation);
-    user_manager_t *user_manager = database_get_users(database);
-    user_t         *user         = user_manager_get_by_id(user_manager, user_id);
-    if (user_get_account_status(user) == ACCOUNT_STATUS_INACTIVE)
-        return 0;
-
     date_t begin_date = reservation_get_begin_date(reservation);
     char   begin_date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
     date_sprintf(begin_date_str, begin_date);
