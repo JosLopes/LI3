@@ -28,7 +28,8 @@
  *
  * @param user_data Pointer, kept from call to call, so that this callback can modify the program's
  *                  state.
- * @param token     The token that was read.
+ * @param token     The token that was read. Its lifetime is limited to the scope of this function,
+ *                  so make a copy of if if you pretend to store it @p user_data.
  *
  * @return `0` on success, other value for immediate termination of tokenization. It's recommended
  *         that this value is positive, not to risk being confused with

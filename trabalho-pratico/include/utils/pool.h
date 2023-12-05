@@ -81,9 +81,9 @@
  * when you can iterate through the pool:
  *
  * ```c
- * int callback(void *user_data, void *item) {
+ * int callback(void *user_data, const void *item) {
  *     (void) user_data;
- *     printf("%d\n", * (int *) item);
+ *     printf("%d\n", * (const int *) item);
  *     return 0; // Another value can be returned to stop iteration
  * }
  *
@@ -99,7 +99,7 @@
  *          there's no need for a large reallocation, and thus there are no memory peaks nor
  *          the risk of dangling pointers, as a new block simply needs to be allocated.
  */
-typedef struct pool_t pool_t;
+typedef struct pool pool_t;
 
 /**
  * @brief   Callback type for pool iterations.
@@ -107,16 +107,18 @@ typedef struct pool_t pool_t;
  *
  * @param user_data Argument passed to ::pool_iter that is passed to every callback, so that this
  *                  method can change the program's state.
- * @param item      Item in the pool. You must convert it to its correct type.
+ * @param item      Item in the pool. You must convert it to its correct type (type provided to
+ *                  ::pool_create).
  *
  * @return `0` on success, or any other value to order pool iteration to stop.
  */
-typedef int (*pool_iter_callback_t)(void *user_data, void *item);
+typedef int (*pool_iter_callback_t)(void *user_data, const void *item);
 
 /**
- * @brief   Creates a pool from the size of its elements. **Use ::pool_create instead.**
- * @details This method needs to be exposed so that the ::pool_create macro works. The returned
- *          value is owned by the caller, and should be freed with ::pool_free.
+ * @brief   Creates a pool from the size of its elements.
+ * @details Unless you are using opaque types with a `*_sizeof` function exposed
+ *          (e.g.: ::user_sizeof), **use ::pool_create instead.** The returned value is owned by the
+ *          caller, and should be freed with ::pool_free.
  *
  * @param item_size      The size (in bytes) of the type of item to be allocated in this pool. For
  *                       example, this should be `sizeof(int)` for a pool of `int`s.
@@ -124,13 +126,13 @@ typedef int (*pool_iter_callback_t)(void *user_data, void *item);
  *
  * @return The allocated pool, or `NULL` on failure.
  */
-pool_t *__pool_create(size_t item_size, size_t block_capacity);
+pool_t *pool_create_from_size(size_t item_size, size_t block_capacity);
 
 /**
  * @brief   Creates a pool.
  * @details The returned value is owned by the caller, and should be freed with ::pool_free.
  *
- * @param type The type of the item in the pool.
+ * @param type           The type of the item in the pool.
  * @param block_capacity A `size_t` with the number of items in each pool block.
  *
  * @return The allocated pool, or `NULL` on failure.
@@ -138,11 +140,12 @@ pool_t *__pool_create(size_t item_size, size_t block_capacity);
  * #### Examples
  * See [the header file's documentation](@ref pool_examples).
  */
-#define pool_create(type, block_capacity) __pool_create(sizeof(type), block_capacity)
+#define pool_create(type, block_capacity) pool_create_from_size(sizeof(type), block_capacity)
 
 /**
  * @brief   Allocates space for an item in a pool. **Use ::pool_alloc_item instead.**
- * @details This method needs to be exposed so that the ::pool_alloc_item macro works.
+ * @details That item does not need to be `free`'d, as that's done when @p pool itself is freed in
+ *          ::pool_free. This method needs to be exposed so that the ::pool_alloc_item macro works.
  *
  * @param pool Pool in which the item will be allocated.
  *
@@ -167,15 +170,43 @@ void *__pool_alloc_item(pool_t *pool);
 #define pool_alloc_item(type, pool) ((type *) __pool_alloc_item(pool))
 
 /**
+ * @brief   Allocates space for @p n contiguous items in a pool (an array of items). **Use
+ *          ::pool_alloc_items instead.**
+ * @details That array of items does not need to be `free`'d, as that's done when @p pool itself is
+ *          freed in ::pool_free. This method needs to be exposed so that the ::pool_alloc_items
+ *          macro works.
+ *
+ * @param pool Pool in which the items will be allocated.
+ * @param n    Number of items to be allocated.
+ *
+ * @return The pointer to the array of allocated items, `NULL` on failure.
+ */
+void *__pool_alloc_items(pool_t *pool, size_t n);
+
+/**
+ * @brief   Allocates space for @p n contiguous items in a pool (an array of items).
+ * @details That array of items does not need to be `free`'d, as that's done when @p pool itself is
+ *          freed in ::pool_free.
+ *
+ * @param type Type of the items in the pool. It's expected to be the same type used in
+ *             ::pool_create. Otherwise, this will result in undefined behavior.
+ * @param pool A `pool_t *` in which the items will be allocated.
+ * @param n    Number of items to be allocated.
+ *
+ * @return The pointer to the array of allocated items, `NULL` on failure.
+ */
+#define pool_alloc_items(type, pool, n) ((type *) __pool_alloc_items(pool, n))
+
+/**
  * @brief   Adds an item to the pool, by allocating space for it and copying it there. **Use
  *          ::pool_put_item instead.**
  * @details This method needs to be exposed so that the ::pool_put_item macro works. That item does
  *          not need to be `free`'d, as that's done when @p pool itself is freed in ::pool_free.
  *
- * @param pool Pool to add the item to.
- * @param item_location Location of the item to be allocated and copied. It must be a `type *`,
- *                      where `type` is the type provided to ::pool_create. Otherwise, this will
- *                      result in undefined behavior.
+ * @param pool          Pool to add the item to.
+ * @param item_location Location of the item to be allocated and copied. It must be a
+ *                      `const type *`, where `type` is the type provided to ::pool_create.
+ *                      Otherwise, this will result in undefined behavior.
  *
  * @return The pointer to the allocated and copied item, `NULL` on failure.
  */
@@ -186,19 +217,53 @@ void *__pool_put_item(pool_t *pool, const void *item_location);
  * @details That item does not need to be `free`'d, as that's done when @p pool itself is freed in
  *          ::pool_free.
  *
- * @param type Type of the items in the pool. It's expected to be the same type used in
- *             ::pool_create. Otherwise, this will result in undefined behavior.
- * @param pool A `pool_t *` to add the item to.
- * @param item_location Location of the item to be allocated and copied. It must be a `type *`,
+ * @param type          Type of the items in the pool. It's expected to be the same type used in
+ *                      ::pool_create. Otherwise, this will result in undefined behavior.
+ * @param pool          A `pool_t *` to add the item to.
+ * @param item_location Pointer to the item to be allocated and copied. It must be a `const type *`,
  *                      where `type` is the type provided to ::pool_create. Otherwise, this will
  *                      result in undefined behavior.
  *
- * @return The pointer to the allocated and copied item, `NULL` on failure.
+ * @return The pointer to the allocated and copied item, `NULL` on failure. The returned value will
+ *         result from a **shallow copy** of @p item_location to the pool.
  *
  * #### Examples
  * See [the header file's documentation](@ref pool_examples).
  */
 #define pool_put_item(type, pool, item_location) ((type *) __pool_put_item(pool, item_location))
+
+/**
+ * @brief   Adds an array of items to the pool, by allocating space for it and copying it there.
+ *          **Use ::pool_put_items instead.**
+ * @details That array of items does not need to be `free`'d, as that's done when @p pool itself is
+ *          freed in ::pool_free. This method needs to be exposed so that the ::pool_put_items macro
+ *          works.
+ *
+ * @param pool           Pool to add the item to.
+ * @param items_location Location of the items to be allocated and copied. It must be a
+ *                       `const type *`, where `type` is the type provided to ::pool_create.
+ *                       Otherwise, this will result in undefined behavior.
+ * @param n              Number of items in @p items_location.
+ *
+ * @return The pointer to the allocated and copied item, `NULL` on failure.
+ */
+void *__pool_put_items(pool_t *pool, const void *items_location, size_t n);
+
+/**
+ * @brief   Adds an array of items to the pool, by allocating space for it and copying it there.
+ * @details That array of items does not need to be `free`'d, as that's done when @p pool itself is
+ *          freed in ::pool_free.
+ *
+ * @param pool           Pool to add the item to.
+ * @param items_location Location of the items to be allocated and copied. It must be a `type *`,
+ *                       where `type` is the type provided to ::pool_create. Otherwise, this will
+ *                       result in undefined behavior.
+ * @param n              Number of items in @p items_location.
+ *
+ * @return The pointer to the allocated and copied item, `NULL` on failure.
+ */
+#define pool_put_items(type, pool, items_location, n)                                              \
+    ((type *) __pool_put_items(pool, items_location, n))
 
 /**
  * @brief Iterates through every item in the pool, calling @p callback for each one.
@@ -213,7 +278,17 @@ void *__pool_put_item(pool_t *pool, const void *item_location);
  * #### Examples
  * See [the header file's documentation](@ref pool_examples).
  */
-int pool_iter(pool_t *pool, pool_iter_callback_t callback, void *user_data);
+int pool_iter(const pool_t *pool, pool_iter_callback_t callback, void *user_data);
+
+/**
+ * @brief   Removes all elements from @p pool.
+ * @details Keep in mind that all values allocated using @p pool will no longer be valid. This
+ *          should only be used when you want to allocate temporary data and free it many times
+ *          over. This method allows you to reduce the number of pool creations (thus, allocations).
+ *
+ * @p pool Pool to have all its elements removed from it.
+ */
+void pool_empty(pool_t *pool);
 
 /**
  * @brief Frees memory allocated by a pool.

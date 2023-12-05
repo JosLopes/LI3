@@ -37,7 +37,8 @@
  * Humberto Gomes;19;175
  * ```
  *
- * This module was purposely built for this task:
+ * This module was purposely built for this task. Keep in mind that we don't check for allocation
+ * failures in this example.
  *
  * ```c
  * #include <stdio.h>
@@ -158,6 +159,7 @@
  *
  * CLEANUP:
  *     fclose(file);
+ *     fixed_n_delimiter_parser_grammar_free(token_grammar);
  *     dataset_parser_grammar_free(grammar);
  *
  *     for (size_t i = 0; i < dataset.n; ++i)
@@ -190,11 +192,8 @@
 
 #include "utils/fixed_n_delimiter_parser.h"
 
-/**
- * @brief   The grammar definition for a dataset parser.
- * @details It's an opaque type.
- */
-typedef struct dataset_parser_grammar_t dataset_parser_grammar_t;
+/** @brief   The grammar definition for a dataset parser. */
+typedef struct dataset_parser_grammar dataset_parser_grammar_t;
 
 /**
  * @brief   Callback for each token delimited by the first-order delimiter in a dataset parser
@@ -203,7 +202,8 @@ typedef struct dataset_parser_grammar_t dataset_parser_grammar_t;
  *
  * @param user_data Pointer provided to ::dataset_parser_parse, so that this callback can modify
  *                  the program's state.
- * @param unparsed  Token to be parsed.
+ * @param unparsed  Token to be parsed. Do not store in @p user_data without copying it first, as
+ *                  the lifetime of @p unparsed is limited to this method.
  *
  * @return `0` on success, other value for immediate termination of parsing. It's recommeneded that
  *         these values are positive, as negative values have special meanings (see
@@ -233,8 +233,7 @@ typedef int (*dataset_parser_token_callback)(void *user_data, int retcode);
  *
  * @param first_order_delimiter Main separator between tokens (e.g.: ``'\n'`` for a CSV table).
  * @param token_grammar         Grammar for ::fixed_n_delimiter_parser_parse_string, used to parse
- *                              each token delimited by @p first_order_delimiter. Ownership of this
- *                              value will be taken by this function.
+ *                              each token delimited by @p first_order_delimiter.
  * @param before_parse_callback Callback called before parsing each token.
  * @param token_callback        Callback called after processing each token with @p token_grammar.
  *
@@ -247,9 +246,19 @@ typedef int (*dataset_parser_token_callback)(void *user_data, int retcode);
  */
 dataset_parser_grammar_t *
     dataset_parser_grammar_new(char                                       first_order_delimiter,
-                               fixed_n_delimiter_parser_grammar_t        *token_grammar,
+                               const fixed_n_delimiter_parser_grammar_t  *token_grammar,
                                dataset_parser_token_before_parse_callback before_parse_callback,
                                dataset_parser_token_callback              token_callback);
+
+/**
+ * @brief  Creates a deep clone of a grammar for this type of parser.
+ *
+ * @param  grammar Grammar to be cloned.
+ *
+ * @return A `malloc`-allocated pointer to a new ::dataset_parser_grammar_t, that must be deleted
+ *         using ::dataset_parser_grammar_free. `NULL` is possible on failure.
+ */
+dataset_parser_grammar_t *dataset_parser_grammar_clone(const dataset_parser_grammar_t *grammar);
 
 /**
  * @brief Frees memory allocated by ::dataset_parser_grammar_new.
@@ -280,6 +289,6 @@ void dataset_parser_grammar_free(dataset_parser_grammar_t *grammar);
  * #### Examples
  * See [the header file's documentation](@ref dataset_parser_examples).
  */
-int dataset_parser_parse(FILE *file, dataset_parser_grammar_t *grammar, void *user_data);
+int dataset_parser_parse(FILE *file, const dataset_parser_grammar_t *grammar, void *user_data);
 
 #endif

@@ -34,7 +34,7 @@
  *     @brief Pointer to the next node.
  */
 struct single_pool_id_linked_list {
-    uint64_t                      value;
+    uint32_t                      value;
     single_pool_id_linked_list_t *next;
 };
 
@@ -45,7 +45,7 @@ single_pool_id_linked_list_t *single_pool_id_linked_list_create(void) {
 single_pool_id_linked_list_t *
     single_pool_id_linked_list_append_beginning(pool_t                       *allocator,
                                                 single_pool_id_linked_list_t *list,
-                                                uint64_t                      value) {
+                                                uint32_t                      value) {
 
     single_pool_id_linked_list_t item = {.value = value, .next = list};
     return pool_put_item(single_pool_id_linked_list_t, allocator, &item);
@@ -55,11 +55,11 @@ pool_t *single_pool_id_linked_list_create_pool(size_t block_capacity) {
     return pool_create(single_pool_id_linked_list_t, block_capacity);
 }
 
-uint64_t single_pool_id_linked_list_get_value(const single_pool_id_linked_list_t *list) {
+uint32_t single_pool_id_linked_list_get_value(const single_pool_id_linked_list_t *list) {
     return list->value;
 }
 
-single_pool_id_linked_list_t *
+const single_pool_id_linked_list_t *
     single_pool_id_linked_list_get_next(const single_pool_id_linked_list_t *list) {
 
     return list->next;

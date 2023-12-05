@@ -78,9 +78,7 @@
 
 #include <stdint.h>
 
-/**
- * @brief A date containing a year, a month a day.
- */
+/** @brief A date containing a year, a month a day. */
 typedef int32_t date_t;
 
 /**
@@ -100,7 +98,8 @@ int date_from_values(date_t *output, uint16_t year, uint8_t month, uint8_t day);
  * @brief Parses a **MODIFIABLE** string containing a date.
  *
  * @param output Where the parsed date is placed. Won't be modified on failure.
- * @param input  String to parse, that won't be modified. Must be in the format `"YYYY/MM/DD"`.
+ * @param input  String to parse, that will be modified during parsing, but then restored to its
+ *               original form. Must be in the format `"YYYY/MM/DD"`.
  *
  * @retval 0 Parsing success.
  * @retval 1 Parsing failure.

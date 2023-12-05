@@ -67,7 +67,8 @@ reservation_manager_t *reservation_manager_create(void) {
         return NULL;
 
     manager->reservations =
-        __pool_create(reservation_sizeof(), RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY);
+        pool_create_from_size(reservation_sizeof(),
+                              RESERVATION_MANAGER_RESERVATIONS_POOL_BLOCK_CAPACITY);
     if (!manager->reservations) {
         free(manager);
         return NULL;
@@ -162,11 +163,11 @@ typedef struct {
  *
  * @return The return value of the target callback, or `0` for filtered-out items.
  */
-int __reservation_manager_iter_callback(void *user_data, void *item) {
-    if (reservation_is_valid((reservation_t *) item) == 0) {
+int __reservation_manager_iter_callback(void *user_data, const void *item) {
+    if (reservation_is_valid((const reservation_t *) item) == 0) {
         reservation_manager_iter_reservation_data_t *helper_data =
             (reservation_manager_iter_reservation_data_t *) user_data;
-        return helper_data->callback(helper_data->original_user_data, (reservation_t *) item);
+        return helper_data->callback(helper_data->original_user_data, (const reservation_t *) item);
     }
     return 0;
 }

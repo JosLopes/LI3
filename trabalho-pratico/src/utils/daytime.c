@@ -31,12 +31,6 @@
 #include "utils/int_utils.h"
 #include "utils/string_utils.h"
 
-/**
- * @brief Grammar for parsing times.
- * @details Shall not be modified apart from its creation.
- */
-fixed_n_delimiter_parser_grammar_t *daytime_grammar = NULL;
-
 /** @brief Time with `union`, to easily extract fields from a time integer. */
 typedef union {
     daytime_t daytime;
@@ -95,30 +89,28 @@ int __daytime_from_string_parse_field(void *daytime_data, char *token, size_t nt
 }
 
 /**
- * @brief Method used with `atexit` to free the grammar created by ::daytime_from_string.
+ * @brief   Grammar for parsing times.
+ * @details Shall not be modified apart from its creation.
  */
-void __daytime_from_string_free_grammar(void) {
-    free(daytime_grammar);
+fixed_n_delimiter_parser_grammar_t *__daytime_grammar = NULL;
+
+/** @brief Automatically initializes ::__daytime_grammar when the program starts. */
+void __attribute__((constructor)) __daytime_grammar_create(void) {
+    fixed_n_delimiter_parser_iter_callback_t callbacks[3] = {__daytime_from_string_parse_field,
+                                                             __daytime_from_string_parse_field,
+                                                             __daytime_from_string_parse_field};
+
+    __daytime_grammar = fixed_n_delimiter_parser_grammar_new(':', 3, callbacks);
+}
+
+/** @brief Automatically frees ::__daytime_grammar when the program terminates */
+void __attribute__((destructor)) __daytime_grammar_free(void) {
+    fixed_n_delimiter_parser_grammar_free(__daytime_grammar);
 }
 
 int daytime_from_string(daytime_t *output, char *input) {
-    /* Create grammar if needed */
-    if (!daytime_grammar) {
-        fixed_n_delimiter_parser_iter_callback_t callbacks[3] = {__daytime_from_string_parse_field,
-                                                                 __daytime_from_string_parse_field,
-                                                                 __daytime_from_string_parse_field};
-
-        /* NOTE - Make thread-safe if multithreading gets implemented */
-        daytime_grammar = fixed_n_delimiter_parser_grammar_new(':', 3, callbacks);
-        if (!daytime_grammar) {
-            return 1;
-        }
-        atexit(__daytime_from_string_free_grammar);
-    }
-
-    /* Actually parse time */
     daytime_union_helper_t tmp_daytime;
-    int retval = fixed_n_delimiter_parser_parse_string(input, daytime_grammar, &tmp_daytime);
+    int retval = fixed_n_delimiter_parser_parse_string(input, __daytime_grammar, &tmp_daytime);
     if (retval) {
         return retval;
     } else {

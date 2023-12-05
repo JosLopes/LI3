@@ -32,12 +32,6 @@
 #include "utils/fixed_n_delimiter_parser.h"
 #include "utils/string_utils.h"
 
-/**
- * @brief Grammar for parsing timed dates.
- * @details Shall not be modified apart from its creation.
- */
-fixed_n_delimiter_parser_grammar_t *date_and_time_grammar = NULL;
-
 /** @brief Timed date with `union`, to easily extract fields from a timed date integer. */
 typedef union {
     date_and_time_t date_and_time;
@@ -80,30 +74,28 @@ int __date_and_time_from_string_parse_daytime(void  *date_and_time_data,
 }
 
 /**
- * @brief Method used with `atexit` to free the grammar created by ::date_and_time_from_string.
+ * @brief   Grammar for parsing timed dates.
+ * @details Shall not be modified apart from its creation.
  */
-void __date_and_time_from_string_free_grammar(void) {
-    free(date_and_time_grammar);
+fixed_n_delimiter_parser_grammar_t *__date_and_time_grammar = NULL;
+
+/** @brief Automatically initializes ::__date_and_time_grammar when the program starts. */
+void __attribute__((constructor)) __date_and_time_grammar_create(void) {
+    fixed_n_delimiter_parser_iter_callback_t callbacks[2] = {
+        __date_and_time_from_string_parse_date,
+        __date_and_time_from_string_parse_daytime};
+
+    __date_and_time_grammar = fixed_n_delimiter_parser_grammar_new(' ', 2, callbacks);
+}
+
+/** @brief Automatically frees ::__date_grammar when the program terminates. */
+void __attribute__((destructor)) __date_and_time_grammar_free(void) {
+    fixed_n_delimiter_parser_grammar_free(__date_and_time_grammar);
 }
 
 int date_and_time_from_string(date_and_time_t *output, char *input) {
-    /* Create grammar if needed */
-    if (!date_and_time_grammar) {
-        fixed_n_delimiter_parser_iter_callback_t callbacks[2] = {
-            __date_and_time_from_string_parse_date,
-            __date_and_time_from_string_parse_daytime};
-
-        /* NOTE - Make thread-safe if multithreading gets implemented */
-        date_and_time_grammar = fixed_n_delimiter_parser_grammar_new(' ', 2, callbacks);
-        if (!date_and_time_grammar) {
-            return 1;
-        }
-        atexit(__date_and_time_from_string_free_grammar);
-    }
-
-    /* Actually parse date */
     date_and_time_union_helper_t tmp_date;
-    int retval = fixed_n_delimiter_parser_parse_string(input, date_and_time_grammar, &tmp_date);
+    int retval = fixed_n_delimiter_parser_parse_string(input, __date_and_time_grammar, &tmp_date);
     if (retval) {
         return retval;
     } else {

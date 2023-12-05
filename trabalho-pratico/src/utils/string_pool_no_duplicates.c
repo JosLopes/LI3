@@ -46,7 +46,11 @@ string_pool_no_duplicates_t *string_pool_no_duplicates_create(size_t block_capac
     if (!no_dups_pool)
         return NULL;
 
-    no_dups_pool->strings        = string_pool_create(block_capacity);
+    no_dups_pool->strings = string_pool_create(block_capacity);
+    if (!no_dups_pool->strings) {
+        free(no_dups_pool);
+        return NULL;
+    }
     no_dups_pool->already_stored = g_hash_table_new(g_str_hash, g_str_equal);
 
     return no_dups_pool;
@@ -56,6 +60,9 @@ const char *string_pool_no_duplicates_put(string_pool_no_duplicates_t *pool_data
     char *data = g_hash_table_lookup(pool_data->already_stored, str);
     if (!data) {
         char *pool_string = string_pool_put(pool_data->strings, str);
+        if (!pool_string)
+            return NULL;
+
         g_hash_table_insert(pool_data->already_stored, pool_string, pool_string);
         return pool_string;
     }

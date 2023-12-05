@@ -30,27 +30,22 @@
 #include "utils/fixed_n_delimiter_parser.h"
 
 /**
- * @brief Grammar for parsing emails.
+ * @brief   Grammar for parsing emails.
  * @details Shall not be modified apart from its creation.
  */
-fixed_n_delimiter_parser_grammar_t *email_grammar = NULL;
+fixed_n_delimiter_parser_grammar_t *__email_grammar = NULL;
 
 /**
- * @brief Grammar for parsing email domains.
+ * @brief   Grammar for parsing email domains.
  * @details Shall not be modified apart from its creation.
  */
-fixed_n_delimiter_parser_grammar_t *domain_grammar = NULL;
+fixed_n_delimiter_parser_grammar_t *__email_domain_grammar = NULL;
 
 /** @brief Auxiliary method for ::email_validate_string. Validates a username in an email. */
 int __email_validate_username(void *user_data, char *token, size_t ntoken) {
     (void) user_data;
     (void) ntoken;
     return (*token == '\0'); /* Fail on empty string */
-}
-
-/** @brief Method used with `atexit` to free the grammar created by ::__email_validate_domain. */
-void __email_validate_domain_free_grammar(void) {
-    free(domain_grammar);
 }
 
 /** @brief Auxiliary method for ::__email_validate_domain. Validates a name in an email's domain. */
@@ -71,46 +66,34 @@ int __email_validate_domain_tld(void *user_data, char *token, size_t ntoken) {
 int __email_validate_domain(void *user_data, char *token, size_t ntoken) {
     (void) user_data;
     (void) ntoken;
-
-    /* Create grammar if needed */
-    if (!domain_grammar) {
-        fixed_n_delimiter_parser_iter_callback_t callbacks[2] = {__email_validate_domain_name,
-                                                                 __email_validate_domain_tld};
-
-        /* NOTE - Make thread-safe if multithreading gets implemented */
-        domain_grammar = fixed_n_delimiter_parser_grammar_new('.', 2, callbacks);
-        if (!domain_grammar) {
-            return 1;
-        }
-        atexit(__email_validate_domain_free_grammar);
-    }
-
-    return fixed_n_delimiter_parser_parse_string(token, domain_grammar, NULL);
+    return fixed_n_delimiter_parser_parse_string(token, __email_domain_grammar, NULL);
 }
 
-/** @brief Method used with `atexit` to free the grammar created by ::email_validate_string. */
-void __email_validate_free_grammar(void) {
-    free(email_grammar);
+/**
+ * @brief Automatically initializes ::__email_grammar and ::email_domain_grammar when the program
+ *        starts.
+ */
+void __attribute__((constructor)) __email_grammars_create(void) {
+    fixed_n_delimiter_parser_iter_callback_t email_callbacks[2] = {__email_validate_username,
+                                                                   __email_validate_domain};
+    __email_grammar = fixed_n_delimiter_parser_grammar_new('@', 2, email_callbacks);
+
+    fixed_n_delimiter_parser_iter_callback_t domain_callbacks[2] = {__email_validate_domain_name,
+                                                                    __email_validate_domain_tld};
+    __email_domain_grammar = fixed_n_delimiter_parser_grammar_new('.', 2, domain_callbacks);
+}
+
+/**
+ * @brief Automatically frees ::__email_grammar and ::email_domain_grammar when the program
+ *        terminates.
+ */
+void __attribute__((destructor)) __email_grammars_free(void) {
+    fixed_n_delimiter_parser_grammar_free(__email_grammar);
+    fixed_n_delimiter_parser_grammar_free(__email_domain_grammar);
 }
 
 int email_validate_string(char *input) {
-    /* Create grammar if needed */
-    if (!email_grammar) {
-        fixed_n_delimiter_parser_iter_callback_t callbacks[2] = {__email_validate_username,
-                                                                 __email_validate_domain};
-
-        /* NOTE - Make thread-safe if multithreading gets implemented */
-        email_grammar = fixed_n_delimiter_parser_grammar_new('@', 2, callbacks);
-        if (!email_grammar) {
-            return 1;
-        }
-        atexit(__email_validate_free_grammar);
-    }
-
-    int retval = fixed_n_delimiter_parser_parse_string(input, email_grammar, NULL);
-    if (retval)
-        return 1; /* Transform all error codes into 1 */
-    return 0;
+    return fixed_n_delimiter_parser_parse_string(input, __email_grammar, NULL) != 0;
 }
 
 int email_validate_string_const(const char *input) {

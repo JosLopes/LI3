@@ -113,7 +113,7 @@ typedef struct user_manager user_manager_t;
  *
  * @return `0` on success, or any other value to order iteration to stop.
  */
-typedef int (*user_manager_iter_callback_t)(void *user_data, user_t *user);
+typedef int (*user_manager_iter_callback_t)(void *user_data, const user_t *user);
 
 /**
  * @brief   Instantiates a new ::user_manager_t.

@@ -23,24 +23,25 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "dataset/dataset_parser.h"
 #include "utils/stream_utils.h"
 
 /**
- * @struct dataset_parser_grammar_t
+ * @struct dataset_parser_grammar
  * @brief  The grammar definition for a dataset parser.
  *
- * @var dataset_parser_grammar_t::token_grammar
+ * @var dataset_parser_grammar::token_grammar
  *     @brief Grammar to use to parse single tokens with ::fixed_n_delimiter_parser_parse_string.
- * @var dataset_parser_grammar_t::before_parse_callback
+ * @var dataset_parser_grammar::before_parse_callback
  *     @brief Callback called before parsing each token.
- * @var dataset_parser_grammar_t::token_callback
+ * @var dataset_parser_grammar::token_callback
  *     @brief Callback called after processing each token.
- * @var dataset_parser_grammar_t::delimiter
+ * @var dataset_parser_grammar::delimiter
  *     @brief Separator between first-order tokens (e.g.: ``'\n'`` for CSV files).
  */
-struct dataset_parser_grammar_t {
+struct dataset_parser_grammar {
     fixed_n_delimiter_parser_grammar_t        *token_grammar;
     dataset_parser_token_before_parse_callback before_parse_callback;
     dataset_parser_token_callback              token_callback;
@@ -48,12 +49,11 @@ struct dataset_parser_grammar_t {
 };
 
 /**
- * @struct dataset_parser
- * @brief A parser for datasets.
+ * @struct dataset_parser_t
+ * @brief  A parser for datasets.
  *
  * @var dataset_parser_t::grammar
  *     @brief Grammar that defines the parser.
- *     @details Not owned by this `struct`.
  * @var dataset_parser_t::user_data
  *     @brief Data to be passed to callbacks in ::dataset_parser_t::grammar
  *     @details Not owned by this `struct`.
@@ -61,32 +61,51 @@ struct dataset_parser_grammar_t {
  *     @brief If the first token (to be ignored) has yet been processed.
  */
 typedef struct {
-    dataset_parser_grammar_t *grammar;
-    void                     *user_data;
-    int                       first_token_passed;
+    const dataset_parser_grammar_t *grammar;
+    void                           *user_data;
+    int                             first_token_passed;
 } dataset_parser_t;
 
 dataset_parser_grammar_t *
     dataset_parser_grammar_new(char                                       first_order_delimiter,
-                               fixed_n_delimiter_parser_grammar_t        *token_grammar,
+                               const fixed_n_delimiter_parser_grammar_t  *token_grammar,
                                dataset_parser_token_before_parse_callback before_parse_callback,
                                dataset_parser_token_callback              token_callback) {
 
-    dataset_parser_grammar_t *grammar = malloc(sizeof(struct dataset_parser_grammar_t));
+    dataset_parser_grammar_t *grammar = malloc(sizeof(dataset_parser_grammar_t));
     if (!grammar) {
         return NULL;
     }
 
-    grammar->delimiter             = first_order_delimiter;
-    grammar->token_grammar         = token_grammar;
+    grammar->delimiter     = first_order_delimiter;
+    grammar->token_grammar = fixed_n_delimiter_parser_grammar_clone(token_grammar);
+    if (!grammar->token_grammar) {
+        free(grammar);
+        return NULL;
+    }
     grammar->before_parse_callback = before_parse_callback;
     grammar->token_callback        = token_callback;
 
     return grammar;
 }
 
+dataset_parser_grammar_t *dataset_parser_grammar_clone(const dataset_parser_grammar_t *grammar) {
+    dataset_parser_grammar_t *new_grammar = malloc(sizeof(dataset_parser_grammar_t));
+    if (!new_grammar)
+        return NULL;
+
+    memcpy(new_grammar, grammar, sizeof(dataset_parser_grammar_t));
+    new_grammar->token_grammar = fixed_n_delimiter_parser_grammar_clone(grammar->token_grammar);
+    if (!new_grammar->token_grammar) {
+        free(new_grammar);
+        return NULL;
+    }
+
+    return new_grammar;
+}
+
 void dataset_parser_grammar_free(dataset_parser_grammar_t *grammar) {
-    free(grammar->token_grammar);
+    fixed_n_delimiter_parser_grammar_free(grammar->token_grammar);
     free(grammar);
 }
 
@@ -116,7 +135,7 @@ int __parse_stream_iter(void *user_data, char *token) {
     return parser->grammar->token_callback(parser->user_data, parser_ret);
 }
 
-int dataset_parser_parse(FILE *file, dataset_parser_grammar_t *grammar, void *user_data) {
+int dataset_parser_parse(FILE *file, const dataset_parser_grammar_t *grammar, void *user_data) {
     dataset_parser_t parser = {.grammar = grammar, .user_data = user_data, .first_token_passed = 0};
 
     int retval = stream_tokenize(file, grammar->delimiter, __parse_stream_iter, &parser);

@@ -18,7 +18,7 @@
  * @file    single_pool_id_linked_list.h
  * @brief   A linked lists that allows for multiple linked lists to allocate nodes in the same
  *          ::pool_t.
- * @details It's designed to store `uint64_t`s, i.e., flight and reservation IDs.
+ * @details It's designed to store `uint32_t`s, i.e., flight and reservation IDs.
  *
  * @anchor single_pool_id_linked_list_examples
  * ### Example
@@ -49,7 +49,7 @@
  *
  *     single_pool_id_linked_list_t *iter_ll = ll;
  *     while (iter_ll != NULL) {
- *         printf("%" PRIu64 "\n", single_pool_id_linked_list_get_value(iter_ll));
+ *         printf("%" PRIu32 "\n", single_pool_id_linked_list_get_value(iter_ll));
  *         iter_ll = single_pool_if_linked_list_get_next(iter_ll);
  *     }
  *
@@ -63,13 +63,14 @@
 #define SINGLE_POOL_ID_LINKED_LIST_H
 
 #include <inttypes.h>
+#include <stddef.h>
 
 #include "utils/pool.h"
 
 /**
  * @brief   A linked lists that allows for multiple linked lists to allocate nodes in the same
  *          ::pool_t.
- * @details It's designed to store `uint64_t`s, i.e., flight and reservation IDs.
+ * @details It's designed to store `uint32_t`s, i.e., flight and reservation IDs.
  */
 typedef struct single_pool_id_linked_list single_pool_id_linked_list_t;
 
@@ -102,21 +103,21 @@ pool_t *single_pool_id_linked_list_create_pool(size_t block_capacity);
 single_pool_id_linked_list_t *
     single_pool_id_linked_list_append_beginning(pool_t                       *allocator,
                                                 single_pool_id_linked_list_t *list,
-                                                uint64_t                      value);
+                                                uint32_t                      value);
 
 /**
  * @brief  Gets the value of the first node in a ::single_pool_id_linked_list_t.
  * @param  list List to get the value of the first node from.
  * @return The value of the first node in @p list.
  */
-uint64_t single_pool_id_linked_list_get_value(const single_pool_id_linked_list_t *list);
+uint32_t single_pool_id_linked_list_get_value(const single_pool_id_linked_list_t *list);
 
 /**
  * @brief  Gets the next list from a ::single_pool_id_linked_list_t.
  * @param  list List to get the next list from.
  * @return The linked list succeding @p list. `NULL` means the end of the list has been found.
  */
-single_pool_id_linked_list_t *
+const single_pool_id_linked_list_t *
     single_pool_id_linked_list_get_next(const single_pool_id_linked_list_t *list);
 
 /**
@@ -124,6 +125,6 @@ single_pool_id_linked_list_t *
  * @param  list List to get length from.
  * @return The length of the @p list.
  */
-uint64_t single_pool_id_linked_list_length(const single_pool_id_linked_list_t *list);
+size_t single_pool_id_linked_list_length(const single_pool_id_linked_list_t *list);
 
 #endif

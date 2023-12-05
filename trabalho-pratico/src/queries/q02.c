@@ -223,7 +223,7 @@ int __q02_execute(database_t       *database,
     GArray *output_items = g_array_new(FALSE, FALSE, sizeof(q02_output_item_t));
 
     if (args->filter != Q02_ARGUMENTS_FLIGHTS) { /* Add reservations */
-        single_pool_id_linked_list_t *user_reservations =
+        const single_pool_id_linked_list_t *user_reservations =
             user_manager_get_reservations_by_id(users, args->user_id);
 
         while (user_reservations) {
@@ -241,7 +241,7 @@ int __q02_execute(database_t       *database,
     }
 
     if (args->filter != Q02_ARGUMENTS_RESERVATIONS) { /* Add flights */
-        single_pool_id_linked_list_t *user_flights =
+        const single_pool_id_linked_list_t *user_flights =
             user_manager_get_flights_by_id(users, args->user_id);
 
         while (user_flights) {

@@ -57,9 +57,7 @@
 #include "utils/date.h"
 #include "utils/daytime.h"
 
-/**
- * @brief A type containing a ::date_t and a ::daytime_t.
- */
+/** @brief A type containing a ::date_t and a ::daytime_t. */
 typedef int64_t date_and_time_t;
 
 /**
@@ -75,8 +73,8 @@ void date_and_time_from_values(date_and_time_t *output, date_t date, daytime_t t
  * @brief Parses a **MODIFIABLE** string containing a date and a time.
  *
  * @param output Where the parsed timed date is placed. Won't be modified on failure.
- * @param input  String to parse, that won't be modified. Must be in the format
- *               `"YYYY/MM/DD HH:MM:SS"`.
+ * @param input  String to parse, that will be modified during parsing, but then restored to its
+ *               original form. Must be in the format `"YYYY/MM/DD HH:MM:SS"`.
  *
  * @retval 0 Parsing success.
  * @retval 1 Parsing failure.

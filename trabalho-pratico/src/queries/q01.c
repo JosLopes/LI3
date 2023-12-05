@@ -115,8 +115,8 @@ void __q01_free_query_instance_argument_data(void *argument_data) {
  *
  * @return The total spent by a ::user_t.
  */
-double __q01_calculate_user_total_spent(single_pool_id_linked_list_t *list,
-                                        reservation_manager_t        *manager) {
+double __q01_calculate_user_total_spent(const single_pool_id_linked_list_t *list,
+                                        reservation_manager_t              *manager) {
     double total_spent = 0.0;
 
     while (list) {
