@@ -106,7 +106,6 @@ int __activity_messagebox_render(void *activity_data) {
                                                                max(messagebox_width - 3, 0),
                                                                &message_width);
 
-
     move(messagebox_y + (messagebox_height / 2),
          messagebox_x + (messagebox_width - message_width) / 2);
 

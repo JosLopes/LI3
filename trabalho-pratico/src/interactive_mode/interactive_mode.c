@@ -30,9 +30,9 @@
 #include <ncurses.h>
 #include <stdlib.h>
 
+#include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_textbox.h"
-#include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/interactive_mode.h"
 
 /**
