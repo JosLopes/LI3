@@ -143,16 +143,17 @@ int __q04_generate_statistics_foreach_reservation(void                *user_data
   *          auxiliary method for ::__q04_generate_statistics.
   */
 gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b) {
+    /* TODO - make const */
     reservation_t *reservation_a = *((reservation_t **) a);
     reservation_t *reservation_b = *((reservation_t **) b);
 
-    int64_t diff = date_diff(reservation_get_begin_date(reservation_a),
-                             reservation_get_begin_date(reservation_b));
+    int64_t diff = date_diff(reservation_get_begin_date(reservation_b),
+                             reservation_get_begin_date(reservation_a));
 
     if (diff == 0)
-        return ((int64_t) * (uint64_t *) a) - ((int64_t) * (uint64_t *) b);
+        return reservation_get_id(reservation_a) - reservation_get_id(reservation_b);
     else
-        return -diff;
+        return diff;
 }
 
 /**
