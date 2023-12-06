@@ -106,10 +106,11 @@ int __activity_messagebox_render(void *activity_data) {
                                                                max(messagebox_width - 3, 0),
                                                                &message_width);
 
-    addnwstr((wchar_t *) messagebox->message, message_max_chars);
 
     move(messagebox_y + (messagebox_height / 2),
          messagebox_x + (messagebox_width - message_width) / 2);
+
+    addnwstr((wchar_t *) messagebox->message, message_max_chars);
 
     return 0;
 }
@@ -154,9 +155,9 @@ int activity_messagebox_run(const char *message, size_t text_field_width) {
     if (!activity)
         return 1;
 
-    curs_set(1);
-    void *run_result = activity_run(activity);
     curs_set(0);
+    void *run_result = activity_run(activity);
+    curs_set(1);
 
     if (run_result) {
         activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) run_result;
