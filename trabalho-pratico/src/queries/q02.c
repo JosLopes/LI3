@@ -99,13 +99,13 @@ void __q02_free_query_instance_argument_data(void *argument_data) {
  * @var q02_output_item_t::id
  *     @brief Identifier of the object in question (flight or reservation).
  * @var q02_output_item_t::date
- *     @brief Date the object in question happened in.
+ *     @brief Date and time the object in question happened in.
  * @var q02_output_item_t::type
  *     @brief Type of the object in question (flight or reservation).
  */
 typedef struct {
-    uint64_t id;
-    date_t   date;
+    uint64_t        id;
+    date_and_time_t date;
 
     enum {
         Q02_OUTPUT_ITEM_FLIGHT,     /**< This output item is a flight. */
@@ -118,15 +118,15 @@ typedef struct {
  * @details Auxiliary function for ::__q02_execute.
  */
 gint __q02_execute_sort_compare(gconstpointer a_data, gconstpointer b_data) {
-    q02_output_item_t *a = (q02_output_item_t *) a_data;
-    q02_output_item_t *b = (q02_output_item_t *) b_data;
+    const q02_output_item_t *a = (const q02_output_item_t *) a_data;
+    const q02_output_item_t *b = (const q02_output_item_t *) b_data;
 
-    int64_t crit1 = date_diff(b->date, a->date);
+    int64_t crit1 = date_and_time_diff(b->date, a->date);
     if (crit1)
         return crit1;
 
-    int64_t crit2 = a->id - b->id;
-    return crit2;
+    int64_t crit3 = (int32_t) a->id - (int32_t) b->id;
+    return crit3;
 }
 
 /**
@@ -146,7 +146,7 @@ void __q02_print_output(FILE                         *output,
         q02_output_item_t *item = &g_array_index(items, q02_output_item_t, i);
 
         char date_string[DATE_SPRINTF_MIN_BUFFER_SIZE];
-        date_sprintf(date_string, item->date);
+        date_sprintf(date_string, date_and_time_get_date(item->date));
 
         if (!formatted) {
             switch (item->type) {
@@ -229,11 +229,16 @@ int __q02_execute(database_t       *database,
         while (user_reservations) {
             uint64_t reservation_id = single_pool_id_linked_list_get_value(user_reservations);
 
-            q02_output_item_t output_item = {
-                .id   = reservation_id,
-                .date = reservation_get_begin_date(
+            date_and_time_t output_time;
+            date_and_time_from_values(
+                &output_time,
+                reservation_get_begin_date(
                     reservation_manager_get_by_id(reservations, reservation_id)),
-                .type = Q02_OUTPUT_ITEM_RESERVATION};
+                0 /* 00:00:00 */);
+
+            q02_output_item_t output_item = {.id   = reservation_id,
+                                             .date = output_time,
+                                             .type = Q02_OUTPUT_ITEM_RESERVATION};
 
             g_array_append_val(output_items, output_item);
             user_reservations = single_pool_id_linked_list_get_next(user_reservations);
@@ -247,11 +252,10 @@ int __q02_execute(database_t       *database,
         while (user_flights) {
             uint64_t flight_id = single_pool_id_linked_list_get_value(user_flights);
 
-            q02_output_item_t output_item = {
-                .id   = flight_id,
-                .date = date_and_time_get_date(flight_get_schedule_departure_date(
-                    flight_manager_get_by_id(flights, flight_id))),
-                .type = Q02_OUTPUT_ITEM_FLIGHT};
+            q02_output_item_t output_item = {.id   = flight_id,
+                                             .date = flight_get_schedule_departure_date(
+                                                 flight_manager_get_by_id(flights, flight_id)),
+                                             .type = Q02_OUTPUT_ITEM_FLIGHT};
 
             g_array_append_val(output_items, output_item);
             user_flights = single_pool_id_linked_list_get_next(user_flights);
