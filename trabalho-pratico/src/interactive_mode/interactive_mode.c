@@ -31,6 +31,8 @@
 #include <stdlib.h>
 
 #include "interactive_mode/activity_dataset_picker.h"
+#include "interactive_mode/activity_messagebox.h"
+#include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
 
 /**
@@ -72,6 +74,8 @@ int __interactive_mode_terminate_ncurses(void) {
 int interactive_mode_run(void) {
     if (__interactive_mode_init_ncurses())
         return 1;
+
+    activity_messagebox_run("This is a message box!");
 
     char *dataset_path = activity_dataset_picker_run();
 
