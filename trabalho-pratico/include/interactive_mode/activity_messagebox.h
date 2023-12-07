@@ -15,15 +15,13 @@
  */
 
 /**
- * @file  activity_message_box.h
+ * @file  activity_messagebox.h
  * @brief A message box that can be used to display information to the user.
  *
  * @anchor activity_messagebox_examples
  * ### Examples
  *
- * Creating a message box is as simple as calling ::activity_messagebox_run. Just provide
- * a message, and how wide you'd like the message box to be.
- *
+ * Creating a message box is as simple as calling ::activity_messagebox_run: just provide a message!
  * The message box will look like the following on screen:
  *
  * ```text
@@ -41,17 +39,16 @@
 #include "interactive_mode/activity.h"
 
 /**
- * @brief Runs a TUI activity for a messagebox.
+ * @brief Runs a TUI activity for a message box.
  *
- * @param message          The message of the box that will be shown on the screen.
- * @param text_field_width Width of the messagebox's message field. In smaller terminals, the final width
- *                         may be less than the value provided in smaller terminals.
+ * @param message The message that will be shown on the screen. Must be a single line of text.
  *
- * @return 1 when the user presses the any key.
+ * @retval 0 Success
+ * @retval 1 Allocation failure
  *
  * #### Examples
  * See [the header file's documentation](@ref activity_messagebox_examples).
  */
-int activity_messagebox_run(const char *message, size_t text_field_width);
+int activity_messagebox_run(const char *message);
 
 #endif

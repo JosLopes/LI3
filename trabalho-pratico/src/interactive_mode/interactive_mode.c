@@ -75,6 +75,8 @@ int interactive_mode_run(void) {
     if (__interactive_mode_init_ncurses())
         return 1;
 
+    activity_messagebox_run("This is a message box!");
+
     char *dataset_path = activity_dataset_picker_run();
 
     if (__interactive_mode_terminate_ncurses()) {
@@ -86,11 +88,6 @@ int interactive_mode_run(void) {
         puts(dataset_path);
         free(dataset_path);
     }
-
-    int retval = activity_messagebox_run("This is a message box!", 60);
-
-    if (!retval)
-        return 1;
 
     return 0;
 }

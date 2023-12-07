@@ -40,46 +40,37 @@
  *
  * @var activity_messagebox_data_t::message
  *    @brief Null-terminated UTF-32 string for the message to display.
- * @var activity_messagebox_data_t::text_field_width
- *   @brief Desired width of the text field in the messagebox. The real size may be smaller on
- *         smaller terminals.
- * @var activity_messagebox_data_t::action_cancelled
- *  @brief Whether the user left the messagebox by pressing any key (`1`).
+ * @var activity_messagebox_data_t::text_width
+ *    @brief Desired width of the text in the messagebox. The real size may be smaller on smaller
+ *           terminals.
  */
 typedef struct {
     gunichar *message;
-
-    size_t text_field_width;
-    int    action_cancelled;
+    size_t    text_width;
 } activity_messagebox_data_t;
 
 /**
  * @brief Handles keypresses for the message box activity.
- * @details When a key is pressed, the activity is called off.
  *
  * @param activity_data Pointer to a ::activity_messagebox_data_t struct.
  * @param key           The key that was pressed. May be an ncurses `KEY_*` value.
  * @param is_key_code   If the pressed key is not a character, but an ncurses `KEY_*` value.
  *
- * @return 0 The user didn't quit the messagebox; continue.
- * @return 1 The user quit the messagebox.
+ * @retval 0 The user didn't quit the message box; continue.
+ * @retval 1 The user quit the messagebox.
  */
 int __activity_messagebox_keypress(void *activity_data, wint_t key, int is_key_code) {
-    activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) activity_data;
-    (void) key;
+    (void) activity_data;
 
-    if (!is_key_code) {
-        messagebox->action_cancelled = 1;
-        return 1;
-    }
-
+    if (!is_key_code && (key == '\n' || key == '\x1b'))
+        return 1; /* Exit on return or escape */
     return 0;
 }
 
 /**
  * @brief Renders the messagebox activity.
  * @param activity_data Ponter to a ::activity_messagebox_data_t struct.
- * @return 0 always.
+ * @retval 0 Always.
  */
 int __activity_messagebox_render(void *activity_data) {
     activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) activity_data;
@@ -87,18 +78,18 @@ int __activity_messagebox_render(void *activity_data) {
     int window_width, window_height;
     getmaxyx(stdscr, window_height, window_width);
 
-    if (window_width < 8 || window_height < 9) /* Don't attempt rendering on small windows */
+    if (window_width < 5 || window_height < 7) /* Don't attempt rendering on small windows */
         return 0;
 
     /* Reference diagram for positions and sizes: see header file */
 
-    int messagebox_width  = min((size_t) window_width - 4, messagebox->text_field_width + 4);
-    int messagebox_height = 7;
+    int messagebox_width  = min((size_t) window_width - 4, messagebox->text_width + 2);
+    int messagebox_height = 3;
 
     int messagebox_x = (window_width - messagebox_width) / 2;
     int messagebox_y = (window_height - messagebox_height) / 2;
 
-    /* Render outer box and message */
+    /* Render box and message */
     ncurses_render_rectangle(messagebox_x, messagebox_y, messagebox_width, messagebox_height);
 
     size_t message_width,
@@ -106,9 +97,7 @@ int __activity_messagebox_render(void *activity_data) {
                                                                max(messagebox_width - 3, 0),
                                                                &message_width);
 
-    move(messagebox_y + (messagebox_height / 2),
-         messagebox_x + (messagebox_width - message_width) / 2);
-
+    move(messagebox_y + 1, messagebox_x + 1);
     addnwstr((wchar_t *) messagebox->message, message_max_chars);
 
     return 0;
@@ -120,28 +109,24 @@ int __activity_messagebox_render(void *activity_data) {
  */
 void __activity_messagebox_free_data(void *activity_data) {
     activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) activity_data;
-
     g_free(messagebox->message);
     free(messagebox);
 }
 
 /**
  * @brief Creates a message box activity.
- * @details See ::activity_messagebox_run for parameter information.
- * @return An ::activity_t for the messagebox, that must be freed with ::activity_free. `NULL` on
+ * @param message The message that will be shown on the screen. Must be a single line of text.
+ *
+ * @return An ::activity_t for a message box, that must be freed with ::activity_free. `NULL` on
  *        allocation error.
  */
-activity_t *__activity_messagebox_create(const char *message, size_t text_field_width) {
+activity_t *__activity_messagebox_create(const char *message) {
     activity_messagebox_data_t *activity_data = malloc(sizeof(activity_messagebox_data_t));
     if (!activity_data)
         return NULL;
 
-    /* Initialize message */
-    activity_data->message = g_utf8_to_ucs4_fast(message, -1, NULL);
-
-    /* Initialize */
-    activity_data->action_cancelled = 0;
-    activity_data->text_field_width = text_field_width;
+    activity_data->message    = g_utf8_to_ucs4_fast(message, -1, NULL);
+    activity_data->text_width = ncurses_measure_unicode_string(activity_data->message);
 
     return activity_create(__activity_messagebox_keypress,
                            __activity_messagebox_render,
@@ -149,23 +134,13 @@ activity_t *__activity_messagebox_create(const char *message, size_t text_field_
                            activity_data);
 }
 
-int activity_messagebox_run(const char *message, size_t text_field_width) {
-    activity_t *activity = __activity_messagebox_create(message, text_field_width);
+int activity_messagebox_run(const char *message) {
+    activity_t *activity = __activity_messagebox_create(message);
     if (!activity)
         return 1;
 
-    curs_set(0);
-    void *run_result = activity_run(activity);
-    curs_set(1);
+    activity_run(activity);
 
-    if (run_result) {
-        activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) run_result;
-
-        if (messagebox->action_cancelled) {
-            activity_free(activity);
-            return 0;
-        }
-    }
-
-    return 1;
+    activity_free(activity);
+    return 0;
 }
