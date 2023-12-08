@@ -56,7 +56,9 @@ query_instance_t *query_instance_create(void) {
     if (!ret)
         return NULL;
 
-    ret->type = 0; /* Invalid type so that deallocations don't deal with uninitialized data */
+    /* Invalid data so that deallocations don't deal with uninitialized data */
+    ret->type          = 0;
+    ret->argument_data = NULL;
     return ret;
 }
 
@@ -100,7 +102,7 @@ void query_instance_pooled_free(query_instance_t *query, query_type_list_t *quer
     query_type_t *type = query_type_list_get_by_index(query_type_list, query->type);
     if (!type) {
         return; /* Invalid query type */
-    } else {
+    } else if (query->argument_data != NULL) {
         query_type_free_query_instance_argument_data_callback_t cb =
             query_type_get_free_query_instance_argument_data_callback(type);
         cb(query->argument_data);

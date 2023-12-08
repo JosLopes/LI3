@@ -23,7 +23,9 @@
  */
 
 /** @cond FALSE */
-#define _DEFAULT_SOURCE
+#ifndef _DEFAULT_SOURCE
+    #define _DEFAULT_SOURCE
+#endif
 /** @endcond */
 
 #include <stddef.h>

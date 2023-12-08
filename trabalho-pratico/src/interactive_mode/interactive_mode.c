@@ -30,10 +30,14 @@
 #include <ncurses.h>
 #include <stdlib.h>
 
+#include "dataset/dataset_loader.h"
 #include "interactive_mode/activity_dataset_picker.h"
+#include "interactive_mode/activity_main_menu.h"
 #include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
+#include "interactive_mode/screen_loading_dataset.h"
+#include "queries/query_parser.h"
 
 /**
  * @brief Initializes ncurses for the interactive mode.
@@ -62,6 +66,78 @@ int __interactive_mode_init_ncurses(void) {
 }
 
 /**
+ * @brief Method called when the user chooses to load a dataset in the main menu.
+ * @param database Databaset to be modifed.
+ */
+void __interactive_mode_load_dataset(database_t **database) {
+    /* Ask for dataset path */
+    char *path = activity_dataset_picker_run();
+    if (!path)
+        return;
+
+    /* Show that a new dataset is being loaded */
+    screen_loading_dataset_render();
+
+    /* Recreate database */
+    if (*database)
+        database_free(*database);
+
+    *database = database_create();
+    if (!*database) {
+        activity_messagebox_run("Failed to allocate new database!");
+        free(path);
+        return;
+    }
+
+    /* Load new dataset */
+    if (dataset_loader_load(*database, path)) {
+        activity_messagebox_run("Failed to load dataset! Old data has been discarded.");
+    } else {
+        activity_messagebox_run("Dataset loaded successfully!");
+    }
+
+    free(path);
+}
+
+/**
+ * @brief Method called when the user chooses to run a query in the main menu.
+ *
+ * @param query_type_list List of known query types (query definitions).
+ * @param database        Database to be queried.
+ */
+void __interactive_mode_run_query(query_type_list_t *query_type_list, const database_t *database) {
+    if (!database) {
+        activity_messagebox_run("Please load a dataset first!");
+        return;
+    }
+
+    gchar *query_old_str = g_strdup("");
+    while (1) {
+        gchar *query_str = activity_textbox_run("Input a query", query_old_str, 40);
+        if (!query_str) {
+            g_free(query_old_str);
+            return;
+        }
+
+        query_instance_t *query_parsed = query_instance_create();
+        if (query_parser_parse_string_const(query_parsed, query_str, query_type_list, NULL)) {
+            g_free(query_old_str);
+            query_old_str = query_str;
+
+            query_instance_free(query_parsed, query_type_list);
+            activity_messagebox_run("Failed to parse query.");
+        } else {
+            activity_messagebox_run("Running a query not yet supported!");
+
+            query_instance_free(query_parsed, query_type_list);
+            g_free(query_old_str);
+            g_free(query_str);
+            return;
+        }
+    }
+}
+
+/**
  * @brief Terminates ncurses when interactive mode isn't needed anymore.
  *
  * @retval 0 Success
@@ -72,22 +148,37 @@ int __interactive_mode_terminate_ncurses(void) {
 }
 
 int interactive_mode_run(void) {
-    if (__interactive_mode_init_ncurses())
-        return 1;
-
-    activity_messagebox_run("This is a message box!");
-
-    char *dataset_path = activity_dataset_picker_run();
-
-    if (__interactive_mode_terminate_ncurses()) {
-        free(dataset_path);
+    query_type_list_t *query_type_list = query_type_list_create();
+    if (!query_type_list) {
+        fputs("Failed to allocate query definitions!\n", stderr);
         return 1;
     }
 
-    if (dataset_path) {
-        puts(dataset_path);
-        free(dataset_path);
+    if (__interactive_mode_init_ncurses()) {
+        query_type_list_free(query_type_list);
+        return 1;
     }
 
-    return 0;
+    database_t *database = NULL;
+
+    while (1) {
+        activity_main_menu_chosen_option_t option = activity_main_menu_run();
+
+        switch (option) {
+            case ACTIVITY_MAIN_MENU_LOAD_DATASET:
+                __interactive_mode_load_dataset(&database);
+                break;
+            case ACTIVITY_MAIN_MENU_RUN_QUERY:
+                __interactive_mode_run_query(query_type_list, database);
+                break;
+            case ACTIVITY_MAIN_MENU_LEAVE:
+                query_type_list_free(query_type_list);
+                if (database)
+                    database_free(database);
+
+                if (__interactive_mode_terminate_ncurses())
+                    return 1;
+                return 0;
+        }
+    }
 }
