@@ -36,6 +36,7 @@
 #include <unistd.h>
 
 #include "interactive_mode/activity_dataset_picker.h"
+#include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/int_utils.h"
@@ -126,7 +127,7 @@ int __activity_dataset_picker_keypress(void *activity_data, wint_t key, int is_k
 }
 
 /** @brief Number of help lines rendered by ::__activity_dataset_picker_render_help_text. */
-#define ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT 5
+#define ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT 6
 
 /**
  * @brief Renders help messages in the bottom of the screen.
@@ -137,6 +138,7 @@ void __activity_dataset_picker_render_help_text(int window_width, int window_hei
     const wchar_t *const help_strings[] = {L"Use \u2191 and \u2193 to cycle through directories",
                                            L"Use \u2192 to visit the selected directory",
                                            L"Use \u2190 to go back",
+                                           L"Use T to type the name of a directory",
                                            L"Use ESC to leave the dataset picker",
                                            L"Use Return to load the selected dataset"};
 
@@ -217,7 +219,7 @@ int __activity_dataset_picker_render(void *activity_data) {
     int window_width, window_height;
     getmaxyx(stdscr, window_height, window_width);
 
-    if (window_width < 44 || window_height < 13)
+    if (window_width < 44 || window_height < 14)
         return 0;
 
     __activity_dataset_picker_render_file_box(picker, window_width, window_height);
@@ -281,12 +283,7 @@ activity_t *__activity_dataset_picker_create(const char *path) {
     /* Load list of directories */
     DIR *dir = opendir(path);
     if (!dir) {
-        /* TODO - replace by message box */
-        gchar *remove_this =
-            activity_textbox_run("Error listing directory!", "Replace this with a message box", 30);
-        if (remove_this)
-            g_free(remove_this);
-
+        activity_messagebox_run("Error listing directory!");
         __activity_dataset_picker_free_data(activity_data);
         return NULL;
     }
@@ -329,12 +326,7 @@ void __activity_dataset_picker_run_textbox(char *pwd) {
         /* Check if directory can be opened first */
         DIR *dir = opendir(new_pwd);
         if (!dir) {
-            /* TODO - replace by message box */
-            gchar *remove_this = activity_textbox_run("Error listing directory!",
-                                                      "Replace this with a message box",
-                                                      30);
-            if (remove_this)
-                g_free(remove_this);
+            activity_messagebox_run("Error listing directory!");
         } else {
             path_normalize(new_pwd);
             strncpy(pwd, new_pwd, PATH_MAX);
