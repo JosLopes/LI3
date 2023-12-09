@@ -29,22 +29,12 @@
  * ### Example
  *
  * For an example on ::dataset_loader_load, see the [database.h header](@ref database_examples).
- *
- * Methods such as ::dataset_loader_get_database and all the `dataset_loader_report_*_error`
- * methods are for usage only by loaders of individual dataset files (users_loader.h,
- * flights_loader.h, passengers_loader.h and reservations_loader.h).
  */
 
 #ifndef DATASET_LOADER_H
 #define DATASET_LOADER_H
 
 #include "database/database.h"
-
-/**
- * @brief Data for a dataset loader.
- * @details To be used only in dataset file parsers.
- */
-typedef struct dataset_loader dataset_loader_t;
 
 /**
  * @brief Parses a dataset in @p path and stores the data in @p database.
@@ -59,40 +49,5 @@ typedef struct dataset_loader dataset_loader_t;
  * See [the header file's documentation](@ref dataset_loader_examples).
  */
 int dataset_loader_load(database_t *database, const char *path);
-
-/**
- * @brief Gets the database being modified by a dataset loader.
- * @param loader Dataset loader modifying the database.
- * @return Database being modifier by @p loader.
- */
-database_t *dataset_loader_get_database(const dataset_loader_t *loader);
-
-/**
- * @brief Writes a line to the `users_errors.csv` file.
- * @param loader Dataset loader that opened the errors file.
- * @param error_line Error to be reported (musn't include ``'\n'``).
- */
-void dataset_loader_report_users_error(dataset_loader_t *loader, const char *error_line);
-
-/**
- * @brief Writes a line to the `flights_errors.csv` file.
- * @param loader Dataset loader that opened the errors file.
- * @param error_line Error to be reported (musn't include ``'\n'``).
- */
-void dataset_loader_report_flights_error(dataset_loader_t *loader, const char *error_line);
-
-/**
- * @brief Writes a line to the `passengers_errors.csv` file.
- * @param loader Dataset loader that opened the errors file.
- * @param error_line Error to be reported (musn't include ``'\n'``).
- */
-void dataset_loader_report_passengers_error(dataset_loader_t *loader, const char *error_line);
-
-/**
- * @brief Writes a line to the `reservations_errors.csv` file.
- * @param loader Dataset loader that opened the errors file.
- * @param error_line Error to be reported (musn't include ``'\n'``).
- */
-void dataset_loader_report_reservations_error(dataset_loader_t *loader, const char *error_line);
 
 #endif
