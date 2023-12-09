@@ -39,8 +39,9 @@
 /**
  * @brief Parses a dataset in @p path and stores the data in @p database.
  *
- * @param database Database where to store the dataset data in.
- * @param path     Path to the directory containing the dataset
+ * @param database     Database where to store the dataset data in.
+ * @param dataset_path Path to the directory containing the dataset.
+ * @param errors_path  Path to the directory where to output error files to.
  *
  * @retval 0 Success
  * @retval 1 Fatal failure (this loader only fatally fails on IO errors).
@@ -48,6 +49,6 @@
  * #### Example
  * See [the header file's documentation](@ref dataset_loader_examples).
  */
-int dataset_loader_load(database_t *database, const char *path);
+int dataset_loader_load(database_t *database, const char *dataset_path, const char *errors_path);
 
 #endif

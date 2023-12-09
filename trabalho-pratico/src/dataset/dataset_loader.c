@@ -27,13 +27,13 @@
 #include "dataset/dataset_input.h"
 #include "dataset/dataset_loader.h"
 
-int dataset_loader_load(database_t *database, const char *path) {
-    dataset_input_t *input_files = dataset_input_create(path);
+int dataset_loader_load(database_t *database, const char *dataset_path, const char *errors_path) {
+    dataset_input_t *input_files = dataset_input_create(dataset_path);
     if (!input_files)
         return 1;
 
     /* TODO - change hardcoded */
-    dataset_error_output_t *error_files = dataset_error_output_create("Resultados");
+    dataset_error_output_t *error_files = dataset_error_output_create(errors_path);
     if (!error_files) {
         dataset_input_free(input_files);
         return 1;

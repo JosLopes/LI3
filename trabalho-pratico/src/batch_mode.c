@@ -16,7 +16,7 @@
 
 /**
  * @file  batch_mode.c
- * @brief Implementation of methods in batch_mode.c
+ * @brief Implementation of methods in batch_mode.h
  *
  * ### Examples
  * See [the header file's documentation](@ref batch_mode_examples).
@@ -56,6 +56,7 @@ int __batch_mode_init_file_callback(void *user_data, query_instance_t *instance)
     char path[PATH_MAX];
     sprintf(path, "Resultados/command%zu_output.txt", query_instance_get_number_in_file(instance));
 
+    /* Parent directory creation is assured by error file output while loading the dataset */
     iter_data->outputs[iter_data->i] = fopen(path, "w");
     if (!iter_data->outputs[iter_data->i]) {
         /* On failure, close all already-opened files */
@@ -69,8 +70,6 @@ int __batch_mode_init_file_callback(void *user_data, query_instance_t *instance)
 }
 
 int batch_mode_run(const char *dataset_dir, const char *query_file_path) {
-    (void) query_file_path;
-
     query_type_list_t *query_type_list = query_type_list_create();
     if (!query_type_list) {
         fputs("Failed to allocate query definitions!\n", stderr);
@@ -102,7 +101,7 @@ int batch_mode_run(const char *dataset_dir, const char *query_file_path) {
         return 1;
     }
 
-    if (dataset_loader_load(database, dataset_dir)) {
+    if (dataset_loader_load(database, dataset_dir, "Resultados")) {
         query_instance_list_free(query_instance_list, query_type_list);
         query_type_list_free(query_type_list);
         database_free(database);
