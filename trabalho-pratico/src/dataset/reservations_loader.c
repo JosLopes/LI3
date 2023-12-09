@@ -23,10 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "database/reservation_manager.h"
 #include "dataset/dataset_parser.h"
 #include "dataset/reservations_loader.h"
-#include "types/reservation.h"
 #include "utils/int_utils.h"
 
 /** @brief Table header for `reservations_errors.csv` */
@@ -38,8 +36,8 @@
  * @struct reservations_loader_t
  * @brief  Temporary data needed to load a set of reservations.
  *
- * @var reservations_loader_t::dataset
- *     @brief Dataset loader, so that errors can be reported.
+ * @var reservations_loader_t::output
+ *     @brief Where to output dataset errors to.
  * @var reservations_loader_t::users
  *     @brief Users manager to check for existence of users mentioned in reservations.
  * @var reservations_loader_t::reservations
@@ -53,9 +51,9 @@
  *            ends.
  */
 typedef struct {
-    dataset_loader_t      *dataset;
-    user_manager_t        *users;
-    reservation_manager_t *reservations;
+    dataset_error_output_t *output;
+    user_manager_t         *users;
+    reservation_manager_t  *reservations;
 
     char *error_line;
 
@@ -76,6 +74,8 @@ int __reservations_loader_before_parse_line(void *loader_data, char *line) {
 int __reservation_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
+
+    /* TODO - use reservation ID parsing method when that's developed */
 
     size_t length = strlen(token);
     if (length > 4) { /* Skip "Book" before any reservation ID */
@@ -124,8 +124,10 @@ int __reservation_loader_parse_hotel_id(void *loader_data, char *token, size_t n
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
+    /* TODO - use hotel ID parsing method when that's developed */
+
     size_t length = strlen(token);
-    if (length > 3) { /* Skip "HTL" before any reservation ID */
+    if (length > 3) { /* Skip "HTL" before any hotel ID */
         uint64_t id;
         int      retval = int_utils_parse_positive(&id, token + 3);
 
@@ -314,15 +316,16 @@ int __reservations_loader_after_parse_line(void *loader_data, int retval) {
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
     if (retval) {
-        dataset_loader_report_reservations_error(loader->dataset, loader->error_line);
+        dataset_error_output_report_reservation_error(loader->output, loader->error_line);
     } else {
         /* Restore token terminations for strings that will be stored in the reservation. */
         *loader->user_id_terminator    = '\0';
         *loader->hotel_name_terminator = '\0';
 
         /* Ignore allocation errors */
-        reservation_manager_add_reservation(loader->reservations, loader->current_reservation);
-        user_manager_add_user_reservation_association(
+        if (!reservation_manager_add_reservation(loader->reservations, loader->current_reservation))
+            return 1;
+        return user_manager_add_user_reservation_association(
             loader->users,
             reservation_get_const_user_id(loader->current_reservation),
             reservation_get_id(loader->current_reservation));
@@ -330,13 +333,15 @@ int __reservations_loader_after_parse_line(void *loader_data, int retval) {
     return 0;
 }
 
-void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
-    dataset_loader_report_reservations_error(dataset_loader, RESERVATIONS_LOADER_HEADER);
-    reservations_loader_t data = {
-        .dataset      = dataset_loader,
-        .users        = database_get_users(dataset_loader_get_database(dataset_loader)),
-        .reservations = database_get_reservations(dataset_loader_get_database(dataset_loader)),
-        .current_reservation = reservation_create()};
+int reservations_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
+    dataset_error_output_report_reservation_error(output, RESERVATIONS_LOADER_HEADER);
+    reservations_loader_t data = {.output              = output,
+                                  .users               = database_get_users(database),
+                                  .reservations        = database_get_reservations(database),
+                                  .current_reservation = reservation_create()};
+
+    if (!data.current_reservation)
+        return 1;
 
     fixed_n_delimiter_parser_iter_callback_t token_callbacks[14] = {
         __reservation_loader_parse_id,
@@ -358,7 +363,7 @@ void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
         fixed_n_delimiter_parser_grammar_new(';', 14, token_callbacks);
     if (!line_grammar) {
         reservation_free(data.current_reservation);
-        return;
+        return 1;
     }
 
     dataset_parser_grammar_t *grammar =
@@ -369,12 +374,14 @@ void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
     if (!grammar) {
         fixed_n_delimiter_parser_grammar_free(line_grammar);
         reservation_free(data.current_reservation);
-        return;
+        return 1;
     }
 
-    dataset_parser_parse(stream, grammar, &data);
+    int retval = dataset_parser_parse(stream, grammar, &data);
 
     fixed_n_delimiter_parser_grammar_free(line_grammar);
     dataset_parser_grammar_free(grammar);
     reservation_free(data.current_reservation);
+
+    return retval != 0;
 }
