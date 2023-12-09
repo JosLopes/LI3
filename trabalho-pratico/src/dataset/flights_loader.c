@@ -37,8 +37,8 @@
  * @struct flights_loader_t
  * @brief  Temporary data needed to load a set of flights.
  *
- * @var flights_loader_t::dataset
- *     @brief Dataset loader, so that errors can be reported.
+ * @var flights_loader_t::output
+ *     @brief Where to output dataset errors to.
  * @var flights_loader_t::flights
  *     @brief Flight manager to add new flights to.
  * @var flights_loader_t::error_line
@@ -53,8 +53,8 @@
  *            ends.
  */
 typedef struct {
-    dataset_loader_t *dataset;
-    flight_manager_t *flights;
+    dataset_error_output_t *output;
+    flight_manager_t       *flights;
 
     char *error_line;
 
@@ -75,6 +75,8 @@ int __flights_loader_before_parse_line(void *loader_data, char *line) {
 int __flight_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
+
+    /* TODO - use flight ID parsing function when available */
 
     size_t parsed_id;
     int    retcode = int_utils_parse_positive(&parsed_id, token);
@@ -262,24 +264,26 @@ int __flights_loader_after_parse_line(void *loader_data, int retval) {
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
     if (retval) {
-        dataset_loader_report_flights_error(loader->dataset, loader->error_line);
+        dataset_error_output_report_flight_error(loader->output, loader->error_line);
     } else {
         /* Restore token terminations for strings that will be stored in a flight. */
         *loader->airline_terminator     = '\0';
         *loader->plane_model_terminator = '\0';
 
         flight_set_number_of_passengers(loader->current_flight, 0);
-        flight_manager_add_flight(loader->flights, loader->current_flight);
+        return flight_manager_add_flight(loader->flights, loader->current_flight) == NULL;
     }
     return 0;
 }
 
-void flights_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
-    dataset_loader_report_flights_error(dataset_loader, FLIGHTS_LOADER_HEADER);
-    flights_loader_t data = {.dataset = dataset_loader,
-                             .flights =
-                                 database_get_flights(dataset_loader_get_database(dataset_loader)),
+int flights_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
+    dataset_error_output_report_flight_error(output, FLIGHTS_LOADER_HEADER);
+    flights_loader_t data = {.output         = output,
+                             .flights        = database_get_flights(database),
                              .current_flight = flight_create()};
+
+    if (!data.current_flight)
+        return 1;
 
     fixed_n_delimiter_parser_iter_callback_t token_callbacks[13] = {
         __flight_loader_parse_id,
@@ -301,7 +305,7 @@ void flights_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
         fixed_n_delimiter_parser_grammar_new(';', 13, token_callbacks);
     if (!line_grammar) {
         flight_free(data.current_flight);
-        return;
+        return 1;
     }
 
     dataset_parser_grammar_t *grammar =
@@ -312,12 +316,14 @@ void flights_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
     if (!grammar) {
         flight_free(data.current_flight);
         fixed_n_delimiter_parser_grammar_free(line_grammar);
-        return;
+        return 1;
     }
 
-    dataset_parser_parse(stream, grammar, &data);
+    int retval = dataset_parser_parse(stream, grammar, &data);
 
     fixed_n_delimiter_parser_grammar_free(line_grammar);
     dataset_parser_grammar_free(grammar);
     flight_free(data.current_flight);
+
+    return retval != 0;
 }
