@@ -25,8 +25,6 @@
 #include "dataset/dataset_parser.h"
 #include "dataset/users_loader.h"
 #include "types/email.h"
-#include "utils/date.h"
-#include "utils/date_and_time.h"
 
 /** @brief Table header for `users_errors.csv` */
 #define USER_LOADER_HEADER                                                                         \
@@ -37,8 +35,8 @@
  * @struct users_loader_t
  * @brief Temporary data needed to load a set of users.
  *
- * @var users_loader_t::dataset
- *     @brief Dataset loader, so that errors can be reported.
+ * @var users_loader_t::output
+ *     @brief Where to output dataset errors to.
  * @var users_loader_t::users
  *     @brief User manager to add new users to.
  * @var users_loader_t::error_line
@@ -53,8 +51,8 @@
  *     @brief Where a ``'\0'`` terminator needs to be placed, so that the user's passport ends.
  */
 typedef struct {
-    dataset_loader_t *dataset;
-    user_manager_t   *users;
+    dataset_error_output_t *output;
+    user_manager_t         *users;
 
     char *error_line;
 
@@ -229,23 +227,26 @@ int __users_loader_after_parse_line(void *loader_data, int retval) {
     users_loader_t *loader = (users_loader_t *) loader_data;
 
     if (retval) {
-        dataset_loader_report_users_error(loader->dataset, loader->error_line);
+        dataset_error_output_report_user_error(loader->output, loader->error_line);
     } else {
         /* Restore token terminations for strings that will be stored in the user. */
         *loader->id_terminator       = '\0';
         *loader->name_terminator     = '\0';
         *loader->passport_terminator = '\0';
 
-        user_manager_add_user(loader->users, loader->current_user);
+        return user_manager_add_user(loader->users, loader->current_user) == NULL;
     }
     return 0;
 }
 
-void users_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
-    dataset_loader_report_users_error(dataset_loader, USER_LOADER_HEADER);
-    users_loader_t data = {.dataset = dataset_loader,
-                           .users = database_get_users(dataset_loader_get_database(dataset_loader)),
+int users_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
+    dataset_error_output_report_user_error(output, USER_LOADER_HEADER);
+    users_loader_t data = {.output       = output,
+                           .users        = database_get_users(database),
                            .current_user = user_create()};
+
+    if (!data.current_user)
+        return 1; /* Allocation failure */
 
     fixed_n_delimiter_parser_iter_callback_t token_callbacks[12] = {
         __user_loader_parse_id,
@@ -266,7 +267,7 @@ void users_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
         fixed_n_delimiter_parser_grammar_new(';', 12, token_callbacks);
     if (!line_grammar) {
         user_free(data.current_user);
-        return;
+        return 1;
     }
 
     dataset_parser_grammar_t *grammar = dataset_parser_grammar_new('\n',
@@ -276,12 +277,14 @@ void users_loader_load(dataset_loader_t *dataset_loader, FILE *stream) {
     if (!grammar) {
         fixed_n_delimiter_parser_grammar_free(line_grammar);
         user_free(data.current_user);
-        return;
+        return 1;
     }
 
-    dataset_parser_parse(stream, grammar, &data);
+    int retval = dataset_parser_parse(stream, grammar, &data);
 
     fixed_n_delimiter_parser_grammar_free(line_grammar);
     dataset_parser_grammar_free(grammar);
     user_free(data.current_user);
+
+    return retval != 0;
 }
