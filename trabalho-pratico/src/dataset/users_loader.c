@@ -54,7 +54,7 @@ typedef struct {
     dataset_error_output_t *output;
     user_manager_t         *users;
 
-    char *error_line;
+    const char *error_line;
 
     user_t *current_user;
     char   *id_terminator, *name_terminator, *passport_terminator;

@@ -55,7 +55,7 @@ typedef struct {
     user_manager_t         *users;
     reservation_manager_t  *reservations;
 
-    char *error_line;
+    const char *error_line;
 
     reservation_t *current_reservation;
     char          *user_id_terminator, *hotel_name_terminator;

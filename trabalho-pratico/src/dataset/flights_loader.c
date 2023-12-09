@@ -56,7 +56,7 @@ typedef struct {
     dataset_error_output_t *output;
     flight_manager_t       *flights;
 
-    char *error_line;
+    const char *error_line;
 
     flight_t *current_flight;
     char     *airline_terminator, *plane_model_terminator;

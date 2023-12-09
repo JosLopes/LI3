@@ -44,8 +44,8 @@
  *     @brief Flight the user identifiable by ::passenger_relation_t::user_id is in.
  */
 typedef struct {
-    char    *user_id;
-    uint64_t flight_id;
+    const char *user_id;
+    uint64_t    flight_id;
 } passenger_relation_t;
 
 /** @brief Block capacity of ::passengers_loader_t::commit_buffer_id_pool */
@@ -87,8 +87,8 @@ typedef struct {
 
     passenger_relation_t current_relation;
 
-    GArray *invalid_flight_ids;
-    char   *error_line;
+    GArray     *invalid_flight_ids;
+    const char *error_line;
 } passengers_loader_t;
 
 /**
