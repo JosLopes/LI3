@@ -194,7 +194,7 @@ void __activity_dataset_picker_render_file_box(const activity_dataset_picker_dat
         if (i == picker->chosen_option) {
             /* Print white line */
             attron(A_REVERSE);
-            for (int i = 0; i < box_width - 2; ++i)
+            for (int j = 0; j < box_width - 2; ++j)
                 addch(' ');
             move(i0_y + i, box_x + 1);
         } else
