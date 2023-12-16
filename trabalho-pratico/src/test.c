@@ -24,34 +24,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "performance/performance_event.h"
+#include "batch_mode.h"
+#include "performance/performance_metrics_output.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for resource usage measurement.
  * @retval 0 Success
  * @retval 1 Failure
  */
-int main(void) {
-    performance_event_t *perf = performance_event_start_measuring();
-    if (!perf)
-        return 1;
+int main(int argc, char **argv) {
+    if (argc == 4) {
+        performance_metrics_t *metrics = performance_metrics_create();
+        if (!metrics) {
+            fputs("Failed to allocate performance metrics!\n", stderr);
+            return 1;
+        }
 
-    char *mem_test = malloc(1 << 24); /* Allocate 16 MiB */
-    strcpy(mem_test, "Hello, world");
-    puts(mem_test);
+        int retval = batch_mode_run(argv[1], argv[2], metrics);
+        if (retval) {
+            performance_metrics_free(metrics);
+            return retval;
+        }
 
-    if (performance_event_stop_measuring(perf)) {
-        performance_event_free(perf);
-        free(mem_test);
+        performance_metrics_output_print(stdout, metrics);
+        performance_metrics_free(metrics);
+        return 0;
+    } else {
+        fputs("Invalid command-line arguments! Usage:\n", stderr);
+        fputs("./programa-testes [dataset] [query file] [expected output]\n", stderr);
         return 1;
     }
-
-    printf("Time: %" PRIu64 " us\nMemory: %zu KiB\n",
-           performance_event_get_elapsed_time(perf),
-           performance_event_get_used_memory(perf));
-
-    free(mem_test);
-    performance_event_free(perf);
-    return 0;
 }
