@@ -19,53 +19,39 @@
  * @brief Contains the entry point to the test program.
  */
 
-#include <limits.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "utils/path_utils.h"
+#include "performance/performance_event.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for path utilities.
+ * @details Tests for resource usage measurement.
  * @retval 0 Success
  * @retval 1 Failure
  */
 int main(void) {
-    const char *test_paths[18] = {/* .. and . in absolute paths */
-                                  "/abc/def/..",
-                                  "/abc/def/.",
+    performance_event_t *perf = performance_event_start_measuring();
+    if (!perf)
+        return 1;
 
-                                  /* .. in absolute and relative paths */
-                                  "/abc/def/../../..",
-                                  "abc/def/../../..",
-                                  "./abc/def/../../..",
-                                  "././abc/def/../../..",
-                                  "./../abc/def/../../..",
+    char *mem_test = malloc(1 << 24); /* Allocate 16 MiB */
+    strcpy(mem_test, "Hello, world");
+    puts(mem_test);
 
-                                  /* Relative paths with parent directory */
-                                  "../abc",
-                                  "../../abc",
-                                  "../..//abc",
-                                  "/../../abc",
-
-                                  /* Multiple . and .. */
-                                  "/.",
-                                  "/././../.",
-                                  "././../.",
-                                  "/..",
-
-                                  /* Others */
-                                  "/",
-                                  "////",
-                                  ""};
-
-    for (size_t i = 0; i < 18; ++i) {
-        char path[PATH_MAX];
-        strcpy(path, test_paths[i]);
-
-        path_normalize(path);
-        printf("%25s -> %s\n", test_paths[i], path);
+    if (performance_event_stop_measuring(perf)) {
+        performance_event_free(perf);
+        free(mem_test);
+        return 1;
     }
+
+    printf("Time: %" PRIu64 " us\nMemory: %zu KiB\n",
+           performance_event_get_elapsed_time(perf),
+           performance_event_get_used_memory(perf));
+
+    free(mem_test);
+    performance_event_free(perf);
     return 0;
 }
