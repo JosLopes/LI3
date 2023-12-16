@@ -22,12 +22,6 @@
  * See [the header file's documentation](@ref string_utils_examples).
  */
 
-/** @cond FALSE */
-#ifndef _DEFAULT_SOURCE
-    #define _DEFAULT_SOURCE
-#endif
-/** @endcond */
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
