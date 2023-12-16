@@ -33,7 +33,7 @@
  *         return 1;
  *     }
  *
- *     if (dataset_loader_load(database, "/path/to/dataset/directory")) {
+ *     if (dataset_loader_load(database, "/path/to/dataset/directory", NULL)) {
  *         fputs("Failed to open dataset to be parsed.\n", stderr);
  *         return 1;
  *     }

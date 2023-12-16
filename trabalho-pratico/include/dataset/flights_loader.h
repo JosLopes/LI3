@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    flights_loader.h
- * @brief   Module to load all the flights in a dataset into the database.
+ * @file  flights_loader.h
+ * @brief Module to load all the flights in a dataset into the database.
  */
 
 #ifndef FLIGHTS_LOADER_H
@@ -24,14 +24,19 @@
 
 #include <stdio.h>
 
-#include "dataset/dataset_loader.h"
+#include "database/database.h"
+#include "dataset/dataset_error_output.h"
 
 /**
  * @brief Parses a `flights.csv` dataset file.
  *
- * @param dataset_loader Dataset loader, for database modification and error reporting.
- * @param stream         File stream with flight data to be loaded.
+ * @param stream   File stream with flight data to be loaded.
+ * @param database Database to add users to.
+ * @param output   Where to output dataset errors to.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation failure
  */
-void flights_loader_load(dataset_loader_t *dataset_loader, FILE *stream);
+int flights_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output);
 
 #endif

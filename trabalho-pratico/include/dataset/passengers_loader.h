@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    passengers_loader.h
- * @brief   Module to load all the passengers in a dataset into the database.
+ * @file  passengers_loader.h
+ * @brief Module to load all the passengers in a dataset into the database.
  */
 
 #ifndef PASSENGERS_LOADER_H
@@ -24,19 +24,22 @@
 
 #include <stdio.h>
 
-#include "dataset/dataset_loader.h"
+#include "database/database.h"
+#include "dataset/dataset_error_output.h"
 
 /**
  * @brief Parses a `passengers.csv` dataset file.
  *
- * @param dataset_loader    Dataset loader, for database modification and error reporting.
  * @param passengers_stream File stream with passenger data to be loaded. It is assumed this stream
  *                          is ordered by flight IDs.
  * @param flights_stream    File stream with flight data to be printed in case of errors. It is
  *                          assumed this stream is ordered by flight IDs.
+ * @param database          Database to add users to.
+ * @param output            Where to output dataset errors to.
  */
-void passengers_loader_load(dataset_loader_t *dataset_loader,
-                            FILE             *passengers_stream,
-                            FILE             *flights_stream);
+int passengers_loader_load(FILE                   *passengers_stream,
+                           FILE                   *flights_stream,
+                           database_t             *database,
+                           dataset_error_output_t *output);
 
 #endif

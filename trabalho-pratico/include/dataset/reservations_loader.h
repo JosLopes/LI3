@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    reservations_loader.h
- * @brief   Module to load all the reservations in a dataset into the database.
+ * @file  reservations_loader.h
+ * @brief Module to load all the reservations in a dataset into the database.
  */
 
 #ifndef RESERVATIONS_LOADER_H
@@ -24,14 +24,19 @@
 
 #include <stdio.h>
 
-#include "dataset/dataset_loader.h"
+#include "database/database.h"
+#include "dataset/dataset_error_output.h"
 
 /**
  * @brief Parses a `reservations.csv` dataset file.
  *
- * @param dataset_loader Dataset loader, for database modification and error reporting.
- * @param stream         File stream with reservation data to be loaded.
+ * @param stream   File stream with reservation data to be loaded.
+ * @param database Database to add users to.
+ * @param output   Where to output dataset errors to.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation failure
  */
-void reservations_loader_load(dataset_loader_t *dataset_loader, FILE *stream);
+int reservations_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output);
 
 #endif
