@@ -57,6 +57,9 @@
 #ifndef PERFORMANCE_EVENT_H
 #define PERFORMANCE_EVENT_H
 
+#include <inttypes.h>
+#include <stddef.h>
+
 /** @brief Information about elapsed time and used memory while running a task. */
 typedef struct performance_event performance_event_t;
 
