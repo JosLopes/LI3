@@ -90,7 +90,7 @@ void __interactive_mode_load_dataset(database_t **database) {
     }
 
     /* Load new dataset */
-    if (dataset_loader_load(*database, path)) {
+    if (dataset_loader_load(*database, path, NULL)) {
         activity_messagebox_run("Failed to load dataset! Old data has been discarded.");
     } else {
         activity_messagebox_run("Dataset loaded successfully!");

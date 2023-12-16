@@ -22,27 +22,41 @@
  * See [the header file's documentation](@ref string_utils_examples).
  */
 
-/** @cond FALSE */
-#ifndef _DEFAULT_SOURCE
-    #define _DEFAULT_SOURCE
-#endif
-/** @endcond */
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "utils/string_utils.h"
 
+char *string_single_delimiter_strsep(char **str, char delimiter) {
+    /*
+     * Based on musl's implementation. See
+     * https://git.musl-libc.org/cgit/musl/tree/src/string/strsep.c
+     */
+
+    char *iter = *str, *previous_input = *str;
+    if (!iter)
+        return NULL;
+
+    while (*iter && (*iter != delimiter))
+        iter++;
+
+    if (*iter)
+        *iter++ = 0;
+    else
+        iter = NULL;
+
+    *str = iter;
+    return previous_input;
+}
+
 int string_tokenize(char                    *input,
                     char                     delimiter,
                     tokenize_iter_callback_t callback,
                     void                    *user_data) {
 
-    const char strsep_delim[2] = {delimiter, '\0'};
-
     char *token;
-    while ((token = strsep(&input, strsep_delim))) {
+    while ((token = string_single_delimiter_strsep(&input, delimiter))) {
         int cb_result = callback(user_data, token);
 
         if (input)

@@ -86,6 +86,31 @@
 #include "utils/tokenize_iter_callback.h"
 
 /**
+ * @brief   A faster `strsep` implementation for single-delimiter strings.
+ * @details For more details, see `man 3 strsep`.
+ *
+ * @param str       Pointer to string to be tokenized.
+ * @param delimiter Token separator.
+ *
+ * #### Example
+ *
+ * Consider the following C code using `strsep`:
+ *
+ * ```c
+ * char str[] = "Hello, world!";
+ * char *iter = str, *token;
+ * while ((token = strsep(&iter, ","))) {
+ *     printf("%s\n", token);
+ * }
+ * ```
+ *
+ * In the previous code sample, `strsep(&iter, ",")` is equivalent to
+ * ``string_single_delimiter_strsep(&iter, ',')``. In principle, the latter function should be
+ * more performant.
+ */
+char *string_single_delimiter_strsep(char **str, char delimiter);
+
+/**
  * @brief Splits a **MODIFIABLE** string into tokens, separated by @p delimiter.
  *
  * @param input     String to tokenize, that that will be modified for this function to work, but
