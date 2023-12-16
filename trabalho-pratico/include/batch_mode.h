@@ -26,11 +26,15 @@
 #ifndef BATCH_MODE_H
 #define BATCH_MODE_H
 
+#include "performance/performance_metrics.h"
+
 /**
  * @brief Starts batch mode.
  *
  * @param dataset_dir     Path to the directory containing the dataset.
  * @param query_file_path Path to the file containing the queries
+ * @param metrics         Where to register program performance data to. Can be `NULL` for no
+ *                        profiling.
  *
  * @retval 0 Success
  * @retval 1 Fatal failure (allocation / file IO errors). A message will also be printed to
@@ -39,6 +43,8 @@
  * #### Examples
  * See [the header file's documentation](@ref batch_mode_examples).
  */
-int batch_mode_run(const char *dataset_dir, const char *query_file_path);
+int batch_mode_run(const char            *dataset_dir,
+                   const char            *query_file_path,
+                   performance_metrics_t *metrics);
 
 #endif

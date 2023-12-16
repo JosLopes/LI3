@@ -27,12 +27,15 @@
 #include "dataset/dataset_input.h"
 #include "dataset/dataset_loader.h"
 
-int dataset_loader_load(database_t *database, const char *dataset_path, const char *errors_path) {
+int dataset_loader_load(database_t            *database,
+                        const char            *dataset_path,
+                        const char            *errors_path,
+                        performance_metrics_t *metrics) {
+
     dataset_input_t *input_files = dataset_input_create(dataset_path);
     if (!input_files)
         return 1;
 
-    /* TODO - change hardcoded */
     dataset_error_output_t *error_files = dataset_error_output_create(errors_path);
     if (!error_files) {
         dataset_input_free(input_files);
@@ -42,25 +45,31 @@ int dataset_loader_load(database_t *database, const char *dataset_path, const ch
     /* Load dataset */
     int retval = 0;
 
+    performance_metrics_measure_dataset(metrics, PERFORMANCE_METRICS_DATASET_STEP_USERS);
     if (dataset_input_load_users(input_files, error_files, database)) {
         retval = 1;
         goto CLEANUP;
     }
 
+    performance_metrics_measure_dataset(metrics, PERFORMANCE_METRICS_DATASET_STEP_FLIGHTS);
     if (dataset_input_load_flights(input_files, error_files, database)) {
         retval = 1;
         goto CLEANUP;
     }
 
+    performance_metrics_measure_dataset(metrics, PERFORMANCE_METRICS_DATASET_STEP_PASSENGERS);
     if (dataset_input_load_passengers(input_files, error_files, database)) {
         retval = 1;
         goto CLEANUP;
     }
 
+    performance_metrics_measure_dataset(metrics, PERFORMANCE_METRICS_DATASET_STEP_RESERVATIONS);
     if (dataset_input_load_reservations(input_files, error_files, database)) {
         retval = 1;
         goto CLEANUP;
     }
+
+    performance_metrics_measure_dataset(metrics, PERFORMANCE_METRICS_DATASET_STEP_DONE);
 
 CLEANUP:
     dataset_input_free(input_files);
