@@ -34,10 +34,20 @@ typedef struct {
 } q05_foreach_airport_data_t;
 
 typedef struct {
-    airport_code_t  airport_code;
     date_and_time_t begin_date;
     date_and_time_t end_date;
+} q05_dates_helper_t;
+
+typedef struct {
+    airport_code_t     airport_code;
+    q05_dates_helper_t dates;
 } q05_parsed_arguments_t;
+
+typedef struct {
+    airport_code_t airport_code;
+    GArray         *dates;
+    size_t         dates_size;
+} q05_dates_of_an_airport_t;
 
 void *__q05_parse_arguments(char **argv, size_t argc) {
     if (argc != 3)
@@ -61,7 +71,7 @@ void *__q05_parse_arguments(char **argv, size_t argc) {
         free(parsed_arguments);
         return NULL;
     }
-    parsed_arguments->begin_date = begin_date;
+    parsed_arguments->dates.begin_date = begin_date;
 
     date_and_time_t end_date;
     int             end_date_retval = date_and_time_from_string(&end_date, argv[2]);
@@ -69,7 +79,7 @@ void *__q05_parse_arguments(char **argv, size_t argc) {
         free(parsed_arguments);
         return NULL;
     }
-    parsed_arguments->end_date = end_date;
+    parsed_arguments->dates.end_date = end_date;
 
     return parsed_arguments;
 }
@@ -79,10 +89,10 @@ void __q05_free_query_instance_argument_data(void *argument_data) {
 }
 
 gint __q05_generate_statistics_uint32_compare_func(gconstpointer a, gconstpointer b) {
-    q05_parsed_arguments_t **parsed_arguments = (q05_parsed_arguments_t **) a;
-    airport_code_t *airport_code = (airport_code_t *) b;
+    q05_dates_of_an_airport_t *parsed_arguments = *(q05_dates_of_an_airport_t **) a;
+    airport_code_t            *airport_code     = (airport_code_t *) b;
 
-    return ((int32_t) (*parsed_arguments)->airport_code - (int32_t) *airport_code);
+    return ((int32_t) parsed_arguments->airport_code - (int32_t) *airport_code);
 }
 
 gint __q05_generate_statistics_uint64_compare_func(gconstpointer a, gconstpointer b) {
@@ -90,9 +100,9 @@ gint __q05_generate_statistics_uint64_compare_func(gconstpointer a, gconstpointe
 }
 
 gint __q05_generate_statistics_identifiers_compare_func(gconstpointer a, gconstpointer b) {
-    const flight_t *flight = *(flight_t **) a;
-    uint64_t flight_id = *(uint64_t *) b; 
-    
+    const flight_t *flight    = *(flight_t **) a;
+    uint64_t        flight_id = *(uint64_t *) b;
+
     return ((int64_t) flight_get_id(flight) - (int64_t) flight_id);
 }
 
@@ -103,36 +113,43 @@ int __q05_generate_statistics_foreach_airport(void *user_data, const flight_t *f
     date_and_time_t schedule_departure_date = flight_get_schedule_departure_date(flight);
 
     guint airport_index;
-    if (!g_array_binary_search(foreach_data->arguments_data,
-                               &airport,
-                               __q05_generate_statistics_uint32_compare_func,
-                               &airport_index))
-        return 0; /* This airport wasn't mentioned in queries */
+    GArray *arguments_data = foreach_data->arguments_data;
 
-    /* Checks if the flight scheduled departure date is in between the given dates */
-    q05_parsed_arguments_t *argument_data =
-        g_array_index(foreach_data->arguments_data, q05_parsed_arguments_t *, airport_index);
-    
-    date_and_time_t end_date   = argument_data->end_date;
-    date_and_time_t begin_date = argument_data->begin_date;
-    if (date_and_time_diff(begin_date, schedule_departure_date) > 0 ||
-        date_and_time_diff(end_date, schedule_departure_date) < 0)
+    if (!g_array_binary_search(arguments_data,
+                                &airport,
+                                __q05_generate_statistics_uint32_compare_func,
+                                &airport_index))
         return 0;
+    
+    q05_dates_of_an_airport_t *argument_data =
+        g_array_index(arguments_data, q05_dates_of_an_airport_t *, airport_index);
 
-    /* TODO - using only airport isn't unique enough */
-    GArray *flights =
-        g_hash_table_lookup(foreach_data->origin_flights, GUINT_TO_POINTER(airport));
+    for (size_t i = 0; i < argument_data->dates_size; i++) {
+        /* Checks if the flight scheduled departure date is in between the given dates */
+        date_and_time_t end_date   =
+            g_array_index(argument_data->dates, q05_dates_helper_t, i).end_date;
+        date_and_time_t begin_date =
+            g_array_index(argument_data->dates, q05_dates_helper_t, i).begin_date;
 
-    if (!flights) {
-        flights = g_array_new(FALSE, FALSE, sizeof(flight_t *));
-        if (!flights)
-            return 1; /* Allocation failure */
+        if (date_and_time_diff(begin_date, schedule_departure_date) <= 0 &&
+            date_and_time_diff(end_date, schedule_departure_date) >= 0) {
 
-        g_hash_table_insert(foreach_data->origin_flights, GUINT_TO_POINTER(airport), flights);
+            GArray *flights = g_hash_table_lookup(foreach_data->origin_flights,
+                                                GUINT_TO_POINTER(airport + begin_date + end_date));
+
+            if (!flights) {
+                flights = g_array_new(FALSE, FALSE, sizeof(flight_t *));
+                if (!flights)
+                    return 1; /* Allocation failure */
+
+                g_hash_table_insert(foreach_data->origin_flights,
+                                    GUINT_TO_POINTER(airport + begin_date + end_date),
+                                    flights);
+            }
+
+            g_array_append_val(flights, flight);
+        }
     }
-
-    /* TODO - Adds a flight if its not already in the array */
-    g_array_append_val(flights, flight);
 
     return 0;
 }
@@ -158,8 +175,8 @@ void __q05_generate_statistics_sort_each_array(gpointer key, gpointer value, gpo
 }
 
 gint __q05_generate_statistics_parsed_arguments_compare_func(gconstpointer a, gconstpointer b) {
-    q05_parsed_arguments_t *argument_data_a = *(q05_parsed_arguments_t **) a;
-    q05_parsed_arguments_t *argument_data_b = *(q05_parsed_arguments_t **) b;
+    q05_dates_of_an_airport_t *argument_data_a = *(q05_dates_of_an_airport_t **) a;
+    q05_dates_of_an_airport_t *argument_data_b = *(q05_dates_of_an_airport_t **) b;
 
     return ((int64_t) argument_data_a->airport_code - (int64_t) argument_data_b->airport_code);
 }
@@ -171,11 +188,54 @@ void *__q05_generate_statistics(database_t *database, query_instance_t *instance
      * Generate an array of all airport codes that will be asked for in queries, to avoid storing
      * information about all airports, and to save information about the required date time frame.
      */
-    GArray *arguments_data = g_array_new(FALSE, FALSE, sizeof(q05_parsed_arguments_t *));
+    GArray *arguments_data = g_array_new(FALSE, FALSE, sizeof(q05_dates_of_an_airport_t *));
+
+    /* Change this if it doesn't work for larger dataset */
     for (size_t i = 0; i < n; ++i) {
         q05_parsed_arguments_t *argument_data =
             (q05_parsed_arguments_t *) query_instance_get_argument_data(instances);
-        g_array_append_val(arguments_data, argument_data);
+
+        size_t j = 0;
+        while(j < arguments_data->len) {
+            q05_dates_of_an_airport_t *airport_data =
+                g_array_index(arguments_data, q05_dates_of_an_airport_t *, j);
+            
+            if (airport_data->airport_code == argument_data->airport_code) {
+                int flag = 0;
+
+                for (size_t x = 0; x < airport_data->dates_size; x++){
+                    q05_dates_helper_t dates =
+                        g_array_index(airport_data->dates, q05_dates_helper_t, x);
+
+                    if (dates.end_date == argument_data->dates.end_date &&
+                        dates.begin_date == argument_data->dates.begin_date) {
+                        flag = 1;
+                        break;
+                    }
+                }
+                
+                if (flag == 0) {
+                    g_array_append_val(airport_data->dates, argument_data->dates);
+                    airport_data->dates_size++;
+                    break;
+                }
+            }
+            
+            j++;
+        }
+
+        if (j == arguments_data->len) {
+            GArray *dates = g_array_new(FALSE, FALSE, sizeof(q05_dates_helper_t));
+            g_array_append_val(dates, argument_data->dates);
+            
+            q05_dates_of_an_airport_t *new_airport = malloc(sizeof(q05_dates_of_an_airport_t));
+            
+            new_airport->airport_code = argument_data->airport_code;
+            new_airport->dates        = dates;
+            new_airport->dates_size   = 1;
+        
+            g_array_append_val(arguments_data, new_airport);
+        }
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
     g_array_sort(arguments_data, __q05_generate_statistics_parsed_arguments_compare_func);
@@ -207,7 +267,7 @@ void __q05_free_hashtable_values(gpointer key, gpointer value, gpointer user_dat
 }
 
 void __q05_free_statistics(void *statistics) {
-    GHashTable *origin_flights = (GHashTable*) statistics; 
+    GHashTable *origin_flights = (GHashTable *) statistics;
 
     g_hash_table_foreach(origin_flights, __q05_free_hashtable_values, NULL);
     g_hash_table_destroy(origin_flights);
@@ -223,17 +283,17 @@ int __q05_execute(database_t       *database,
     q05_parsed_arguments_t *arguments =
         (q05_parsed_arguments_t *) query_instance_get_argument_data(instance);
 
-    GArray *flights =
-        g_hash_table_lookup(origin_flights, GUINT_TO_POINTER(arguments->airport_code));
+    GArray *flights = g_hash_table_lookup(
+        origin_flights,
+        GUINT_TO_POINTER(arguments->airport_code + arguments->dates.begin_date + arguments->dates.end_date));
     if (!flights) {
-        fprintf(stderr, "Bad statistical data in query 5! This should not happen!\n");
         return 1;
     }
     size_t flights_len = flights->len;
 
     if (query_instance_get_formatted(instance)) {
         for (size_t i = 0; i < flights_len; i++) {
-            flight_t *flight = g_array_index(flights, flight_t*, i);
+            flight_t *flight = g_array_index(flights, flight_t *, i);
 
             char scheduled_departure_str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
             date_and_time_sprintf(scheduled_departure_str,
@@ -245,19 +305,19 @@ int __q05_execute(database_t       *database,
             fprintf(output,
                     "--- %ld ---\nid: %010" PRIu64 "\nschedule_departure_date: %s\n"
                     "destination: %s\nairline: %s\nplane_model: %s\n",
-                    i+1,
+                    i + 1,
                     flight_get_id(flight),
                     scheduled_departure_str,
                     destination_airport,
                     flight_get_const_airline(flight),
                     flight_get_const_plane_model(flight));
-        
+
             if (i != flights_len - 1)
                 fputc('\n', output);
         }
     } else {
         for (size_t i = 0; i < flights_len; i++) {
-            flight_t *flight = g_array_index(flights, flight_t*, i);
+            flight_t *flight = g_array_index(flights, flight_t *, i);
 
             char scheduled_departure_str[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
             date_and_time_sprintf(scheduled_departure_str,
