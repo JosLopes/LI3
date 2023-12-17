@@ -34,9 +34,6 @@
 #include "queries/qplaceholder.h"
 #include "queries/query_type_list.h"
 
-/** @brief Number of queries supported (1 to ::QUERY_TYPE_LIST_COUNT). */
-#define QUERY_TYPE_LIST_COUNT 10
-
 /**
  * @struct query_type_list
  * @brief Container structure for the list of all supported queries.
