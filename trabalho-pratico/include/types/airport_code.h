@@ -15,8 +15,8 @@
  */
 
 /**
- * @file     airport_code.h
- * @brief    Airport code in a ::flight_t.
+ * @file  airport_code.h
+ * @brief Airport code in a ::flight_t.
  *
  * @anchor airport_examples
  * ### Examples
