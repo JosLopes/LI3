@@ -35,6 +35,7 @@
 #include <stdio.h>
 
 #include "database/database.h"
+#include "performance/performance_metrics.h"
 #include "queries/query_instance_list.h"
 
 /**
@@ -58,10 +59,12 @@ void query_dispatcher_dispatch_single(database_t        *database,
  * @param query_type_list     List of known queries.
  * @param outputs             Where the queries' results will be written to. These should be in
  *                            the same as the @p query_instance_list after being sorted.
+ * @param metrics             Where to write profiling data to. Can be `NULL`.
  */
 void query_dispatcher_dispatch_list(database_t            *database,
                                     query_instance_list_t *query_instance_list,
                                     query_type_list_t     *query_type_list,
-                                    FILE                 **outputs);
+                                    FILE                 **outputs,
+                                    performance_metrics_t *metrics);
 
 #endif

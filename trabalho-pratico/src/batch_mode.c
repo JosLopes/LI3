@@ -138,7 +138,11 @@ int batch_mode_run(const char            *dataset_dir,
         return 1;
     }
 
-    query_dispatcher_dispatch_list(database, query_instance_list, query_type_list, query_outputs);
+    query_dispatcher_dispatch_list(database,
+                                   query_instance_list,
+                                   query_type_list,
+                                   query_outputs,
+                                   metrics);
 
     for (size_t i = 0; i < query_instance_list_get_length(query_instance_list); ++i)
         fclose(query_outputs[i]);
