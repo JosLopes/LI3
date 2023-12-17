@@ -15,8 +15,8 @@
  */
 
 /**
- * @file     account_status.h
- * @brief    Account status of a ::user_t.
+ * @file  account_status.h
+ * @brief Account status of a ::user_t.
  */
 
 #ifndef ACCOUNT_STATUS_H
@@ -32,7 +32,7 @@ typedef enum {
  * @brief Parses a user's account status.
  *
  * @param output Where the parsed status will be placed (only on success).
- * @param input  Input (`"active"` or `"inactive"`, case-insensitive).
+ * @param input  Input (`"active"` or `"inactive"`, case-insensitive), only modified on success.
  *
  * @retval 0 Parsing success
  * @retval 1 Parsing failure

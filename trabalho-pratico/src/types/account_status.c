@@ -20,27 +20,23 @@
  */
 
 #include <ctype.h>
+
+/** @cond FALSE */
+#ifndef _BSD_SOURCE
+    #define _BSD_SOURCE
+#endif
+/** @endcond */
+
 #include <string.h>
 
 #include "types/account_status.h"
 
-/** @brief Value of `strlen("inactive")`. */
-#define ACCOUNT_STATUS_STRLEN_INACTIVE 8
-
 int account_status_from_string(account_status_t *output, const char *input) {
-    size_t len = strlen(input);
-    if (len > ACCOUNT_STATUS_STRLEN_INACTIVE)
-        return 1; /* Too long for "inactive" */
 
-    char lower_case[ACCOUNT_STATUS_STRLEN_INACTIVE + 1];
-    for (size_t i = 0; i < len; ++i)
-        lower_case[i] = tolower(input[i]);
-    lower_case[len] = '\0';
-
-    if (strcmp(lower_case, "inactive") == 0) {
+    if (strcasecmp(input, "inactive") == 0) {
         *output = ACCOUNT_STATUS_INACTIVE;
         return 0;
-    } else if (strcmp(lower_case, "active") == 0) {
+    } else if (strcasecmp(input, "active") == 0) {
         *output = ACCOUNT_STATUS_ACTIVE;
         return 0;
     } else {
