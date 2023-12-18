@@ -15,15 +15,15 @@
  */
 
 /**
- * @file     flight.h
- * @brief    Declaration of type ::flight_t.
+ * @file  flight.h
+ * @brief Declaration of type ::flight_t.
  *
- * @details  In this module you can find a declaration of the type `flight_t` as a struct flight,
- *           as well as getter and setter functions, which allow's the developer access to any
- *           previously created flight, or gives them the ability to create a new flight.
+ * @details In this module you can find a declaration of the type `flight_t` as a struct flight,
+ *          as well as getter and setter functions, which allow's the developer access to any
+ *          previously created flight, or gives them the ability to create a new flight.
  *
- *           You can see what fields define a flight (and thus available through getters and
- *           setters) in the [struct's documentation](@ref flight).
+ *          You can see what fields define a flight (and thus available through getters and
+ *          setters) in the [struct's documentation](@ref flight).
  *
  * @anchor flight_examples
  * ### Examples
@@ -37,6 +37,7 @@
 #define FLIGHT_H
 
 #include "types/airport_code.h"
+#include "types/flight_id.h"
 #include "utils/date_and_time.h"
 
 /**
@@ -93,7 +94,7 @@ void flight_set_destination(flight_t *flight, airport_code_t destination);
  * @param flight Flight to have its id set.
  * @param id     Identifier of the flight.
  */
-void flight_set_id(flight_t *flight, size_t id);
+void flight_set_id(flight_t *flight, flight_id_t id);
 
 /**
  * @brief Sets the flight's scheduled departure date.
@@ -170,7 +171,7 @@ airport_code_t flight_get_destination(const flight_t *flight);
  * @param  flight Flight to get the id from.
  * @return The flight's identifier.
  */
-size_t flight_get_id(const flight_t *flight);
+flight_id_t flight_get_id(const flight_t *flight);
 
 /**
  * @brief  Gets the flight's scheduled departure date.

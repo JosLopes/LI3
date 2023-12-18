@@ -37,7 +37,9 @@
 #ifndef RESERVATION_H
 #define RESERVATION_H
 
+#include "types/hotel_id.h"
 #include "types/includes_breakfast.h"
+#include "types/reservation_id.h"
 #include "utils/date.h"
 
 /** @brief Value of a reservation's rating when it's not specified. */
@@ -102,7 +104,7 @@ void reservation_set_end_date(reservation_t *reservation, date_t end_date);
  * @param reservation Reservation to have its identifier set.
  * @param id          Identifier of the reservation.
  */
-void reservation_set_id(reservation_t *reservation, size_t id);
+void reservation_set_id(reservation_t *reservation, reservation_id_t id);
 
 /**
  * @brief Sets the reservation's rating.
@@ -117,7 +119,7 @@ void reservation_set_rating(reservation_t *reservation, int rating);
  * @param reservation Reservation to have its hotel identifier set.
  * @param hotel_id    Hotel identifier of the reservation.
  */
-void reservation_set_hotel_id(reservation_t *reservation, int hotel_id);
+void reservation_set_hotel_id(reservation_t *reservation, hotel_id_t hotel_id);
 
 /**
  * @brief Sets the reservation's hotel stars.
@@ -180,7 +182,7 @@ date_t reservation_get_end_date(const reservation_t *reservation);
  * @param  reservation Reservation to get the identifier from.
  * @return The reservation's identifier.
  */
-size_t reservation_get_id(const reservation_t *reservation);
+reservation_id_t reservation_get_id(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's rating.
@@ -194,7 +196,7 @@ int reservation_get_rating(const reservation_t *reservation);
  * @param  reservation Reservation to get the hotel identifier from.
  * @return The reservation's hotel identifier.
  */
-int reservation_get_hotel_id(const reservation_t *reservation);
+hotel_id_t reservation_get_hotel_id(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel stars.

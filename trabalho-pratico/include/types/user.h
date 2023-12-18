@@ -15,15 +15,15 @@
  */
 
 /**
- * @file     user.h
- * @brief    Declaration of type ::user_t.
+ * @file  user.h
+ * @brief Declaration of type ::user_t.
  *
- * @details  In this module you can find a declaration of the type `user_t`, as well as getter and
- *           setter functions, which allow the developer to access any previously created user, and
- *           functions to create new users.
+ * @details In this module you can find a declaration of the type `user_t`, as well as getter and
+ *          setter functions, which allow the developer to access any previously created user, and
+ *          functions to create new users.
  *
- *           You can see what fields define a user (and thus available through getters and setters)
- *           in the [struct's documentation](@ref user).
+ *          You can see what fields define a user (and thus available through getters and setters)
+ *          in the [struct's documentation](@ref user).
  *
  * @anchor user_examples
  * ### Examples

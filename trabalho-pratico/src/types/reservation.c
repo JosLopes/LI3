@@ -61,9 +61,9 @@ struct reservation {
     includes_breakfast_t includes_breakfast;
     date_t               begin_date;
     date_t               end_date;
-    size_t               id;
+    reservation_id_t     id;
     int                  rating;
-    int                  hotel_id;
+    hotel_id_t           hotel_id;
     int                  hotel_stars;
     int                  city_tax;
     int                  price_per_night;
@@ -94,7 +94,7 @@ void reservation_set_end_date(reservation_t *reservation, date_t end_date) {
     reservation->end_date = end_date;
 }
 
-void reservation_set_id(reservation_t *reservation, size_t id) {
+void reservation_set_id(reservation_t *reservation, reservation_id_t id) {
     reservation->id = id;
 }
 
@@ -102,7 +102,7 @@ void reservation_set_rating(reservation_t *reservation, int rating) {
     reservation->rating = rating;
 }
 
-void reservation_set_hotel_id(reservation_t *reservation, int hotel_id) {
+void reservation_set_hotel_id(reservation_t *reservation, hotel_id_t hotel_id) {
     reservation->hotel_id = hotel_id;
 }
 
@@ -138,7 +138,7 @@ date_t reservation_get_end_date(const reservation_t *reservation) {
     return reservation->end_date;
 }
 
-size_t reservation_get_id(const reservation_t *reservation) {
+reservation_id_t reservation_get_id(const reservation_t *reservation) {
     return reservation->id;
 }
 
@@ -146,7 +146,7 @@ int reservation_get_rating(const reservation_t *reservation) {
     return reservation->rating;
 }
 
-int reservation_get_hotel_id(const reservation_t *reservation) {
+hotel_id_t reservation_get_hotel_id(const reservation_t *reservation) {
     return reservation->hotel_id;
 }
 
@@ -171,9 +171,9 @@ size_t reservation_sizeof(void) {
 }
 
 int reservation_is_valid(const reservation_t *reservation) {
-    return reservation->id == (size_t) -1;
+    return reservation->id == (reservation_id_t) -1;
 }
 
 void reservation_invalidate(reservation_t *reservation) {
-    reservation->id = -1;
+    reservation->id = (reservation_id_t) -1;
 }

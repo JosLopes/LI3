@@ -58,7 +58,7 @@ struct flight {
     const char     *plane_model;
     airport_code_t  origin;
     airport_code_t  destination;
-    size_t          id;
+    flight_id_t     id;
     date_and_time_t schedule_departure_date;
     date_and_time_t real_departure_date;
     date_and_time_t schedule_arrival_date;
@@ -86,7 +86,7 @@ void flight_set_destination(flight_t *flight, airport_code_t destination) {
     flight->destination = destination;
 }
 
-void flight_set_id(flight_t *flight, size_t id) {
+void flight_set_id(flight_t *flight, flight_id_t id) {
     flight->id = id;
 }
 
@@ -131,7 +131,7 @@ airport_code_t flight_get_destination(const flight_t *flight) {
     return flight->destination;
 }
 
-size_t flight_get_id(const flight_t *flight) {
+flight_id_t flight_get_id(const flight_t *flight) {
     return flight->id;
 }
 
@@ -164,9 +164,9 @@ size_t flight_sizeof(void) {
 }
 
 int flight_is_valid(const flight_t *flight) {
-    return flight->id == (size_t) -1;
+    return flight->id == (flight_id_t) -1;
 }
 
 void flight_invalidate(flight_t *flight) {
-    flight->id = -1;
+    flight->id = (flight_id_t) -1;
 }
