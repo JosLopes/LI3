@@ -17,14 +17,50 @@
 /**
  * @file  includes_breakfast.h
  * @brief Includes breakfast of a ::reservation_t.
+ *
+ * @anchor includes_breakfast_example
+ * ### Example
+ *
+ * The following example shows how to parse "includes breakfast" fields. It also shows that these
+ * fields are stored as boolean values, and there is no way to go back to the original values once
+ * parsed.
+ *
+ * ```c
+ * const char *tests[] = {"", "0", "1", "t", "f", "true", "false", "False", "tRue", "abcd", "T"};
+ * for (int i = 0; i < 11; ++i) {
+ *     includes_breakfast_t breakfast;
+ *
+ *     if (includes_breakfast_from_string(&breakfast, tests[i])) {
+ *         printf("\"%s\" -> parsing failure\n", tests[i]);
+ *     } else {
+ *         char output[INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE];
+ *         includes_breakfast_sprintf(output, breakfast);
+ *         printf("\"%s\" -> %s\n", tests[i], output);
+ *     }
+ * }
+ * ```
+ *
+ * Here is the expected value from the previous program:
+ *
+ * ```text
+ * "" -> False
+ * "0" -> False
+ * "1" -> True
+ * "t" -> True
+ * "f" -> False
+ * "true" -> True
+ * "false" -> False
+ * "False" -> False
+ * "tRue" -> True
+ * "abcd" -> parsing failure
+ * "T" -> True
+ * ```
  */
 
 #ifndef INCLUDES_BREAKFAST_H
 #define INCLUDES_BREAKFAST_H
 
-/**
- * @brief Indicates if breakfast is included for a ::reservation_t.
- */
+/** @brief Indicates if breakfast is included for a ::reservation_t. */
 typedef enum {
     INCLUDES_BREAKFAST_FALSE, /**< @brief Breakfast not included. */
     INCLUDES_BREAKFAST_TRUE   /**< @brief Breakfast included. */
@@ -38,6 +74,9 @@ typedef enum {
  *
  * @retval 0 Parsing success
  * @retval 1 Parsing failure
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref includes_breakfast_example).
  */
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input);
 
@@ -46,7 +85,7 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
  *        breakfast" field to a buffer using ::includes_breakfast_sprintf.
  * @details
  *
- * | F | A | L | S | E | \0 |
+ * | F | a | l | s | e | \0 |
  * | - | - | - | - | - | -- |
  * | 1 | 2 | 3 | 4 | 5 | 6  |
  */
@@ -58,6 +97,9 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
  * @param output    Where to print the airport code to. Must be at least
  *                  ::INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE long.
  * @param breakfast "Includes breakfast" field.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref includes_breakfast_example).
  */
 void includes_breakfast_sprintf(char *output, includes_breakfast_t breakfast);
 

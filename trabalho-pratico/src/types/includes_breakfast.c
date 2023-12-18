@@ -17,49 +17,53 @@
 /**
  * @file  includes_breakfast.c
  * @brief Implementation of methods in include/types/includes_breakfast.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref includes_breakfast_example).
  */
 #include <ctype.h>
 #include <string.h>
 
 #include "types/includes_breakfast.h"
-
-/** @brief Value of `strlen("false")`. */
-#define INCLUDES_BREAKFAST_STRLEN_FALSE 5
+#include "utils/string_utils.h"
 
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input) {
     size_t len = strlen(input);
-    if (len > INCLUDES_BREAKFAST_STRLEN_FALSE)
-        return 1;
-
-    char lower_case[INCLUDES_BREAKFAST_STRLEN_FALSE + 1];
-    for (size_t i = 0; i < len; ++i)
-        lower_case[i] = tolower(input[i]);
-    lower_case[len] = '\0';
-
-    if (*lower_case == '\0') {
-        *output = INCLUDES_BREAKFAST_FALSE;
-        return 0;
-    } else if (strcmp(lower_case, "0") == 0) {
-        *output = INCLUDES_BREAKFAST_FALSE;
-        return 0;
-    } else if (strcmp(lower_case, "f") == 0) {
-        *output = INCLUDES_BREAKFAST_FALSE;
-        return 0;
-    } else if (strcmp(lower_case, "false") == 0) {
-        *output = INCLUDES_BREAKFAST_FALSE;
-        return 0;
-    } else if (strcmp(lower_case, "1") == 0) {
-        *output = INCLUDES_BREAKFAST_TRUE;
-        return 0;
-    } else if (strcmp(lower_case, "t") == 0) {
-        *output = INCLUDES_BREAKFAST_TRUE;
-        return 0;
-    } else if (strcmp(lower_case, "true") == 0) {
-        *output = INCLUDES_BREAKFAST_TRUE;
-        return 0;
+    switch (len) {
+        case 0:
+            *output = INCLUDES_BREAKFAST_FALSE;
+            return 0;
+        case 1: {
+            int l = tolower(input[0]);
+            if (l == '0' || l == 'f') {
+                *output = INCLUDES_BREAKFAST_FALSE;
+            } else if (l == '1' || l == 't') {
+                *output = INCLUDES_BREAKFAST_TRUE;
+            } else {
+                return 1;
+            }
+            return 0;
+        }
+        case 4: {
+            /* Inline lowercase comparison with "true" */
+            int ret = tolower(input[0]) == 't' && tolower(input[1]) == 'r' &&
+                      tolower(input[2]) == 'u' && tolower(input[3]) == 'e';
+            if (ret)
+                *output = INCLUDES_BREAKFAST_TRUE;
+            return !ret;
+        }
+        case 5: {
+            /* Inline lowercase comparison with "false" */
+            int ret = tolower(input[0]) == 'f' && tolower(input[1]) == 'a' &&
+                      tolower(input[2]) == 'l' && tolower(input[3]) == 's' &&
+                      tolower(input[4]) == 'e';
+            if (ret)
+                *output = INCLUDES_BREAKFAST_FALSE;
+            return !ret;
+        }
+        default:
+            return 1;
     }
-
-    return 1;
 }
 
 void includes_breakfast_sprintf(char *output, includes_breakfast_t breakfast) {
