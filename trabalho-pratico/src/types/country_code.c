@@ -23,13 +23,27 @@
  */
 
 #include <ctype.h>
+#include <string.h>
 
 #include "types/country_code.h"
 
+/**
+ * @brief   Macro implementation of `isalpha`.
+ * @details See musl's implementation of `isalpha` for source.
+ */
+#define inline_isalpha(c) ((((unsigned) c | 32) - 'a') < 26)
+
 int country_code_from_string(country_code_t *output, const char *input) {
-    if (*input && *(input + 1) && !*(input + 2) && isalpha(*input) && isalpha(*(input + 1))) {
-        *output = *(country_code_t *) input;
-        return 0;
+    if (input[0] && input[1] && !input[2]) { /* inline strlen(input) == 2 */
+        if (inline_isalpha(input[0]) && inline_isalpha(input[1])) {
+
+            /*
+             * "Vectorized" toupper, when all characters are certain to be letters.
+             * In musl's implementation of toupper, c & 0x5f is done.
+             */
+            *output = *(country_code_t *) input & 0x5f5f;
+            return 0;
+        }
     }
     return 1;
 }

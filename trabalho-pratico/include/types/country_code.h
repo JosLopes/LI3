@@ -15,8 +15,8 @@
  */
 
 /**
- * @file     country_code.h
- * @brief    Country code in a ::user_t.
+ * @file  country_code.h
+ * @brief Country code in a ::user_t.
  *
  * @anchor country_code_examples
  * ### Examples
