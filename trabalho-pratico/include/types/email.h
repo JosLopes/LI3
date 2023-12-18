@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    email.h
- * @brief   The email of a ::user_t.
+ * @file  email.h
+ * @brief The email of a ::user_t.
  *
  * @anchor email_examples
  * ### Examples
@@ -53,8 +53,6 @@
 
 #ifndef EMAIL_H
 #define EMAIL_H
-
-#include <stdint.h>
 
 /**
  * @brief Verifies if a **MODIFIABLE** string is a valid email.
