@@ -104,7 +104,7 @@ void __q02_free_query_instance_argument_data(void *argument_data) {
  *     @brief Type of the object in question (flight or reservation).
  */
 typedef struct {
-    uint64_t        id;
+    uint32_t        id;
     date_and_time_t date;
 
     enum {
@@ -148,13 +148,18 @@ void __q02_print_output(FILE                         *output,
         char date_string[DATE_SPRINTF_MIN_BUFFER_SIZE];
         date_sprintf(date_string, date_and_time_get_date(item->date));
 
+        char flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+        char reservation_id_str[RESERVATION_ID_SPRINTF_MIN_BUFFER_SIZE];
+
         if (!formatted) {
             switch (item->type) {
                 case Q02_OUTPUT_ITEM_FLIGHT:
-                    fprintf(output, "%010" PRIu64 ";%s", item->id, date_string);
+                    flight_id_sprintf(flight_id_str, item->id);
+                    fprintf(output, "%s;%s", flight_id_str, date_string);
                     break;
                 case Q02_OUTPUT_ITEM_RESERVATION:
-                    fprintf(output, "Book%010" PRIu64 ";%s", item->id, date_string);
+                    reservation_id_sprintf(reservation_id_str, item->id);
+                    fprintf(output, "%s;%s", reservation_id_str, date_string);
                     break;
             }
 
@@ -167,17 +172,19 @@ void __q02_print_output(FILE                         *output,
         } else {
             switch (item->type) {
                 case Q02_OUTPUT_ITEM_FLIGHT:
+                    flight_id_sprintf(flight_id_str, item->id);
                     fprintf(output,
-                            "--- %zu ---\nid: %010" PRIu64 "\ndate: %s\n",
+                            "--- %zu ---\nid: %s\ndate: %s\n",
                             i + 1,
-                            item->id,
+                            flight_id_str,
                             date_string);
                     break;
                 case Q02_OUTPUT_ITEM_RESERVATION:
+                    reservation_id_sprintf(reservation_id_str, item->id);
                     fprintf(output,
-                            "--- %zu ---\nid: Book%010" PRIu64 "\ndate: %s\n",
+                            "--- %zu ---\nid: %s\ndate: %s\n",
                             i + 1,
-                            item->id,
+                            reservation_id_str,
                             date_string);
                     break;
             }
@@ -227,7 +234,7 @@ int __q02_execute(database_t       *database,
             user_manager_get_reservations_by_id(users, args->user_id);
 
         while (user_reservations) {
-            uint64_t reservation_id = single_pool_id_linked_list_get_value(user_reservations);
+            uint32_t reservation_id = single_pool_id_linked_list_get_value(user_reservations);
 
             date_and_time_t output_time;
             date_and_time_from_values(
@@ -250,7 +257,7 @@ int __q02_execute(database_t       *database,
             user_manager_get_flights_by_id(users, args->user_id);
 
         while (user_flights) {
-            uint64_t flight_id = single_pool_id_linked_list_get_value(user_flights);
+            uint32_t flight_id = single_pool_id_linked_list_get_value(user_flights);
 
             q02_output_item_t output_item = {.id   = flight_id,
                                              .date = flight_get_schedule_departure_date(

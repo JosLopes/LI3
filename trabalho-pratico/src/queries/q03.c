@@ -34,27 +34,27 @@
  * @param argv Values of the arguments.
  * @param argc Number of arguments.
  *
- * @return `NULL` on failure, a pointer to a `uint64_t` hotel ID otherwise.
+ * @return `NULL` on failure, a pointer to a hotel ID otherwise.
  */
 void *__q03_parse_arguments(char **argv, size_t argc) {
     if (argc != 1)
         return NULL;
 
-    size_t length = strlen(argv[0]);
-    if (length > 3) { /* Skip "HTL" before any reservation ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, argv[0] + 3);
-
-        if (retval)
-            return NULL; /* Non-HTL**** hotel */
-
-        uint64_t *id_ptr = malloc(sizeof(uint64_t));
+    hotel_id_t id;
+    int        retval = hotel_id_from_string(&id, argv[0]);
+    if (retval == 0) {
+        hotel_id_t *id_ptr = malloc(sizeof(hotel_id_t));
         if (id_ptr)
             *id_ptr = id;
+
         return id_ptr;
-    } else {
-        return NULL; /* Non-HTL**** hotel */
+    } else if (retval == 2) {
+        /* TODO - have a way of communicating this failure */
+        /* fprintf(stderr,
+                  "Hotel ID \"%s\" not if format HTLXXXXX. This isn't supported by our program!\n",
+                  token);*/
     }
+    return NULL;
 }
 
 /**
@@ -94,11 +94,11 @@ typedef struct {
 } q03_foreach_reservation_data_t;
 
 /**
- * @brief   A comparison function for sorting an `GArray` of `uint64_t`s.
+ * @brief   A comparison function for sorting an `GArray` of ::hotel_id_t.
  * @details Auxiliary method for ::__q03_generate_statistics.
  */
-gint __q03_generate_statistics_uint64_compare_func(gconstpointer a, gconstpointer b) {
-    return ((int64_t) * (uint64_t *) a) - ((int64_t) * (uint64_t *) b);
+gint __q03_generate_statistics_hotel_id_compare_func(gconstpointer a, gconstpointer b) {
+    return ((hotel_id_t) * (hotel_id_t *) a) - ((hotel_id_t) * (hotel_id_t *) b);
 }
 
 /**
@@ -115,13 +115,12 @@ int __q03_generate_statistics_foreach_reservation(void                *user_data
                                                   const reservation_t *reservation) {
     q03_foreach_reservation_data_t *foreach_data = (q03_foreach_reservation_data_t *) user_data;
 
-    /* TODO - fix reservation missing consts in getters */
-    uint64_t hotel_id = reservation_get_hotel_id((reservation_t *) reservation);
-    int      rating   = reservation_get_rating((reservation_t *) reservation);
+    hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
+    int        rating   = reservation_get_rating(reservation);
 
     if (!g_array_binary_search(foreach_data->hotels_to_average,
                                &hotel_id,
-                               __q03_generate_statistics_uint64_compare_func,
+                               __q03_generate_statistics_hotel_id_compare_func,
                                NULL))
         return 0; /* This hotel wasn't mentioned in queries */
 
@@ -159,13 +158,13 @@ void *__q03_generate_statistics(database_t *database, query_instance_t *instance
      * Generate an array of all hotel IDs that will be asked for in queries, to avoid storing
      * rating information about all hotels.
      */
-    GArray *hotels_to_average = g_array_new(FALSE, FALSE, sizeof(uint64_t));
+    GArray *hotels_to_average = g_array_new(FALSE, FALSE, sizeof(hotel_id_t));
     for (size_t i = 0; i < n; ++i) {
-        uint64_t *hotel_id = (uint64_t *) query_instance_get_argument_data(instances);
+        hotel_id_t *hotel_id = (hotel_id_t *) query_instance_get_argument_data(instances);
         g_array_append_val(hotels_to_average, *hotel_id);
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
-    g_array_sort(hotels_to_average, __q03_generate_statistics_uint64_compare_func);
+    g_array_sort(hotels_to_average, __q03_generate_statistics_hotel_id_compare_func);
 
     /* Iterate through all reservations to calculate rating averages. */
     GHashTable *ratings_averages =
@@ -213,7 +212,7 @@ int __q03_execute(database_t       *database,
     (void) database;
 
     GHashTable *ratings_averages = (GHashTable *) statistics;
-    uint64_t    hotel_id         = *(uint64_t *) query_instance_get_argument_data(instance);
+    hotel_id_t  hotel_id         = *(hotel_id_t *) query_instance_get_argument_data(instance);
 
     q03_average_t *avg = g_hash_table_lookup(ratings_averages, GUINT_TO_POINTER(hotel_id));
     if (!avg) {

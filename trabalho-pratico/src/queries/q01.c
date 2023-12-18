@@ -61,27 +61,28 @@ void *__q01_parse_arguments(char **argv, size_t argc) {
     if (argc != 1)
         return NULL;
 
-    size_t                  parsed_id_aux;
-    size_t                  length          = strlen(*argv);
+    /* TODO - fix leaks */
+
+    flight_id_t             parsed_flight_id_aux;
+    reservation_id_t        parsed_reservation_id_aux;
     q01_parsed_arguments_t *parsed_argument = malloc(sizeof(q01_parsed_arguments_t));
     if (!parsed_argument)
         return NULL;
 
-    if (!int_utils_parse_positive(&parsed_id_aux, *argv)) {
-        uint64_t *parsed_id = malloc(sizeof(uint64_t));
+    if (!flight_id_from_string(&parsed_flight_id_aux, *argv)) {
+        flight_id_t *parsed_id = malloc(sizeof(flight_id_t));
         if (!parsed_id)
             return NULL;
 
-        *parsed_id                 = parsed_id_aux;
+        *parsed_id                 = parsed_flight_id_aux;
         parsed_argument->id_entity = ID_ENTITY_FLIGHT;
         parsed_argument->parsed_id = parsed_id;
-    } else if (length > 4 /* skip "Book" in reservation id */
-               && !int_utils_parse_positive(&parsed_id_aux, *argv + 4)) {
-        uint64_t *parsed_id = malloc(sizeof(uint64_t));
+    } else if (!reservation_id_from_string(&parsed_reservation_id_aux, *argv)) {
+        reservation_id_t *parsed_id = malloc(sizeof(reservation_id_t));
         if (!parsed_id)
             return NULL;
 
-        *parsed_id                 = parsed_id_aux;
+        *parsed_id                 = parsed_reservation_id_aux;
         parsed_argument->id_entity = ID_ENTITY_RESERVATION;
         parsed_argument->parsed_id = parsed_id;
     } else {
@@ -157,9 +158,9 @@ int __q01_execute_user_entity(database_t       *database,
 
     single_pool_id_linked_list_t *reservation_list =
         user_manager_get_reservations_by_id(user_manager, id);
-    uint64_t number_of_flights =
+    size_t number_of_flights =
         single_pool_id_linked_list_length(user_manager_get_flights_by_id(user_manager, id));
-    uint64_t number_of_reservations = single_pool_id_linked_list_length(reservation_list);
+    size_t number_of_reservations = single_pool_id_linked_list_length(reservation_list);
 
     double total_spent = __q01_calculate_user_total_spent(reservation_list, reservation_manager);
 
@@ -177,8 +178,8 @@ int __q01_execute_user_entity(database_t       *database,
     if (query_instance_get_formatted(instance)) {
         fprintf(output,
                 "--- 1 ---\nname: %s\nsex: %s\nage: %" PRIi64 "\ncountry_code: %s\n"
-                "passport: %s\nnumber_of_flights: %" PRIu64 "\n"
-                "number_of_reservations: %" PRIu64 "\ntotal_spent: %.3f\n",
+                "passport: %s\nnumber_of_flights: %zu\nnumber_of_reservations: %zu\n"
+                "total_spent: %.3f\n",
                 user_get_const_name(user),
                 sex,
                 age,
@@ -189,7 +190,7 @@ int __q01_execute_user_entity(database_t       *database,
                 total_spent);
     } else {
         fprintf(output,
-                "%s;%s;%" PRIi64 ";%s;%s;%" PRIu64 ";%" PRIu64 ";%.3f\n",
+                "%s;%s;%" PRIi64 ";%s;%s;%zu;%zu;%.3f\n",
                 user_get_const_name(user),
                 sex,
                 age,
@@ -214,12 +215,12 @@ int __q01_execute_user_entity(database_t       *database,
  * @retval 0 Always successful.
  */
 int __q01_execute_reservation_entity(database_t       *database,
-                                     uint64_t         *id,
+                                     reservation_id_t  id,
                                      query_instance_t *instance,
                                      FILE             *output) {
 
     reservation_manager_t *reservation_manager = database_get_reservations(database);
-    reservation_t         *reservation = reservation_manager_get_by_id(reservation_manager, *id);
+    reservation_t         *reservation = reservation_manager_get_by_id(reservation_manager, id);
     if (!reservation)
         return 0;
 
@@ -240,12 +241,15 @@ int __q01_execute_reservation_entity(database_t       *database,
     int     city_tax        = reservation_get_city_tax(reservation);
     double  total_price     = price_per_night * nights * (1 + 0.01 * city_tax);
 
+    char hotel_id_str[HOTEL_ID_SPRINTF_MIN_BUFFER_SIZE];
+    hotel_id_sprintf(hotel_id_str, reservation_get_hotel_id(reservation));
+
     if (query_instance_get_formatted(instance)) {
         fprintf(output,
-                "--- 1 ---\nhotel_id: HTL%d\nhotel_name: %s\nhotel_stars: %d\n"
+                "--- 1 ---\nhotel_id: %s\nhotel_name: %s\nhotel_stars: %d\n"
                 "begin_date: %s\nend_date: %s\nincludes_breakfast: %s\nnights: %" PRIi64 "\n"
                 "total_price: %.3f\n",
-                reservation_get_hotel_id(reservation),
+                hotel_id_str,
                 reservation_get_const_hotel_name(reservation),
                 reservation_get_hotel_stars(reservation),
                 begin_date_str,
@@ -255,8 +259,8 @@ int __q01_execute_reservation_entity(database_t       *database,
                 total_price);
     } else {
         fprintf(output,
-                "HTL%d;%s;%d;%s;%s;%s;%" PRIi64 ";%.3f\n",
-                reservation_get_hotel_id(reservation),
+                "%s;%s;%d;%s;%s;%s;%" PRIi64 ";%.3f\n",
+                hotel_id_str,
                 reservation_get_const_hotel_name(reservation),
                 reservation_get_hotel_stars(reservation),
                 begin_date_str,
@@ -280,12 +284,12 @@ int __q01_execute_reservation_entity(database_t       *database,
  * @retval 0 Always successful.
  */
 int __q01_execute_flight_entity(database_t       *database,
-                                uint64_t         *id,
+                                flight_id_t       id,
                                 query_instance_t *instance,
                                 FILE             *output) {
 
     flight_manager_t *flight_manager = database_get_flights(database);
-    flight_t         *flight         = flight_manager_get_by_id(flight_manager, *id);
+    flight_t         *flight         = flight_manager_get_by_id(flight_manager, id);
     if (!flight)
         return 0;
 
@@ -359,9 +363,9 @@ int __q01_execute(database_t       *database,
         case ID_ENTITY_USER:
             return __q01_execute_user_entity(database, id, instance, output);
         case ID_ENTITY_RESERVATION:
-            return __q01_execute_reservation_entity(database, id, instance, output);
+            return __q01_execute_reservation_entity(database, * (reservation_id_t *) id, instance, output);
         case ID_ENTITY_FLIGHT:
-            return __q01_execute_flight_entity(database, id, instance, output);
+            return __q01_execute_flight_entity(database, * (flight_id_t *) id, instance, output);
         default:
             return 1; /* unreachable */
     }
