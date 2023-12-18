@@ -39,7 +39,6 @@ int hotel_id_from_string(hotel_id_t *output, const char *input) {
     }
 
     return (length == 0) ? 1 : 2;
-
 }
 
 void hotel_id_sprintf(char *output, hotel_id_t id) {

@@ -44,8 +44,8 @@
  *     @brief Flight the user identifiable by ::passenger_relation_t::user_id is in.
  */
 typedef struct {
-    const char  *user_id;
-    flight_id_t  flight_id;
+    const char *user_id;
+    flight_id_t flight_id;
 } passenger_relation_t;
 
 /** @brief Block capacity of ::passengers_loader_t::commit_buffer_id_pool */
@@ -151,7 +151,7 @@ int __passengers_loader_commit_flight_list(passengers_loader_t *loader) {
         char print_buffer[LINE_MAX];
         for (size_t i = 0; i < loader->commit_buffer->len; ++i) {
             char *user_id = g_ptr_array_index(loader->commit_buffer, i);
-            char flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+            char  flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
             flight_id_sprintf(flight_id_str, loader->commit_buffer_flight);
 
             snprintf(print_buffer, LINE_MAX, "%s;%s", flight_id_str, user_id);
@@ -245,7 +245,7 @@ int __passengers_loader_check_line_for_erroneous_flight(void *user_data, char *l
 void __passengers_loader_report_erroneous_flights(passengers_loader_t *loader, FILE *flights) {
     for (size_t i = 0; i < loader->invalid_flight_ids->len; ++i) {
         flight_id_t id_int = g_array_index(loader->invalid_flight_ids, flight_id_t, i);
-        char flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+        char        flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
         flight_id_sprintf(flight_id_str, id_int);
 
         passengers_loader_erroneous_flight_callback_data_t user_data = {.output    = loader->output,

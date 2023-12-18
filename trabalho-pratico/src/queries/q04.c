@@ -235,7 +235,7 @@ int __q04_execute(database_t       *database,
                   FILE             *output) {
     (void) database;
 
-    hotel_id_t   hotel_id = *((hotel_id_t *) query_instance_get_argument_data(instance));
+    hotel_id_t hotel_id = *((hotel_id_t *) query_instance_get_argument_data(instance));
     GPtrArray *reservations =
         g_hash_table_lookup((GHashTable *) statistics, GUINT_TO_POINTER(hotel_id));
     if (!reservations)

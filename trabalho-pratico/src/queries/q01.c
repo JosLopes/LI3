@@ -363,9 +363,12 @@ int __q01_execute(database_t       *database,
         case ID_ENTITY_USER:
             return __q01_execute_user_entity(database, id, instance, output);
         case ID_ENTITY_RESERVATION:
-            return __q01_execute_reservation_entity(database, * (reservation_id_t *) id, instance, output);
+            return __q01_execute_reservation_entity(database,
+                                                    *(reservation_id_t *) id,
+                                                    instance,
+                                                    output);
         case ID_ENTITY_FLIGHT:
-            return __q01_execute_flight_entity(database, * (flight_id_t *) id, instance, output);
+            return __q01_execute_flight_entity(database, *(flight_id_t *) id, instance, output);
         default:
             return 1; /* unreachable */
     }
