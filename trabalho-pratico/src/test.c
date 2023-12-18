@@ -19,53 +19,39 @@
  * @brief Contains the entry point to the test program.
  */
 
-#include <limits.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "utils/path_utils.h"
+#include "batch_mode.h"
+#include "performance/performance_metrics_output.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for path utilities.
  * @retval 0 Success
  * @retval 1 Failure
  */
-int main(void) {
-    const char *test_paths[18] = {/* .. and . in absolute paths */
-                                  "/abc/def/..",
-                                  "/abc/def/.",
+int main(int argc, char **argv) {
+    if (argc == 4) {
+        performance_metrics_t *metrics = performance_metrics_create();
+        if (!metrics) {
+            fputs("Failed to allocate performance metrics!\n", stderr);
+            return 1;
+        }
 
-                                  /* .. in absolute and relative paths */
-                                  "/abc/def/../../..",
-                                  "abc/def/../../..",
-                                  "./abc/def/../../..",
-                                  "././abc/def/../../..",
-                                  "./../abc/def/../../..",
+        int retval = batch_mode_run(argv[1], argv[2], metrics);
+        if (retval) {
+            performance_metrics_free(metrics);
+            return retval;
+        }
 
-                                  /* Relative paths with parent directory */
-                                  "../abc",
-                                  "../../abc",
-                                  "../..//abc",
-                                  "/../../abc",
-
-                                  /* Multiple . and .. */
-                                  "/.",
-                                  "/././../.",
-                                  "././../.",
-                                  "/..",
-
-                                  /* Others */
-                                  "/",
-                                  "////",
-                                  ""};
-
-    for (size_t i = 0; i < 18; ++i) {
-        char path[PATH_MAX];
-        strcpy(path, test_paths[i]);
-
-        path_normalize(path);
-        printf("%25s -> %s\n", test_paths[i], path);
+        performance_metrics_output_print(stdout, metrics);
+        performance_metrics_free(metrics);
+        return 0;
+    } else {
+        fputs("Invalid command-line arguments! Usage:\n", stderr);
+        fputs("./programa-testes [dataset] [query file] [expected output]\n", stderr);
+        return 1;
     }
-    return 0;
 }

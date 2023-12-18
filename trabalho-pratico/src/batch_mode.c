@@ -69,7 +69,10 @@ int __batch_mode_init_file_callback(void *user_data, query_instance_t *instance)
     return 0;
 }
 
-int batch_mode_run(const char *dataset_dir, const char *query_file_path) {
+int batch_mode_run(const char            *dataset_dir,
+                   const char            *query_file_path,
+                   performance_metrics_t *metrics) {
+
     query_type_list_t *query_type_list = query_type_list_create();
     if (!query_type_list) {
         fputs("Failed to allocate query definitions!\n", stderr);
@@ -101,7 +104,7 @@ int batch_mode_run(const char *dataset_dir, const char *query_file_path) {
         return 1;
     }
 
-    if (dataset_loader_load(database, dataset_dir, "Resultados")) {
+    if (dataset_loader_load(database, dataset_dir, "Resultados", metrics)) {
         query_instance_list_free(query_instance_list, query_type_list);
         query_type_list_free(query_type_list);
         database_free(database);
@@ -135,7 +138,11 @@ int batch_mode_run(const char *dataset_dir, const char *query_file_path) {
         return 1;
     }
 
-    query_dispatcher_dispatch_list(database, query_instance_list, query_type_list, query_outputs);
+    query_dispatcher_dispatch_list(database,
+                                   query_instance_list,
+                                   query_type_list,
+                                   query_outputs,
+                                   metrics);
 
     for (size_t i = 0; i < query_instance_list_get_length(query_instance_list); ++i)
         fclose(query_outputs[i]);
