@@ -94,7 +94,7 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
 /**
  * @brief Prints an "includes breakfast" field using `sprintf`.
  *
- * @param output    Where to print the airport code to. Must be at least
+ * @param output    Where to print the "includes breakfast" field to. Must be at least
  *                  ::INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE long.
  * @param breakfast "Includes breakfast" field.
  *
