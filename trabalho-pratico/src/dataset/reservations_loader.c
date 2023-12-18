@@ -75,33 +75,18 @@ int __reservation_loader_parse_id(void *loader_data, char *token, size_t ntoken)
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    /* TODO - use reservation ID parsing method when that's developed */
-
-    size_t length = strlen(token);
-    if (length > 4) { /* Skip "Book" before any reservation ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, token + 4);
-
-        if (retval) {
-            fprintf(stderr,
-                    "Non-numerical reservation ID detected, \"%s\". Our program's architecture "
-                    "doesn't allow for this.\n",
-                    token);
-            return 1;
-        } else {
-            reservation_set_id(loader->current_reservation, id);
-            return 0;
-        }
-    } else {
-        if (length != 0) {
-            fprintf(stderr,
-                    "Reservation ID detected that doesn't start with \"Book\" detected, \"%s\". "
-                    "Our program's architecture doesn't allow for this.\n",
-                    token);
-        }
-
-        return 1;
+    reservation_id_t id;
+    int              retval = reservation_id_from_string(&id, token);
+    if (retval == 0) {
+        reservation_set_id(loader->current_reservation, id);
+        return 0;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Reservation ID \"%s\" not if format BookXXXXXXXXXX. This isn't supported by our "
+                "program!\n",
+                token);
     }
+    return 1;
 }
 
 /** @brief Parses a reservation's user identifier */
@@ -124,33 +109,17 @@ int __reservation_loader_parse_hotel_id(void *loader_data, char *token, size_t n
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    /* TODO - use hotel ID parsing method when that's developed */
-
-    size_t length = strlen(token);
-    if (length > 3) { /* Skip "HTL" before any hotel ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, token + 3);
-
-        if (retval) {
-            fprintf(stderr,
-                    "Non-numerical hotel ID detected, \"%s\". Our program's architecture doesn't "
-                    "doesn't allow for this.\n",
-                    token);
-            return 1;
-        } else {
-            reservation_set_hotel_id(loader->current_reservation, id);
-            return 0;
-        }
-    } else {
-        if (length != 0) {
-            fprintf(stderr,
-                    "Hotel ID detected that doesn't start with \"HTL\" detected, \"%s\". "
-                    "Our program's architecture doesn't allow for this.\n",
-                    token);
-        }
-
-        return 1;
+    hotel_id_t id;
+    int        retval = hotel_id_from_string(&id, token);
+    if (retval == 0) {
+        reservation_set_hotel_id(loader->current_reservation, id);
+        return 0;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Hotel ID \"%s\" not if format HTLXXXXX. This isn't supported by our program!\n",
+                token);
     }
+    return 1;
 }
 
 /** @brief Parses a reservation's hotel name */

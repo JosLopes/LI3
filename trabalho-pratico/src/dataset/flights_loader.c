@@ -76,21 +76,17 @@ int __flight_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
-    /* TODO - use flight ID parsing function when available */
-
-    size_t parsed_id;
-    int    retcode = int_utils_parse_positive(&parsed_id, token);
-    if (!retcode) {
-        flight_set_id(loader->current_flight, parsed_id);
+    flight_id_t id;
+    int         retval = flight_id_from_string(&id, token);
+    if (retval == 0) {
+        flight_set_id(loader->current_flight, id);
         return 0;
-    } else {
-        if (*token)
-            fprintf(stderr,
-                    "Non-numerical flight ID detected, \"%s\". Our program's architecture doesn't "
-                    "allow for this.\n",
-                    token);
-        return 1;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Flight ID \"%s\" is not numerical. This isn't supported by our program!\n",
+                token);
     }
+    return 1;
 }
 
 /** @brief Parses a flight's airline */
