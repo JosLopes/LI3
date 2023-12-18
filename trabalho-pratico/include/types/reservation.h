@@ -15,16 +15,16 @@
  */
 
 /**
- * @file     reservation.h
- * @brief    Declaration of type ::reservation_t.
+ * @file  reservation.h
+ * @brief Declaration of type ::reservation_t.
  *
- * @details  In this module you can find a declaration of the type `reservation_t` as a struct
- *           reservation, as well as getter and setter functions, which allow's the developer
- *           access to any previously created reservation, or gives them the ability to create a
- *           new reservation.
+ * @details In this module you can find a declaration of the type `reservation_t` as a struct
+ *          reservation, as well as getter and setter functions, which allow's the developer
+ *          access to any previously created reservation, or gives them the ability to create a
+ *          new reservation.
  *
- *           You can see what fields define a reservation (and thus available through getters and
- *           setters) in the [struct's documentation](@ref reservation).
+ *          You can see what fields define a reservation (and thus available through getters and
+ *          setters) in the [struct's documentation](@ref reservation).
  *
  * @anchor reservation_examples
  * ### Examples
@@ -33,6 +33,7 @@
  * there, `iter_callback` is a great example on how to extract all data from an existing
  * reservation and print it to `stdout`.
  */
+
 #ifndef RESERVATION_H
 #define RESERVATION_H
 
@@ -158,63 +159,63 @@ const char *reservation_get_const_hotel_name(const reservation_t *reservation);
  * @param  reservation Reservation to get the `includes_breakfast` flag from.
  * @return The reservation's flag `includes_breakfast`.
  */
-includes_breakfast_t reservation_get_includes_breakfast(reservation_t *reservation);
+includes_breakfast_t reservation_get_includes_breakfast(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's beginning date.
  * @param  reservation Reservation to get the beginning date from.
  * @return The reservation's beginning date.
  */
-date_t reservation_get_begin_date(reservation_t *reservation);
+date_t reservation_get_begin_date(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's end date.
  * @param  reservation Reservation to get the end date from.
  * @return The reservation's end date.
  */
-date_t reservation_get_end_date(reservation_t *reservation);
+date_t reservation_get_end_date(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's identifier.
  * @param  reservation Reservation to get the identifier from.
  * @return The reservation's identifier.
  */
-size_t reservation_get_id(reservation_t *reservation);
+size_t reservation_get_id(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's rating.
  * @param  reservation Reservation to get the rating from.
  * @return The reservation's rating. ::RESERVATION_NO_RATING means no rating was provided.
  */
-int reservation_get_rating(reservation_t *reservation);
+int reservation_get_rating(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel identifier.
  * @param  reservation Reservation to get the hotel identifier from.
  * @return The reservation's hotel identifier.
  */
-int reservation_get_hotel_id(reservation_t *reservation);
+int reservation_get_hotel_id(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel stars.
  * @param  reservation Reservation to get the hotel stars from.
  * @return The reservation's hotel stars.
  */
-int reservation_get_hotel_stars(reservation_t *reservation);
+int reservation_get_hotel_stars(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's city tax.
  * @param  reservation Reservation to get the city tax from.
  * @return The reservation's city tax.
  */
-int reservation_get_city_tax(reservation_t *reservation);
+int reservation_get_city_tax(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's price per night.
  * @param  reservation Reservation to get the price per night from.
  * @return The reservation's price per night.
  */
-int reservation_get_price_per_night(reservation_t *reservation);
+int reservation_get_price_per_night(const reservation_t *reservation);
 
 /**
  * @brief             Frees the memory used for a given reservation.

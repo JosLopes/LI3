@@ -126,39 +126,39 @@ const char *reservation_get_const_hotel_name(const reservation_t *reservation) {
     return reservation->hotel_name;
 }
 
-includes_breakfast_t reservation_get_includes_breakfast(reservation_t *reservation) {
+includes_breakfast_t reservation_get_includes_breakfast(const reservation_t *reservation) {
     return reservation->includes_breakfast;
 }
 
-date_t reservation_get_begin_date(reservation_t *reservation) {
+date_t reservation_get_begin_date(const reservation_t *reservation) {
     return reservation->begin_date;
 }
 
-date_t reservation_get_end_date(reservation_t *reservation) {
+date_t reservation_get_end_date(const reservation_t *reservation) {
     return reservation->end_date;
 }
 
-size_t reservation_get_id(reservation_t *reservation) {
+size_t reservation_get_id(const reservation_t *reservation) {
     return reservation->id;
 }
 
-int reservation_get_rating(reservation_t *reservation) {
+int reservation_get_rating(const reservation_t *reservation) {
     return reservation->rating;
 }
 
-int reservation_get_hotel_id(reservation_t *reservation) {
+int reservation_get_hotel_id(const reservation_t *reservation) {
     return reservation->hotel_id;
 }
 
-int reservation_get_hotel_stars(reservation_t *reservation) {
+int reservation_get_hotel_stars(const reservation_t *reservation) {
     return reservation->hotel_stars;
 }
 
-int reservation_get_city_tax(reservation_t *reservation) {
+int reservation_get_city_tax(const reservation_t *reservation) {
     return reservation->city_tax;
 }
 
-int reservation_get_price_per_night(reservation_t *reservation) {
+int reservation_get_price_per_night(const reservation_t *reservation) {
     return reservation->price_per_night;
 }
 
