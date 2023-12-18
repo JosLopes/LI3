@@ -18,7 +18,7 @@
  * @file  airport_code.h
  * @brief Airport code in a ::flight_t.
  *
- * @anchor airport_examples
+ * @anchor airport_code_examples
  * ### Examples
  *
  * The following example shows how to validate airport codes and how to print them back to strings.
@@ -67,6 +67,9 @@ typedef uint32_t airport_code_t;
  *
  * @retval 0 Valid airport code
  * @retval 1 Invalid airport code
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref airport_code_examples).
  */
 int airport_code_from_string(airport_code_t *output, const char *input);
 
@@ -87,6 +90,9 @@ int airport_code_from_string(airport_code_t *output, const char *input);
  * @param output  Where to print the airport code to. Must be at least
  *                ::AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE long.
  * @param airport Country code to be printed.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref airport_code_examples).
  */
 void airport_code_sprintf(char *output, airport_code_t airport);
 
