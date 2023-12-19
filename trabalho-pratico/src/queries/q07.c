@@ -51,6 +51,10 @@ void __q07_free_query_instance_argument_data(void *argument_data) {
     free(argument_data);
 }
 
+void __q07_destroy_list(gpointer data) {
+    g_list_free((GList *) data);
+}
+
 gint __q07_compare_ints(gconstpointer a, gconstpointer b) {
     return GPOINTER_TO_UINT(a) - GPOINTER_TO_UINT(b);
 }
@@ -96,16 +100,17 @@ void *__q07_generate_statistics(database_t *database, query_instance_t *instance
     (void) instances;
     (void) n;
 
-    GHashTable *airports_median = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
+    GHashTable *airport_delays  = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
+    GHashTable *airport_medians = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     flight_manager_iter(database_get_flights(database),
                         __q07_generate_statistics_foreach_flight,
-                        airports_median);
+                        airport_delays);
 
     // iterate throught the hashtable and calculate the median
     GHashTableIter iter;
     gpointer       key, value;
-    g_hash_table_iter_init(&iter, airports_median);
+    g_hash_table_iter_init(&iter, airport_delays);
     while (g_hash_table_iter_next(&iter, &key, &value)) {
         GList   *delays = (GList *) value;
         uint64_t median;
@@ -116,10 +121,11 @@ void *__q07_generate_statistics(database_t *database, query_instance_t *instance
         } else {
             median = GPOINTER_TO_UINT(g_list_nth_data(delays, g_list_length(delays) / 2));
         }
-        g_hash_table_replace(airports_median, key, GUINT_TO_POINTER(median));
+        g_hash_table_insert(airport_medians, key, GUINT_TO_POINTER(median));
     }
 
-    return airports_median;
+    g_hash_table_destroy(airport_delays);
+    return airport_medians;
 }
 
 void __q07_free_statistics(void *statistics) {
@@ -150,8 +156,11 @@ int __q07_execute(database_t       *database,
         char *airport_code_str = malloc(4 * sizeof(char));
         airport_code_sprintf(airport_code_str, airport_code);
         fprintf(output, "%s;%lu\n", airport_code_str, median);
+
+        free(airport_code_str);
     }
 
+    g_list_free(sorted_airports);
     return 0;
 }
 
