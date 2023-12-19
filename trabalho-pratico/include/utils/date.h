@@ -81,6 +81,14 @@
 /** @brief A date containing a year, a month a day. */
 typedef int32_t date_t;
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    /** @brief Current system date (`2023/10/01`). */
+    #define DATE_CURRENT 0x07e70a01
+#else
+    /** @brief Current system date (`2023/10/01`). */
+    #define DATE_CURRENT 0x010a07e7
+#endif
+
 /**
  * @brief Creates a date from a @p year, a @p month and a @p day.
  *

@@ -129,10 +129,6 @@ date_and_time_t user_get_account_creation_date(const user_t *user) {
     return user->account_creation_date;
 }
 
-void user_free(user_t *user) {
-    free(user);
-}
-
 size_t user_sizeof(void) {
     return sizeof(struct user);
 }
@@ -143,4 +139,12 @@ int user_is_valid(const user_t *user) {
 
 void user_invalidate(user_t *user) {
     user->id = NULL;
+}
+
+int32_t user_calculate_age(const user_t *user) {
+    return date_diff(DATE_CURRENT, user->birth_date) / 372;
+}
+
+void user_free(user_t *user) {
+    free(user);
 }

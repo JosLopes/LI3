@@ -162,17 +162,14 @@ int __q01_execute_user_entity(database_t       *database,
     char sex[SEX_SPRINTF_MIN_BUFFER_SIZE];
     sex_sprintf(sex, user_get_sex(user));
 
-    date_t birth_date = user_get_birth_date(user), present_date;
-    date_from_values(&present_date, 2023, 10, 1);
-    /* 372 = 31 * 12, as all months have 31 days */
-    int64_t age = (date_diff(present_date, birth_date)) / 372;
+    int32_t age = user_calculate_age(user);
 
     char country_code[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
     country_code_sprintf(country_code, user_get_country_code(user));
 
     if (query_instance_get_formatted(instance)) {
         fprintf(output,
-                "--- 1 ---\nname: %s\nsex: %s\nage: %" PRIi64 "\ncountry_code: %s\n"
+                "--- 1 ---\nname: %s\nsex: %s\nage: %" PRIi32 "\ncountry_code: %s\n"
                 "passport: %s\nnumber_of_flights: %zu\nnumber_of_reservations: %zu\n"
                 "total_spent: %.3f\n",
                 user_get_const_name(user),
@@ -185,7 +182,7 @@ int __q01_execute_user_entity(database_t       *database,
                 total_spent);
     } else {
         fprintf(output,
-                "%s;%s;%" PRIi64 ";%s;%s;%zu;%zu;%.3f\n",
+                "%s;%s;%" PRIi32 ";%s;%s;%zu;%zu;%.3f\n",
                 user_get_const_name(user),
                 sex,
                 age,

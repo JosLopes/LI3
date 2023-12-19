@@ -178,13 +178,6 @@ account_status_t user_get_account_status(const user_t *user);
 date_and_time_t user_get_account_creation_date(const user_t *user);
 
 /**
- * @brief      Frees the memory used for a given user.
- * @details    All strings inside the user won't be freed, as they're not owned by the user.
- * @param user User to be deleted.
- */
-void user_free(user_t *user);
-
-/**
  * @brief   Gets the size of a ::user_t in memory.
  * @details Useful for pool allocation.
  * @return  `sizeof(user_t)`.
@@ -209,5 +202,22 @@ int user_is_valid(const user_t *user);
  * @param user User to be modified.
  */
 void user_invalidate(user_t *user);
+
+/**
+ * @brief   Calculates the age of @p user.
+ * @details The current date is considered to be ::DATE_CURRENT.
+ *
+ * @param  user User to have its age calculated.
+ *
+ * @return Age of @p user in years.
+ */
+int32_t user_calculate_age(const user_t *user);
+
+/**
+ * @brief      Frees the memory used for a given user.
+ * @details    All strings inside the user won't be freed, as they're not owned by the user.
+ * @param user User to be deleted.
+ */
+void user_free(user_t *user);
 
 #endif
