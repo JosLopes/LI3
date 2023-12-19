@@ -58,7 +58,7 @@ struct flight {
     const char     *plane_model;
     airport_code_t  origin;
     airport_code_t  destination;
-    size_t          id;
+    uint64_t        id;
     date_and_time_t schedule_departure_date;
     date_and_time_t real_departure_date;
     date_and_time_t schedule_arrival_date;
