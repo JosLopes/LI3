@@ -43,21 +43,13 @@
  *     @brief Current line being processed, in case it needs to be put in the error file.
  * @var users_loader_t::current_user
  *     @brief User being currently parsed, whose fields are still being filled in.
- * @var users_loader_t::id_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that the user's identifier ends.
- * @var users_loader_t::name_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that the user's name ends.
- * @var users_loader_t::passport_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that the user's passport ends.
  */
 typedef struct {
     dataset_error_output_t *output;
     user_manager_t         *users;
 
     const char *error_line;
-
-    user_t *current_user;
-    char   *id_terminator, *name_terminator, *passport_terminator;
+    user_t     *current_user;
 } users_loader_t;
 
 /**
@@ -74,10 +66,8 @@ int __user_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     users_loader_t *loader = (users_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length) {
-        user_set_id(loader->current_user, token);
-        loader->id_terminator = token + length;
+    if (*token) { /* Not empty */
+        user_set_id(NULL, loader->current_user, token);
         return 0;
     } else {
         return 1;
@@ -89,10 +79,8 @@ int __user_loader_parse_name(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     users_loader_t *loader = (users_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length) {
-        user_set_name(loader->current_user, token);
-        loader->name_terminator = token + length;
+    if (*token) { /* Not empty */
+        user_set_name(NULL, loader->current_user, token);
         return 0;
     } else {
         return 1;
@@ -150,10 +138,8 @@ int __user_loader_parse_passport(void *loader_data, char *token, size_t ntoken) 
     (void) ntoken;
     users_loader_t *loader = (users_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length) {
-        user_set_passport(loader->current_user, token);
-        loader->passport_terminator = token + length;
+    if (*token) { /* Not empty */
+        user_set_passport(NULL, loader->current_user, token);
         return 0;
     } else {
         return 1;
@@ -229,11 +215,6 @@ int __users_loader_after_parse_line(void *loader_data, int retval) {
     if (retval) {
         dataset_error_output_report_user_error(loader->output, loader->error_line);
     } else {
-        /* Restore token terminations for strings that will be stored in the user. */
-        *loader->id_terminator       = '\0';
-        *loader->name_terminator     = '\0';
-        *loader->passport_terminator = '\0';
-
         return user_manager_add_user(loader->users, loader->current_user) == NULL;
     }
     return 0;
@@ -243,7 +224,7 @@ int users_loader_load(FILE *stream, database_t *database, dataset_error_output_t
     dataset_error_output_report_user_error(output, USER_LOADER_HEADER);
     users_loader_t data = {.output       = output,
                            .users        = database_get_users(database),
-                           .current_user = user_create()};
+                           .current_user = user_create(NULL)};
 
     if (!data.current_user)
         return 1; /* Allocation failure */

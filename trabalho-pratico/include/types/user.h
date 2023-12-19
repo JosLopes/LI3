@@ -39,39 +39,58 @@
 #include "types/account_status.h"
 #include "types/country_code.h"
 #include "types/sex.h"
-#include "utils/date.h"
 #include "utils/date_and_time.h"
+#include "utils/pool.h"
+#include "utils/string_pool.h"
 
 /**
- * @brief   Type `user_t` defined as a struct user, that stores valuable information of a given
- *          person.
- * @details It's an opaque type.
+ * @brief Type `user_t` defined as a struct user, that stores valuable information of a given
+ *        person.
  */
 typedef struct user user_t;
 
 /**
  * @brief Creates a new user with uninitialized fields.
- * @return A `malloc`-allocated user (`NULL` on allocation failure).
+ *
+ * @param allocator  Pool where to allocate the user. Its element size must be the value returned by
+ *                   ::user_sizeof. Can be `NULL`, so that malloc is used.
+ *
+ * @return A allocated user (`NULL` on allocation failure).
  */
-user_t *user_create(void);
+user_t *user_create(pool_t *allocator);
 
 /**
- * @brief Sets the user's identifier.
+ * @brief Creates a deep clone of a user.
+ *
+ * @param allocator        Pool where to allocate the user. Its element size must be the value
+ *                         returned by ::user_sizeof. Can be `NULL`, so that malloc is used.
+ * @param string_allocator Pool where to allocate the strings of a user. Can be `NULL`, so that
+ *                         `strdup` is used.
+ * @param user             User to be cloned.
+ *
+ * @return A deep-clone of @p user.
+ */
+user_t *user_clone(pool_t *allocator, string_pool_t *string_allocator, const user_t *user);
+
+/**
+ * @brief   Sets the user's identifier.
  * @details @p id will not get owned by @p user, and you should free it later.
  *
- * @param user User to have its identifier set.
- * @param id   Id of the user.
+ * @param allocator Pool where to allocate @p id. `NULL` can be provided so that `strdup` is used.
+ * @param user      User to have its identifier set.
+ * @param id        Id of the user.
  */
-void user_set_id(user_t *user, char *id);
+void user_set_id(string_pool_t *allocator, user_t *user, const char *id);
 
 /**
- * @brief Sets the user's name.
+ * @brief   Sets the user's name.
  * @details @p name will not get owned by @p user, and you should free it later.
  *
- * @param user User to have its name set.
- * @param name Name of the user.
+ * @param allocator Pool where to allocate @p name. `NULL` can be provided so that `strdup` is used.
+ * @param user      User to have its name set.
+ * @param name      Name of the user.
  */
-void user_set_name(user_t *user, char *name);
+void user_set_name(string_pool_t *allocator, user_t *user, const char *name);
 
 /**
  * @brief Sets the user's birth date.
@@ -82,13 +101,15 @@ void user_set_name(user_t *user, char *name);
 void user_set_birth_date(user_t *user, date_t date);
 
 /**
- * @brief Sets the user's passport.
+ * @brief   Sets the user's passport.
  * @details @p passport will not get owned by @p user, and you should free it later.
  *
- * @param user     User to have its passport set.
- * @param passport Passport number of the user.
+ * @param allocator Pool where to allocate @p passport. `NULL` can be provided so that `strdup` is
+ *                  used.
+ * @param user      User to have its passport set.
+ * @param passport  Passport number of the user.
  */
-void user_set_passport(user_t *user, char *passport);
+void user_set_passport(string_pool_t *allocator, user_t *user, const char *passport);
 
 /**
  * @brief Sets the user's country code.
@@ -123,56 +144,57 @@ void user_set_account_status(user_t *user, account_status_t account_status);
 void user_set_account_creation_date(user_t *user, date_and_time_t date);
 
 /**
- * @brief Gets the user's identifier.
- * @param user User to get id from.
+ * @brief  Gets the user's identifier.
+ * @param  user User to get id from.
  * @return The user's identifier, with modifications not allowed.
  */
 const char *user_get_const_id(const user_t *user);
 
 /**
- * @brief Gets the user name.
- * @param user User to get name from.
+ * @brief  Gets the user name.
+ * @param  user User to get name from.
  * @return The user's name, with modifications not allowed.
  */
 const char *user_get_const_name(const user_t *user);
 
 /**
- * @brief Gets the user's birth date.
- * @param user User to get birth date from.
+ * @brief  Gets the user's birth date.
+ * @param  user User to get birth date from.
  * @return The user's birth date.
  */
 date_t user_get_birth_date(const user_t *user);
 
 /**
- * @brief Gets the user passport.
- * @param user User to get passport number from.
+ * @brief  Gets the user passport.
+ * @param  user User to get passport number from.
  * @return The user's passport number, with modifications not allowed.
  */
 const char *user_get_const_passport(const user_t *user);
 
 /**
- * @brief Gets the user's country code.
- * @param user User to get country code from.
+ * @brief  Gets the user's country code.
+ * @param  user User to get country code from.
+ * @return The country code of @p user.
  */
 country_code_t user_get_country_code(const user_t *user);
 
 /**
- * @brief Gets the user's sex.
- * @param user User to get sex from.
+ * @brief  Gets the user's sex.
+ * @param  user User to get sex from.
  * @return The user's sex.
  */
 sex_t user_get_sex(const user_t *user);
 
 /**
- * @brief Gets the user's account_status.
- * @param user User to get account status from.
+ * @brief  Gets the user's account_status.
+ * @param  user User to get account status from.
  * @return The user's account status.
  */
 account_status_t user_get_account_status(const user_t *user);
 
 /**
- * @brief Gets the user's account creation date.
- * @param user User to get account create date from.
+ * @brief  Gets the user's account creation date.
+ * @param  user User to get account create date from.
  * @return The user's account creation date.
  */
 date_and_time_t user_get_account_creation_date(const user_t *user);
@@ -195,10 +217,7 @@ size_t user_sizeof(void);
 int user_is_valid(const user_t *user);
 
 /**
- * @brief   Alters a user in a database to make it invalid.
- * @details This will get rid of the user's identifier. If you're not using pool storage, you must
- *          free it before using this method.
- *
+ * @brief Alters a user in a database to make it invalid.
  * @param user User to be modified.
  */
 void user_invalidate(user_t *user);
