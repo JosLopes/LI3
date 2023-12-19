@@ -162,10 +162,6 @@ int reservation_get_price_per_night(const reservation_t *reservation) {
     return reservation->price_per_night;
 }
 
-void reservation_free(reservation_t *reservation) {
-    free(reservation);
-}
-
 size_t reservation_sizeof(void) {
     return sizeof(struct reservation);
 }
@@ -176,4 +172,16 @@ int reservation_is_valid(const reservation_t *reservation) {
 
 void reservation_invalidate(reservation_t *reservation) {
     reservation->id = (reservation_id_t) -1;
+}
+
+double reservation_calculate_hotel_profit(const reservation_t *reservation) {
+    return reservation->price_per_night * date_diff(reservation->end_date, reservation->begin_date);
+}
+
+double reservation_calculate_price(const reservation_t *reservation) {
+    return reservation_calculate_hotel_profit(reservation) * (1 + 0.01 * reservation->city_tax);
+}
+
+void reservation_free(reservation_t *reservation) {
+    free(reservation);
 }

@@ -121,14 +121,9 @@ double __q01_calculate_user_total_spent(const single_pool_id_linked_list_t *list
     double total_spent = 0.0;
 
     while (list) {
-        reservation_t *reservation =
+        const reservation_t *reservation =
             reservation_manager_get_by_id(manager, single_pool_id_linked_list_get_value(list));
-        double   price_per_night = (double) reservation_get_price_per_night(reservation);
-        uint64_t nights          = date_diff(reservation_get_end_date(reservation),
-                                    reservation_get_begin_date(reservation));
-        double   city_tax        = reservation_get_city_tax(reservation);
-
-        total_spent += price_per_night * nights * (1 + 0.01 * city_tax);
+        total_spent += reservation_calculate_price(reservation);
         list = single_pool_id_linked_list_get_next(list);
     }
 
@@ -236,10 +231,8 @@ int __q01_execute_reservation_entity(database_t       *database,
     char                 includes_breakfast_str[INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE];
     includes_breakfast_sprintf(includes_breakfast_str, includes_breakfast);
 
-    int64_t nights          = date_diff(end_date, begin_date);
-    int     price_per_night = reservation_get_price_per_night(reservation);
-    int     city_tax        = reservation_get_city_tax(reservation);
-    double  total_price     = price_per_night * nights * (1 + 0.01 * city_tax);
+    int64_t nights      = date_diff(end_date, begin_date);
+    double  total_price = reservation_calculate_price(reservation);
 
     char hotel_id_str[HOTEL_ID_SPRINTF_MIN_BUFFER_SIZE];
     hotel_id_sprintf(hotel_id_str, reservation_get_hotel_id(reservation));

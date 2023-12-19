@@ -220,14 +220,6 @@ int reservation_get_city_tax(const reservation_t *reservation);
 int reservation_get_price_per_night(const reservation_t *reservation);
 
 /**
- * @brief             Frees the memory used for a given reservation.
- * @details           All strings inside the reservation won't be freed, as they're not owned by the
- *                    reservation.
- * @param reservation Reservation to be deleted.
- */
-void reservation_free(reservation_t *reservation);
-
-/**
  * @brief   Gets the size of a ::reservation_t in memory.
  * @details Useful for pool allocation.
  * @return  `sizeof(reservation_t)`.
@@ -252,5 +244,27 @@ int reservation_is_valid(const reservation_t *reservation);
  * @param reservation Reservation to be modified.
  */
 void reservation_invalidate(reservation_t *reservation);
+
+/**
+ * @brief  Calculates the profit a hotel accrued from @p reservation.
+ * @param  reservation Reservation to use to calculate hotel profit.
+ * @return The profit a hotel accrued from @p reservation.
+ */
+double reservation_calculate_hotel_profit(const reservation_t *reservation);
+
+/**
+ * @brief  Calculates the price a ::user_t payed for @p reservation.
+ * @param  reservation Reservation to use to calculate user price.
+ * @return The price a ::user_t payed for @p reservation.
+ */
+double reservation_calculate_price(const reservation_t *reservation);
+
+/**
+ * @brief             Frees the memory used for a given reservation.
+ * @details           All strings inside the reservation won't be freed, as they're not owned by the
+ *                    reservation.
+ * @param reservation Reservation to be deleted.
+ */
+void reservation_free(reservation_t *reservation);
 
 #endif

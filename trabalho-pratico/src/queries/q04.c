@@ -244,13 +244,12 @@ int __q04_execute(database_t       *database,
     for (size_t i = 0; i < reservations->len; i++) {
         reservation_t *reservation = g_ptr_array_index(reservations, i);
 
-        reservation_id_t reservation_id  = reservation_get_id(reservation);
-        date_t           begin_date      = reservation_get_begin_date(reservation);
-        date_t           end_date        = reservation_get_end_date(reservation);
-        const char      *user_id         = reservation_get_const_user_id(reservation);
-        int              rating          = reservation_get_rating(reservation);
-        int              price_per_night = reservation_get_price_per_night(reservation);
-        int              city_tax        = reservation_get_city_tax(reservation);
+        reservation_id_t reservation_id = reservation_get_id(reservation);
+        date_t           begin_date     = reservation_get_begin_date(reservation);
+        date_t           end_date       = reservation_get_end_date(reservation);
+        const char      *user_id        = reservation_get_const_user_id(reservation);
+        int              rating         = reservation_get_rating(reservation);
+        double           total_price    = reservation_calculate_price(reservation);
 
         char begin_date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
         char end_date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
@@ -258,9 +257,6 @@ int __q04_execute(database_t       *database,
         date_sprintf(begin_date_str, begin_date);
         date_sprintf(end_date_str, end_date);
         reservation_id_sprintf(reservation_id_str, reservation_id);
-
-        int    reservation_days = date_diff(end_date, begin_date);
-        double total_price      = price_per_night * reservation_days * (1 + 0.01 * city_tax);
 
         if (query_instance_get_formatted(instance)) {
             fprintf(output,
