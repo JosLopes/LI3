@@ -65,7 +65,16 @@ gint __q07_compare_airports_median(gconstpointer a, gconstpointer b) {
     __q07_airport_median *airport_median_b = (__q07_airport_median *) b;
 
     if (airport_median_a->median == airport_median_b->median) {
-        return airport_median_b->airport_code - airport_median_a->airport_code;
+        char *airport_code_a = malloc(3 * sizeof(char));
+        char *airport_code_b = malloc(3 * sizeof(char));
+        airport_code_sprintf(airport_code_a, airport_median_a->airport_code);
+        airport_code_sprintf(airport_code_b, airport_median_b->airport_code);
+
+        int retval = strcmp(airport_code_a, airport_code_b);
+
+        free(airport_code_a);
+        free(airport_code_b);
+        return retval;
     } else {
         return airport_median_b->median - airport_median_a->median;
     }
