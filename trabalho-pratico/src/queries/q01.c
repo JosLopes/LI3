@@ -303,7 +303,7 @@ int __q01_execute_flight_entity(database_t       *database,
         fprintf(output,
                 "--- 1 ---\nairline: %s\nplane_model: %s\norigin: %s\n"
                 "destination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
-                "passengers: %d\ndelay: %" PRIi64 "\n",
+                "passengers: %" PRIu16 "\ndelay: %" PRIi64 "\n",
                 flight_get_const_airline(flight),
                 flight_get_const_plane_model(flight),
                 origin_airport,
@@ -314,7 +314,7 @@ int __q01_execute_flight_entity(database_t       *database,
                 delay);
     } else {
         fprintf(output,
-                "%s;%s;%s;%s;%s;%s;%d;%" PRIi64 "\n",
+                "%s;%s;%s;%s;%s;%s;%" PRIu16 ";%" PRIi64 "\n",
                 flight_get_const_airline(flight),
                 flight_get_const_plane_model(flight),
                 origin_airport,

@@ -64,16 +64,16 @@
 struct flight {
     const char     *airline;
     const char     *plane_model;
-    airport_code_t  origin;
-    airport_code_t  destination;
-    flight_id_t     id;
     date_and_time_t schedule_departure_date;
     date_and_time_t real_departure_date;
     date_and_time_t schedule_arrival_date;
-    int             number_of_passengers;
-    int             total_seats;
+    airport_code_t  origin;
+    airport_code_t  destination;
+    flight_id_t     id;
+    uint16_t        number_of_passengers;
+    uint16_t        total_seats;
 
-    int owns_itself, owns_airline, owns_plane_model;
+    int owns_itself : 1, owns_airline : 1, owns_plane_model : 1;
 };
 
 flight_t *flight_create(pool_t *allocator) {
@@ -153,11 +153,7 @@ void flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule
     flight->schedule_arrival_date = schedule_arrival_date;
 }
 
-void flight_increment_number_of_passengers(flight_t *flight, int increment_factor) {
-    flight->number_of_passengers += increment_factor;
-}
-
-void flight_set_number_of_passengers(flight_t *flight, int number_of_passengers) {
+void flight_set_number_of_passengers(flight_t *flight, uint16_t number_of_passengers) {
     flight->number_of_passengers = number_of_passengers;
 }
 
@@ -165,7 +161,7 @@ void flight_set_real_departure_date(flight_t *flight, date_and_time_t real_depar
     flight->real_departure_date = real_departure_date;
 }
 
-void flight_set_total_seats(flight_t *flight, int total_seats) {
+void flight_set_total_seats(flight_t *flight, uint16_t total_seats) {
     flight->total_seats = total_seats;
 }
 
@@ -197,7 +193,7 @@ date_and_time_t flight_get_schedule_arrival_date(const flight_t *flight) {
     return flight->schedule_arrival_date;
 }
 
-int flight_get_number_of_passengers(const flight_t *flight) {
+uint16_t flight_get_number_of_passengers(const flight_t *flight) {
     return flight->number_of_passengers;
 }
 
@@ -205,7 +201,7 @@ date_and_time_t flight_get_real_departure_date(const flight_t *flight) {
     return flight->real_departure_date;
 }
 
-int flight_get_total_seats(const flight_t *flight) {
+uint16_t flight_get_total_seats(const flight_t *flight) {
     return flight->total_seats;
 }
 

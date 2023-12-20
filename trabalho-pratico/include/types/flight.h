@@ -135,18 +135,11 @@ void flight_set_schedule_departure_date(flight_t *flight, date_and_time_t schedu
 void flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date);
 
 /**
- * @brief Increments the flight's number of passengers.
- * @param flight           Flight to have its number of passengers incremented.
- * @param increment_factor Factor by which the number of passengers is incremented.
- */
-void flight_increment_number_of_passengers(flight_t *flight, int increment_factor);
-
-/**
  * @brief Sets the flight's number of passengers.
  * @param flight               Flight to have its number of passengers set.
  * @param number_of_passengers Number of passengers of the flight.
  */
-void flight_set_number_of_passengers(flight_t *flight, int number_of_passengers);
+void flight_set_number_of_passengers(flight_t *flight, uint16_t number_of_passengers);
 
 /**
  * @brief Sets the flight's real departure date.
@@ -160,7 +153,7 @@ void flight_set_real_departure_date(flight_t *flight, date_and_time_t real_depar
  * @param flight      Flight to have its number of total seats set.
  * @param total_seats Number of total seats of the flight.
  */
-void flight_set_total_seats(flight_t *flight, int total_seats);
+void flight_set_total_seats(flight_t *flight, uint16_t total_seats);
 
 /**
  * @brief  Gets the flight's airline.
@@ -216,7 +209,7 @@ date_and_time_t flight_get_schedule_arrival_date(const flight_t *flight);
  * @param  flight Flight to get the number of passengers from.
  * @return The flight's number of passengers.
  */
-int flight_get_number_of_passengers(const flight_t *flight);
+uint16_t flight_get_number_of_passengers(const flight_t *flight);
 
 /**
  * @brief  Gets the flight's real departure date.
@@ -230,7 +223,7 @@ date_and_time_t flight_get_real_departure_date(const flight_t *flight);
  * @param  flight Flight to get the number of total seats from.
  * @return The flight's number of total seats.
  */
-int flight_get_total_seats(const flight_t *flight);
+uint16_t flight_get_total_seats(const flight_t *flight);
 
 /**
  * @brief   Gets the size of a ::flight_t in memory.

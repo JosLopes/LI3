@@ -108,7 +108,7 @@ void __q06_free_query_instance_argument_data(void *argument_data) {
  */
 void __q06_generate_statistics_add_passengers(GHashTable    *airport_count,
                                               airport_code_t airport,
-                                              int            num_passengers) {
+                                              uint16_t       num_passengers) {
 
     uint64_t origin_count =
         GPOINTER_TO_UINT(g_hash_table_lookup(airport_count, GUINT_TO_POINTER(airport)));
@@ -177,7 +177,7 @@ int __q06_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
 
     airport_code_t origin         = flight_get_origin(flight);
     airport_code_t destination    = flight_get_destination(flight);
-    int            num_passengers = flight_get_number_of_passengers(flight);
+    uint16_t       num_passengers = flight_get_number_of_passengers(flight);
 
     __q06_generate_statistics_add_passengers(airport_count, origin, num_passengers);
     __q06_generate_statistics_add_passengers(airport_count, destination, num_passengers);

@@ -40,7 +40,7 @@
  *     size_t      id          = flight_get_id(flight);
  *     const char *airline     = flight_get_const_airline(flight);
  *     const char *passport    = flight_get_const_plane_model(flight);
- *     int         total_seats = flight_get_total_seats(flight);
+ *     uint16_t    total_seats = flight_get_total_seats(flight);
  *
  *     char origin[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
  *     airport_code_sprintf(origin, flight_get_origin(flight));
@@ -57,9 +57,9 @@
  *     char real_departure_date[DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE];
  *     date_and_time_sprintf(real_departure_date, flight_get_real_departure_date(flight));
  *
- *     printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: %d\norigin: %s"
- *            "\ndestination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
- *            "real_departure_date: %s\n\n",
+ *     printf("--- FLIGHT ---\nid: %zu\nairline: %s\nplane_model: %s\ntotal_seats: " PRIu16
+ *            "\norigin: %s\ndestination: %s\nschedule_departure_date: %s\n"
+ *            "schedule_arrival_date: %s\nreal_departure_date: %s\n\n",
  *            id,
  *            airline,
  *            passport,
