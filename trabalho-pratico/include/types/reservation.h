@@ -41,6 +41,8 @@
 #include "types/includes_breakfast.h"
 #include "types/reservation_id.h"
 #include "utils/date.h"
+#include "utils/pool.h"
+#include "utils/string_pool_no_duplicates.h"
 
 /** @brief Value of a reservation's rating when it's not specified. */
 #define RESERVATION_NO_RATING 0
@@ -54,27 +56,54 @@ typedef struct reservation reservation_t;
 
 /**
  * @brief Creates a new reservation with uninitialized fields.
- * @return A `malloc`-allocated reservation (`NULL` on allocation failure).
+ *
+ * @param allocator Pool where to allocate the reservation. Its element size must be the value
+ *                  returned by ::reservation_sizeof. Can be `NULL`, so that malloc is used.
+ *
+ * @return A allocated reservation (`NULL` on allocation failure).
  */
-reservation_t *reservation_create(void);
+reservation_t *reservation_create(pool_t *allocator);
+
+/**
+ * @brief Creates a deep clone of a reservation.
+ *
+ * @param allocator            Pool where to allocate the reservation. Its element size must be the
+ *                             value returned by ::reservation_sizeof. Can be `NULL`, so that malloc
+ *                             is used.
+ * @param user_id_allocator    Pool where to allocate the user identifier in a reservation. Can be
+ *                             `NULL`, so that `strdup` is used.
+ * @param hotel_name_allocator Pool where to allocate the hotel name in a reservation. Can be
+ *                             `NULL`, so that `strdup` is used.
+ * @param reservation          Reservation to be cloned.
+ *
+ * @return A deep-clone of @p reservation.
+ */
+reservation_t *reservation_clone(pool_t                      *allocator,
+                                 string_pool_t               *user_id_allocator,
+                                 string_pool_no_duplicates_t *hotel_name_allocator,
+                                 const reservation_t         *reservation);
 
 /**
  * @brief Sets the reservation's user identifier.
- * @details @p user_id will not get owned by @p reservation, and you should free it later.
  *
+ * @param allocator   Where to copy @p user_id to. Can be `NULL`, so that `strdup` is used.
  * @param reservation Reservation to have its user identifier set.
  * @param user_id     User identifier of the reservation.
  */
-void reservation_set_user_id(reservation_t *reservation, const char *user_id);
+void reservation_set_user_id(string_pool_t *allocator,
+                             reservation_t *reservation,
+                             const char    *user_id);
 
 /**
  * @brief Sets the reservation's hotel name.
- * @details @p hotel_name will not get owned by @p reservation, and you should free it later.
  *
+ * @param allocator   Where to copy @p hotel_name to. Can be `NULL`, so that `strdup` is used.
  * @param reservation Reservation to have its hotel name set.
  * @param hotel_name  Hotel name of the reservation.
  */
-void reservation_set_hotel_name(reservation_t *reservation, const char *hotel_name);
+void reservation_set_hotel_name(string_pool_no_duplicates_t *allocator,
+                                reservation_t               *reservation,
+                                const char                  *hotel_name);
 
 /**
  * @brief Sets the reservation's inclusion of breakfast.
