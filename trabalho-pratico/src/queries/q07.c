@@ -51,24 +51,24 @@ void __q07_free_query_instance_argument_data(void *argument_data) {
     free(argument_data);
 }
 
-void __q07_destroy_list(gpointer data) {
-    g_list_free((GList *) data);
-}
+typedef struct {
+    airport_code_t airport_code;
+    uint64_t       median;
+} __q07_airport_median;
 
 gint __q07_compare_ints(gconstpointer a, gconstpointer b) {
     return GPOINTER_TO_UINT(a) - GPOINTER_TO_UINT(b);
 }
 
-gint __q07_compare_airports_median(gconstpointer a, gconstpointer b, gpointer user_data) {
-    GHashTable *airports_median = (GHashTable *) user_data;
+gint __q07_compare_airports_median(gconstpointer a, gconstpointer b) {
+    __q07_airport_median *airport_median_a = (__q07_airport_median *) a;
+    __q07_airport_median *airport_median_b = (__q07_airport_median *) b;
 
-    // if the median is equal, compare the airport code
-    if (GPOINTER_TO_UINT(g_hash_table_lookup(airports_median, b)) ==
-        GPOINTER_TO_UINT(g_hash_table_lookup(airports_median, a))) {
-        return GPOINTER_TO_UINT(b) - GPOINTER_TO_UINT(a);
+    if (airport_median_a->median == airport_median_b->median) {
+        return airport_median_b->airport_code - airport_median_a->airport_code;
+    } else {
+        return airport_median_b->median - airport_median_a->median;
     }
-    return GPOINTER_TO_UINT(g_hash_table_lookup(airports_median, b)) -
-           GPOINTER_TO_UINT(g_hash_table_lookup(airports_median, a));
 }
 
 int __q07_generate_statistics_foreach_flight(void *user_data, const flight_t *flight) {
@@ -100,8 +100,8 @@ void *__q07_generate_statistics(database_t *database, query_instance_t *instance
     (void) instances;
     (void) n;
 
-    GHashTable *airport_delays  = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
-    GHashTable *airport_medians = g_hash_table_new(g_direct_hash, g_direct_equal);
+    GHashTable *airport_delays  = g_hash_table_new(g_direct_hash, g_direct_equal);
+    GArray     *airport_medians = g_array_new(FALSE, FALSE, sizeof(__q07_airport_median));
 
     flight_manager_iter(database_get_flights(database),
                         __q07_generate_statistics_foreach_flight,
@@ -121,7 +121,9 @@ void *__q07_generate_statistics(database_t *database, query_instance_t *instance
         } else {
             median = GPOINTER_TO_UINT(g_list_nth_data(delays, g_list_length(delays) / 2));
         }
-        g_hash_table_insert(airport_medians, key, GUINT_TO_POINTER(median));
+        // create airport median struct and add it to airport_medians array
+        __q07_airport_median airport_median = {GPOINTER_TO_UINT(key), median};
+        g_array_append_val(airport_medians, airport_median);
     }
 
     g_hash_table_destroy(airport_delays);
@@ -129,7 +131,8 @@ void *__q07_generate_statistics(database_t *database, query_instance_t *instance
 }
 
 void __q07_free_statistics(void *statistics) {
-    g_hash_table_destroy(statistics);
+    GArray *airport_medians = (GArray *) statistics;
+    g_array_free(airport_medians, TRUE);
 }
 
 int __q07_execute(database_t       *database,
@@ -140,27 +143,22 @@ int __q07_execute(database_t       *database,
 
     uint64_t n = *(uint64_t *) query_instance_get_argument_data(instance);
 
-    GHashTable *airport_delays = (GHashTable *) statistics;
+    GArray *airport_medians = (GArray *) statistics;
 
-    // sort the hash table by the median
-    GList *sorted_airports = g_hash_table_get_keys(airport_delays);
-    sorted_airports =
-        g_list_sort_with_data(sorted_airports, __q07_compare_airports_median, airport_delays);
+    // sort the array by median and airport code
+    g_array_sort(airport_medians, __q07_compare_airports_median);
 
-    // print the top n airports
-    for (size_t i = 0; i < n && i < g_list_length(sorted_airports); i++) {
-        airport_code_t airport_code = GPOINTER_TO_UINT(g_list_nth_data(sorted_airports, i));
-        uint64_t       median =
-            GPOINTER_TO_UINT(g_hash_table_lookup(airport_delays, GUINT_TO_POINTER(airport_code)));
+    // print the first n airports and dont go over length of array
+    char *airport_code = malloc(3 * sizeof(char));
+    for (size_t i = 0; i < n && i < airport_medians->len; i++) {
+        __q07_airport_median *airport_median =
+            &g_array_index(airport_medians, __q07_airport_median, i);
 
-        char *airport_code_str = malloc(4 * sizeof(char));
-        airport_code_sprintf(airport_code_str, airport_code);
-        fprintf(output, "%s;%lu\n", airport_code_str, median);
-
-        free(airport_code_str);
+        airport_code_sprintf(airport_code, airport_median->airport_code);
+        fprintf(output, "%s;%lu\n", airport_code, airport_median->median);
     }
+    free(airport_code);
 
-    g_list_free(sorted_airports);
     return 0;
 }
 
