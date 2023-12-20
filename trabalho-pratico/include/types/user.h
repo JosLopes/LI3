@@ -74,7 +74,6 @@ user_t *user_clone(pool_t *allocator, string_pool_t *string_allocator, const use
 
 /**
  * @brief   Sets the user's identifier.
- * @details @p id will not get owned by @p user, and you should free it later.
  *
  * @param allocator Pool where to allocate @p id. `NULL` can be provided so that `strdup` is used.
  * @param user      User to have its identifier set.
@@ -84,7 +83,6 @@ void user_set_id(string_pool_t *allocator, user_t *user, const char *id);
 
 /**
  * @brief   Sets the user's name.
- * @details @p name will not get owned by @p user, and you should free it later.
  *
  * @param allocator Pool where to allocate @p name. `NULL` can be provided so that `strdup` is used.
  * @param user      User to have its name set.
@@ -102,7 +100,6 @@ void user_set_birth_date(user_t *user, date_t date);
 
 /**
  * @brief   Sets the user's passport.
- * @details @p passport will not get owned by @p user, and you should free it later.
  *
  * @param allocator Pool where to allocate @p passport. `NULL` can be provided so that `strdup` is
  *                  used.
