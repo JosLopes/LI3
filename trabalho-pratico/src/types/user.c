@@ -67,7 +67,7 @@ struct user {
     date_and_time_t  account_creation_date;
     date_t           birth_date;
     country_code_t   country_code;
-    sex_t            sex : 1;
+    sex_t            sex            : 1;
     account_status_t account_status : 1;
 
     int owns_itself : 1, owns_id : 1, owns_name : 1, owns_passport : 1;
