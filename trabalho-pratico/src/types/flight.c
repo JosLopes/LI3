@@ -22,6 +22,7 @@
  * See [the header file's documentation](@ref flight_examples).
  */
 #include <stdlib.h>
+#include <string.h>
 
 #include "types/flight.h"
 
@@ -52,6 +53,13 @@
  *     @brief Number of passengers of a given flight.
  * @var flight::total_seats
  *     @brief Number of total seats of a given flight.
+ * @var flight::owns_itself
+ *     @brief   Whether, when `free`ing this flight, the flight pointer should be `free`'d.
+ *     @details A false value means that the flight is allocated in a pool.
+ * @var flight::owns_airline
+ *     @brief Whether ::flight::airline should be `free`d.
+ * @var flight::owns_plane_model
+ *     @brief Whether ::flight::plane_model should be `free`d.
  */
 struct flight {
     const char     *airline;
@@ -64,18 +72,64 @@ struct flight {
     date_and_time_t schedule_arrival_date;
     int             number_of_passengers;
     int             total_seats;
+
+    int owns_itself, owns_airline, owns_plane_model;
 };
 
-flight_t *flight_create(void) {
-    return malloc(sizeof(struct flight));
+flight_t *flight_create(pool_t *allocator) {
+    flight_t *ret = allocator ? pool_alloc_item(flight_t, allocator) : malloc(sizeof(flight_t));
+    if (!ret)
+        return NULL;
+
+    ret->owns_itself  = allocator == NULL;
+    ret->owns_airline = ret->owns_plane_model = 0; /* Don't free in first setter call */
+    return ret;
 }
 
-void flight_set_airline(flight_t *flight, const char *airline) {
-    flight->airline = airline;
+flight_t *flight_clone(pool_t                      *allocator,
+                       string_pool_no_duplicates_t *string_allocator,
+                       const flight_t              *flight) {
+
+    flight_t *ret = flight_create(allocator);
+    if (!ret)
+        return NULL;
+
+    memcpy(ret, flight, sizeof(flight_t));
+    ret->owns_itself  = allocator == NULL;
+    ret->owns_airline = ret->owns_plane_model = 0; /* Don't free in first setter call */
+
+    flight_set_airline(string_allocator, ret, flight->airline);
+    flight_set_plane_model(string_allocator, ret, flight->plane_model);
+
+    return ret;
 }
 
-void flight_set_plane_model(flight_t *flight, const char *plane_model) {
-    flight->plane_model = plane_model;
+void flight_set_airline(string_pool_no_duplicates_t *allocator,
+                        flight_t                    *flight,
+                        const char                  *airline) {
+
+    const char *new_airline =
+        allocator ? string_pool_no_duplicates_put(allocator, airline) : strdup(airline);
+    if (flight->owns_airline)
+        /* Purposely remove const. We know it was allocated by this module */
+        free((char *) flight->airline);
+    flight->owns_airline = allocator == NULL;
+
+    flight->airline = new_airline;
+}
+
+void flight_set_plane_model(string_pool_no_duplicates_t *allocator,
+                            flight_t                    *flight,
+                            const char                  *plane_model) {
+
+    const char *new_plane_model =
+        allocator ? string_pool_no_duplicates_put(allocator, plane_model) : strdup(plane_model);
+    if (flight->owns_plane_model)
+        /* Purposely remove const. We know it was allocated by this module */
+        free((char *) flight->plane_model);
+    flight->owns_plane_model = allocator == NULL;
+
+    flight->plane_model = new_plane_model;
 }
 
 void flight_set_origin(flight_t *flight, airport_code_t origin) {
@@ -155,10 +209,6 @@ int flight_get_total_seats(const flight_t *flight) {
     return flight->total_seats;
 }
 
-void flight_free(flight_t *flight) {
-    free(flight);
-}
-
 size_t flight_sizeof(void) {
     return sizeof(struct flight);
 }
@@ -169,4 +219,17 @@ int flight_is_valid(const flight_t *flight) {
 
 void flight_invalidate(flight_t *flight) {
     flight->id = (flight_id_t) -1;
+}
+
+void flight_free(flight_t *flight) {
+    if (flight->owns_airline)
+        /* Purposely remove const. We know it was allocated by this module */
+        free((char *) flight->airline);
+
+    if (flight->owns_plane_model)
+        /* Purposely remove const. We know it was allocated by this module */
+        free((char *) flight->plane_model);
+
+    if (flight->owns_itself)
+        free(flight);
 }
