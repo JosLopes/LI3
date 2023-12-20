@@ -15,15 +15,15 @@
  */
 
 /**
- * @file     flight.h
- * @brief    Declaration of type ::flight_t.
+ * @file  flight.h
+ * @brief Declaration of type ::flight_t.
  *
- * @details  In this module you can find a declaration of the type `flight_t` as a struct flight,
- *           as well as getter and setter functions, which allow's the developer access to any
- *           previously created flight, or gives them the ability to create a new flight.
+ * @details In this module you can find a declaration of the type `flight_t` as a struct flight,
+ *          as well as getter and setter functions, which allow's the developer access to any
+ *          previously created flight, or gives them the ability to create a new flight.
  *
- *           You can see what fields define a flight (and thus available through getters and
- *           setters) in the [struct's documentation](@ref flight).
+ *          You can see what fields define a flight (and thus available through getters and
+ *          setters) in the [struct's documentation](@ref flight).
  *
  * @anchor flight_examples
  * ### Examples
@@ -37,41 +37,66 @@
 #define FLIGHT_H
 
 #include "types/airport_code.h"
+#include "types/flight_id.h"
 #include "utils/date_and_time.h"
+#include "utils/pool.h"
+#include "utils/string_pool_no_duplicates.h"
 
 /**
  * @brief Type `flight_t` defined as a struct flight, that stores valuable information of a given
- * flight.
- * @details It's an opaque type.
+ *        flight.
  */
 typedef struct flight flight_t;
 
 /**
- * @brief Creates a new flight with uninitialized fields.
- * @return A `malloc`-allocated flight (`NULL` on allocation failure).
+ * @brief  Creates a new flight with uninitialized fields.
+ *
+ * @param allocator Pool where to allocate the flight. Its element size must be the value returned
+ *                  by ::flight_sizeof. Can be `NULL`, so that malloc is used.
+ *
+ * @return A allocated flight (`NULL` on allocation failure).
  */
-flight_t *flight_create(void);
+flight_t *flight_create(pool_t *allocator);
 
 /**
- * @brief Sets the flight's airline.
- * @details @p airline will not get owned by @p flight, and you should free it later.
+ * @brief Creates a deep clone of a flight.
  *
- * @param flight  Flight to have its airline set.
- * @param airline Airline of the flight.
+ * @param allocator        Pool where to allocate the flight. Its element size must be the value
+ *                         returned by ::flight_sizeof. Can be `NULL`, so that malloc is used.
+ * @param string_allocator Pool where to allocate the strings of a flight. Can be `NULL`, so that
+ *                         `strdup` is used.
+ * @param flight           Flight to be cloned.
+ *
+ * @return A deep-clone of @p flight.
  */
-void flight_set_airline(flight_t *flight, const char *airline);
+flight_t *flight_clone(pool_t                      *allocator,
+                       string_pool_no_duplicates_t *string_allocator,
+                       const flight_t              *flight);
+
+/**
+ * @brief   Sets the flight's airline.
+ *
+ * @param allocator Where to copy @p airline to. Can be `NULL`, so that `strdup` is used.
+ * @param flight    Flight to have its airline set.
+ * @param airline   Airline of the flight.
+ */
+void flight_set_airline(string_pool_no_duplicates_t *allocator,
+                        flight_t                    *flight,
+                        const char                  *airline);
 
 /**
  * @brief Sets the flight's plane model.
- * @details @p plane_model will not get owned by @p flight, and you should free it later.
  *
+ * @param allocator   Where to copy @p airline to. Can be `NULL`, so that `strdup` is used.
  * @param flight      Flight to have its plane model set.
  * @param plane_model Plane model of the flight.
  */
-void flight_set_plane_model(flight_t *flight, const char *plane_model);
+void flight_set_plane_model(string_pool_no_duplicates_t *allocator,
+                            flight_t                    *flight,
+                            const char                  *plane_model);
 
 /**
- * @brief Sets the flight's origin.
+ * @brief   Sets the flight's origin.
  * @details @p origin will not get owned by @p flight, and you should free it later.
  *
  * @param flight Flight to have its origin set.
@@ -93,7 +118,7 @@ void flight_set_destination(flight_t *flight, airport_code_t destination);
  * @param flight Flight to have its id set.
  * @param id     Identifier of the flight.
  */
-void flight_set_id(flight_t *flight, size_t id);
+void flight_set_id(flight_t *flight, flight_id_t id);
 
 /**
  * @brief Sets the flight's scheduled departure date.
@@ -110,18 +135,11 @@ void flight_set_schedule_departure_date(flight_t *flight, date_and_time_t schedu
 void flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date);
 
 /**
- * @brief Increments the flight's number of passengers.
- * @param flight           Flight to have its number of passengers incremented.
- * @param increment_factor Factor by which the number of passengers is incremented.
- */
-void flight_increment_number_of_passengers(flight_t *flight, int increment_factor);
-
-/**
  * @brief Sets the flight's number of passengers.
  * @param flight               Flight to have its number of passengers set.
  * @param number_of_passengers Number of passengers of the flight.
  */
-void flight_set_number_of_passengers(flight_t *flight, int number_of_passengers);
+void flight_set_number_of_passengers(flight_t *flight, uint16_t number_of_passengers);
 
 /**
  * @brief Sets the flight's real departure date.
@@ -135,7 +153,7 @@ void flight_set_real_departure_date(flight_t *flight, date_and_time_t real_depar
  * @param flight      Flight to have its number of total seats set.
  * @param total_seats Number of total seats of the flight.
  */
-void flight_set_total_seats(flight_t *flight, int total_seats);
+void flight_set_total_seats(flight_t *flight, uint16_t total_seats);
 
 /**
  * @brief  Gets the flight's airline.
@@ -170,7 +188,7 @@ airport_code_t flight_get_destination(const flight_t *flight);
  * @param  flight Flight to get the id from.
  * @return The flight's identifier.
  */
-size_t flight_get_id(const flight_t *flight);
+flight_id_t flight_get_id(const flight_t *flight);
 
 /**
  * @brief  Gets the flight's scheduled departure date.
@@ -191,7 +209,7 @@ date_and_time_t flight_get_schedule_arrival_date(const flight_t *flight);
  * @param  flight Flight to get the number of passengers from.
  * @return The flight's number of passengers.
  */
-int flight_get_number_of_passengers(const flight_t *flight);
+uint16_t flight_get_number_of_passengers(const flight_t *flight);
 
 /**
  * @brief  Gets the flight's real departure date.
@@ -205,14 +223,7 @@ date_and_time_t flight_get_real_departure_date(const flight_t *flight);
  * @param  flight Flight to get the number of total seats from.
  * @return The flight's number of total seats.
  */
-int flight_get_total_seats(const flight_t *flight);
-
-/**
- * @brief        Frees the memory used for a given flight.
- * @details      All strings inside the flight won't be freed, as they're not owned by the flight.
- * @param flight FLight to be deleted.
- */
-void flight_free(flight_t *flight);
+uint16_t flight_get_total_seats(const flight_t *flight);
 
 /**
  * @brief   Gets the size of a ::flight_t in memory.
@@ -222,20 +233,25 @@ void flight_free(flight_t *flight);
 size_t flight_sizeof(void);
 
 /**
- * @brief Checks if a flight is valid.
- * @details A flight is valid if it has an airline, a plane model, an origin, a destination, a valid
- *          id, a scheduled departure date, a scheduled arrival date, a number of passengers, a real
- *          departure date and a number of total seats.
- * @param flight Flight to be checked.
- * @return `1` if the flight is valid, `0` otherwise.
+ * @brief  Checks if a flight is valid.
+ *
+ * @param  flight Flight to be checked.
+ *
+ * @retval 0 Valid flight.
+ * @retval 1 Invalid flight.
  */
 int flight_is_valid(const flight_t *flight);
 
 /**
  * @brief Invalidates a flight.
- * @details Sets all fields to their default values.
  * @param flight Flight to be invalidated.
  */
 void flight_invalidate(flight_t *flight);
+
+/**
+ * @brief Frees the memory used for a given flight.
+ * @param flight FLight to be deleted.
+ */
+void flight_free(flight_t *flight);
 
 #endif

@@ -15,8 +15,8 @@
  */
 
 /**
- * @file     sex.h
- * @brief    Sex of a ::user_t.
+ * @file  sex.h
+ * @brief Sex of a ::user_t.
  */
 
 #ifndef SEX_H

@@ -78,36 +78,19 @@ flight_manager_t *flight_manager_create(void) {
 }
 
 flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight) {
-    flight_t *pool_flight = pool_put_item(flight_t, manager->flights, flight);
-    if (!pool_flight)
-        return NULL;
+    flight_t *pool_flight = flight_clone(manager->flights, manager->strings, flight);
 
-    /* Copy strings to string pool */
-    const char *pool_airline =
-        string_pool_no_duplicates_put(manager->strings, flight_get_const_airline(flight));
-    const char *pool_plane_model =
-        string_pool_no_duplicates_put(manager->strings, flight_get_const_plane_model(flight));
+    size_t flight_id = flight_get_id(flight);
+    if (!g_hash_table_insert(manager->id_flights_rel, GINT_TO_POINTER(flight_id), pool_flight)) {
 
-    if (pool_airline && pool_plane_model) {
-        flight_set_airline(pool_flight, pool_airline);
-        flight_set_plane_model(pool_flight, pool_plane_model);
+        char id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+        flight_id_sprintf(id_str, flight_id);
+        fprintf(stderr, "REPEATED FLIGHT ID %s. This shouldn't happen! Replacing it.\n", id_str);
 
-        size_t flight_id = flight_get_id(flight);
-        if (!g_hash_table_insert(manager->id_flights_rel,
-                                 GINT_TO_POINTER(flight_id),
-                                 pool_flight)) {
-            fprintf(stderr,
-                    "REPEATED FLIGHT ID %zu. This shouldn't happen! Replacing it.\n",
-                    flight_id);
-            /* Do not fail and return NULL. Show must go on */
-        }
-
-        return pool_flight;
-    } else {
-        /* On allocation failure, it's impossible to remove anything already in a pool */
-        flight_invalidate(pool_flight);
-        return NULL;
+        /* Do not fail and return NULL. Show must go on */
     }
+
+    return pool_flight;
 }
 
 flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id) {

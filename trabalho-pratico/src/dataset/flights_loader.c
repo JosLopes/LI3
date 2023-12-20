@@ -45,21 +45,13 @@
  *     @brief Current line being processed, in case it needs to be put in the error file.
  * @var flights_loader_t::current_flight
  *     @brief Flight being currently parsed, whose fields are still being filled in.
- * @var flights_loader_t::airline_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that the flight's airline name
- *            ends.
- * @var flights_loader_t::plane_model_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that the flight's plane model name
- *            ends.
  */
 typedef struct {
     dataset_error_output_t *output;
     flight_manager_t       *flights;
 
     const char *error_line;
-
-    flight_t *current_flight;
-    char     *airline_terminator, *plane_model_terminator;
+    flight_t   *current_flight;
 } flights_loader_t;
 
 /**
@@ -76,21 +68,17 @@ int __flight_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
-    /* TODO - use flight ID parsing function when available */
-
-    size_t parsed_id;
-    int    retcode = int_utils_parse_positive(&parsed_id, token);
-    if (!retcode) {
-        flight_set_id(loader->current_flight, parsed_id);
+    flight_id_t id;
+    int         retval = flight_id_from_string(&id, token);
+    if (retval == 0) {
+        flight_set_id(loader->current_flight, id);
         return 0;
-    } else {
-        if (*token)
-            fprintf(stderr,
-                    "Non-numerical flight ID detected, \"%s\". Our program's architecture doesn't "
-                    "allow for this.\n",
-                    token);
-        return 1;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Flight ID \"%s\" is not numerical. This isn't supported by our program!\n",
+                token);
     }
+    return 1;
 }
 
 /** @brief Parses a flight's airline */
@@ -98,10 +86,8 @@ int __flight_loader_parse_airline(void *loader_data, char *token, size_t ntoken)
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length) {
-        flight_set_airline(loader->current_flight, token);
-        loader->airline_terminator = token + length;
+    if (*token) { /* Not empty */
+        flight_set_airline(NULL, loader->current_flight, token);
         return 0;
     } else {
         return 1;
@@ -113,10 +99,8 @@ int __flight_loader_parse_plane_model(void *loader_data, char *token, size_t nto
     (void) ntoken;
     flights_loader_t *loader = (flights_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length) {
-        flight_set_plane_model(loader->current_flight, token);
-        loader->plane_model_terminator = token + length;
+    if (*token) { /* Not empty */
+        flight_set_plane_model(NULL, loader->current_flight, token);
         return 0;
     } else {
         return 1;
@@ -266,10 +250,6 @@ int __flights_loader_after_parse_line(void *loader_data, int retval) {
     if (retval) {
         dataset_error_output_report_flight_error(loader->output, loader->error_line);
     } else {
-        /* Restore token terminations for strings that will be stored in a flight. */
-        *loader->airline_terminator     = '\0';
-        *loader->plane_model_terminator = '\0';
-
         flight_set_number_of_passengers(loader->current_flight, 0);
         return flight_manager_add_flight(loader->flights, loader->current_flight) == NULL;
     }
@@ -280,7 +260,7 @@ int flights_loader_load(FILE *stream, database_t *database, dataset_error_output
     dataset_error_output_report_flight_error(output, FLIGHTS_LOADER_HEADER);
     flights_loader_t data = {.output         = output,
                              .flights        = database_get_flights(database),
-                             .current_flight = flight_create()};
+                             .current_flight = flight_create(NULL)};
 
     if (!data.current_flight)
         return 1;

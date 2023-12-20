@@ -44,21 +44,14 @@
  *     @brief Reservations manager to add new reservations to.
  * @var reservations_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
- * @var reservations_loader_t::user_id_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that the user's identifier ends.
- * @var reservations_loader_t::hotel_name_terminator
- *     @brief Where a ``'\0'`` terminator needs to be placed, so that a reservation's hotel name
- *            ends.
  */
 typedef struct {
     dataset_error_output_t *output;
     user_manager_t         *users;
     reservation_manager_t  *reservations;
 
-    const char *error_line;
-
+    const char    *error_line;
     reservation_t *current_reservation;
-    char          *user_id_terminator, *hotel_name_terminator;
 } reservations_loader_t;
 
 /**
@@ -75,33 +68,18 @@ int __reservation_loader_parse_id(void *loader_data, char *token, size_t ntoken)
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    /* TODO - use reservation ID parsing method when that's developed */
-
-    size_t length = strlen(token);
-    if (length > 4) { /* Skip "Book" before any reservation ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, token + 4);
-
-        if (retval) {
-            fprintf(stderr,
-                    "Non-numerical reservation ID detected, \"%s\". Our program's architecture "
-                    "doesn't allow for this.\n",
-                    token);
-            return 1;
-        } else {
-            reservation_set_id(loader->current_reservation, id);
-            return 0;
-        }
-    } else {
-        if (length != 0) {
-            fprintf(stderr,
-                    "Reservation ID detected that doesn't start with \"Book\" detected, \"%s\". "
-                    "Our program's architecture doesn't allow for this.\n",
-                    token);
-        }
-
-        return 1;
+    reservation_id_t id;
+    int              retval = reservation_id_from_string(&id, token);
+    if (retval == 0) {
+        reservation_set_id(loader->current_reservation, id);
+        return 0;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Reservation ID \"%s\" not if format BookXXXXXXXXXX. This isn't supported by our "
+                "program!\n",
+                token);
     }
+    return 1;
 }
 
 /** @brief Parses a reservation's user identifier */
@@ -109,10 +87,8 @@ int __reservation_loader_parse_user_id(void *loader_data, char *token, size_t nt
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length && user_manager_get_by_id(loader->users, token) != NULL) {
-        reservation_set_user_id(loader->current_reservation, token);
-        loader->user_id_terminator = token + length;
+    if (*token && user_manager_get_by_id(loader->users, token) != NULL) {
+        reservation_set_user_id(NULL, loader->current_reservation, token);
         return 0;
     } else {
         return 1;
@@ -124,33 +100,17 @@ int __reservation_loader_parse_hotel_id(void *loader_data, char *token, size_t n
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    /* TODO - use hotel ID parsing method when that's developed */
-
-    size_t length = strlen(token);
-    if (length > 3) { /* Skip "HTL" before any hotel ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, token + 3);
-
-        if (retval) {
-            fprintf(stderr,
-                    "Non-numerical hotel ID detected, \"%s\". Our program's architecture doesn't "
-                    "doesn't allow for this.\n",
-                    token);
-            return 1;
-        } else {
-            reservation_set_hotel_id(loader->current_reservation, id);
-            return 0;
-        }
-    } else {
-        if (length != 0) {
-            fprintf(stderr,
-                    "Hotel ID detected that doesn't start with \"HTL\" detected, \"%s\". "
-                    "Our program's architecture doesn't allow for this.\n",
-                    token);
-        }
-
-        return 1;
+    hotel_id_t id;
+    int        retval = hotel_id_from_string(&id, token);
+    if (retval == 0) {
+        reservation_set_hotel_id(loader->current_reservation, id);
+        return 0;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Hotel ID \"%s\" not if format HTLXXXXX. This isn't supported by our program!\n",
+                token);
     }
+    return 1;
 }
 
 /** @brief Parses a reservation's hotel name */
@@ -158,10 +118,8 @@ int __reservation_loader_parse_hotel_name(void *loader_data, char *token, size_t
     (void) ntoken;
     reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
-    size_t length = strlen(token);
-    if (length) {
-        reservation_set_hotel_name(loader->current_reservation, token);
-        loader->hotel_name_terminator = token + length;
+    if (*token) {
+        reservation_set_hotel_name(NULL, loader->current_reservation, token);
         return 0;
     } else {
         return 1;
@@ -318,10 +276,6 @@ int __reservations_loader_after_parse_line(void *loader_data, int retval) {
     if (retval) {
         dataset_error_output_report_reservation_error(loader->output, loader->error_line);
     } else {
-        /* Restore token terminations for strings that will be stored in the reservation. */
-        *loader->user_id_terminator    = '\0';
-        *loader->hotel_name_terminator = '\0';
-
         /* Ignore allocation errors */
         if (!reservation_manager_add_reservation(loader->reservations, loader->current_reservation))
             return 1;
@@ -338,7 +292,7 @@ int reservations_loader_load(FILE *stream, database_t *database, dataset_error_o
     reservations_loader_t data = {.output              = output,
                                   .users               = database_get_users(database),
                                   .reservations        = database_get_reservations(database),
-                                  .current_reservation = reservation_create()};
+                                  .current_reservation = reservation_create(NULL)};
 
     if (!data.current_reservation)
         return 1;

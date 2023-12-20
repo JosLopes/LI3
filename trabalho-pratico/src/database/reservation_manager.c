@@ -97,40 +97,30 @@ reservation_manager_t *reservation_manager_create(void) {
 
 reservation_t *reservation_manager_add_reservation(reservation_manager_t *manager,
                                                    const reservation_t   *reservation) {
-    reservation_t *pool_reservation =
-        pool_put_item(reservation_t, manager->reservations, reservation);
+
+    reservation_t *pool_reservation = reservation_clone(manager->reservations,
+                                                        manager->user_id_pool,
+                                                        manager->hotel_name_pool,
+                                                        reservation);
     if (!pool_reservation)
         return NULL;
 
-    /* Copy strings to string pool */
-    const char *pool_user_id =
-        string_pool_put(manager->user_id_pool, reservation_get_const_user_id(reservation));
-    const char *pool_hotel_name =
-        string_pool_no_duplicates_put(manager->hotel_name_pool,
-                                      reservation_get_const_hotel_name(reservation));
+    /* Reservation identifier */
+    size_t res_id = reservation_get_id((reservation_t *) reservation);
 
-    if (pool_user_id && pool_hotel_name) {
-        reservation_set_user_id(pool_reservation, pool_user_id);
-        reservation_set_hotel_name(pool_reservation, pool_hotel_name);
+    if (!g_hash_table_insert(manager->id_reservations_rel,
+                             GINT_TO_POINTER(res_id),
+                             pool_reservation)) {
 
-        /* Reservation identifier */
-        size_t res_id = reservation_get_id((reservation_t *) reservation);
-
-        if (!g_hash_table_insert(manager->id_reservations_rel,
-                                 GINT_TO_POINTER(res_id),
-                                 pool_reservation)) {
-            fprintf(stderr,
-                    "REPEATED RESERVATION ID \"%ld\". This shouldn't happen! Replacing it.\n",
-                    res_id);
-            /* Do not fail and return NULL. Show must go on */
-        }
-
-        return pool_reservation;
-    } else {
-        /* On allocation failure, it's impossible to remove anything already in a pool */
-        reservation_invalidate(pool_reservation);
-        return NULL;
+        char id_str[RESERVATION_ID_SPRINTF_MIN_BUFFER_SIZE];
+        reservation_id_sprintf(id_str, res_id);
+        fprintf(stderr,
+                "REPEATED RESERVATION ID \"%s\". This shouldn't happen! Replacing it.\n",
+                id_str);
+        /* Do not fail and return NULL. Show must go on */
     }
+
+    return pool_reservation;
 }
 
 reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manager, size_t id) {

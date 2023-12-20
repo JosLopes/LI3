@@ -45,7 +45,7 @@
  */
 typedef struct {
     const char *user_id;
-    uint64_t    flight_id;
+    flight_id_t flight_id;
 } passenger_relation_t;
 
 /** @brief Block capacity of ::passengers_loader_t::commit_buffer_id_pool */
@@ -82,7 +82,7 @@ typedef struct {
     flight_manager_t       *flights;
 
     GPtrArray     *commit_buffer;
-    uint64_t       commit_buffer_flight;
+    flight_id_t    commit_buffer_flight;
     string_pool_t *commit_buffer_id_pool;
 
     passenger_relation_t current_relation;
@@ -105,16 +105,20 @@ int __passengers_loader_parse_flight_id(void *loader_data, char *token, size_t n
     (void) ntoken;
     passengers_loader_t *loader = (passengers_loader_t *) loader_data;
 
-    /* TODO - use flight id parsing function when available */
+    flight_id_t id;
+    int         retval = flight_id_from_string(&id, token);
+    if (retval == 0) {
+        loader->current_relation.flight_id = id;
 
-    size_t id;
-    if (int_utils_parse_positive(&id, token)) {
-        return 1;
+        /* Fail if the flight isn't found (invalid flights won't be found too). */
+        return flight_manager_get_by_id(loader->flights, id) == NULL;
+        return 0;
+    } else if (retval == 2) {
+        fprintf(stderr,
+                "Flight ID \"%s\" is not numerical. This isn't supported by our program!\n",
+                token);
     }
-    loader->current_relation.flight_id = id;
-
-    /* Fail if the flight isn't found (invalid flights won't be found too). */
-    return flight_manager_get_by_id(loader->flights, id) == NULL;
+    return 1;
 }
 
 /** @brief Parses a user id in a user-flight passenger relation. */
@@ -147,17 +151,14 @@ int __passengers_loader_commit_flight_list(passengers_loader_t *loader) {
         char print_buffer[LINE_MAX];
         for (size_t i = 0; i < loader->commit_buffer->len; ++i) {
             char *user_id = g_ptr_array_index(loader->commit_buffer, i);
+            char  flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+            flight_id_sprintf(flight_id_str, loader->commit_buffer_flight);
 
-            /* TODO - use ID printing function when available */
-            snprintf(print_buffer,
-                     LINE_MAX,
-                     "%010" PRIu64 ";%s",
-                     loader->commit_buffer_flight,
-                     user_id);
+            snprintf(print_buffer, LINE_MAX, "%s;%s", flight_id_str, user_id);
             dataset_error_output_report_passenger_error(loader->output, print_buffer);
         }
     } else {
-        uint64_t flight_id = flight_get_id(flight);
+        flight_id_t flight_id = flight_get_id(flight);
         for (size_t i = 0; i < loader->commit_buffer->len; ++i) {
             const char *user_id = g_ptr_array_index(loader->commit_buffer, i);
             /* Ignore allocation errors */
@@ -243,11 +244,9 @@ int __passengers_loader_check_line_for_erroneous_flight(void *user_data, char *l
  */
 void __passengers_loader_report_erroneous_flights(passengers_loader_t *loader, FILE *flights) {
     for (size_t i = 0; i < loader->invalid_flight_ids->len; ++i) {
-        uint64_t id_int = g_array_index(loader->invalid_flight_ids, uint64_t, i);
-
-        /* TODO - use ID printing function when available */
-        char flight_id_str[11];
-        sprintf(flight_id_str, "%010" PRIu64, id_int);
+        flight_id_t id_int = g_array_index(loader->invalid_flight_ids, flight_id_t, i);
+        char        flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+        flight_id_sprintf(flight_id_str, id_int);
 
         passengers_loader_erroneous_flight_callback_data_t user_data = {.output    = loader->output,
                                                                         .flight_id = flight_id_str};
@@ -276,7 +275,7 @@ int passengers_loader_load(FILE                   *passengers_stream,
         return 1;
     }
 
-    data.invalid_flight_ids = g_array_new(FALSE, FALSE, sizeof(uint64_t));
+    data.invalid_flight_ids = g_array_new(FALSE, FALSE, sizeof(flight_id_t));
 
     fixed_n_delimiter_parser_iter_callback_t token_callbacks[2] = {
         __passengers_loader_parse_flight_id,

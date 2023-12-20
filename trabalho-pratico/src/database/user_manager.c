@@ -120,7 +120,7 @@ user_manager_t *user_manager_create(void) {
 }
 
 user_t *user_manager_add_user(user_manager_t *manager, const user_t *user) {
-    user_t *pool_user = pool_put_item(user_t, manager->users, user);
+    user_t *pool_user = user_clone(manager->users, manager->strings, user);
     if (!pool_user)
         return NULL;
 
@@ -133,29 +133,17 @@ user_t *user_manager_add_user(user_manager_t *manager, const user_t *user) {
     user_and_data_t *pool_user_and_data =
         pool_put_item(user_and_data_t, manager->user_data, &user_and_data);
 
-    /* Copy strings to string pool */
-    char *pool_id       = string_pool_put(manager->strings, user_get_const_id(user));
-    char *pool_name     = string_pool_put(manager->strings, user_get_const_name(user));
-    char *pool_passport = string_pool_put(manager->strings, user_get_const_passport(user));
-
-    if (pool_id && pool_user_and_data && pool_name && pool_passport) {
-        user_set_id(pool_user, pool_id);
-        user_set_name(pool_user, pool_name);
-        user_set_passport(pool_user, pool_passport);
-
-        if (!g_hash_table_insert(manager->id_users_rel, pool_id, pool_user_and_data)) {
-            fprintf(stderr,
-                    "REPEATED USER ID \"%s\". This shouldn't happen! Replacing it.\n",
-                    pool_id);
-            /* Do not fail and return NULL. Show must go on */
-        }
-
-        return pool_user;
-    } else {
-        /* On allocation failure, it's impossible to remove anything already in a pool */
-        user_invalidate(pool_user);
-        return NULL;
+    /* TODO - find way of keeping const */
+    if (!g_hash_table_insert(manager->id_users_rel,
+                             (char *) user_get_const_id(pool_user),
+                             pool_user_and_data)) {
+        fprintf(stderr,
+                "REPEATED USER ID \"%s\". This shouldn't happen! Replacing it.\n",
+                user_get_const_id(user));
+        /* Do not fail and return NULL. Show must go on */
     }
+
+    return pool_user;
 }
 
 int user_manager_add_user_flight_association(user_manager_t *manager,

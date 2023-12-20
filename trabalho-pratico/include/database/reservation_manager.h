@@ -35,14 +35,14 @@
  * int iter_callback(void *user_data, reservation_t *reservation) {
  *     (void) user_data;
  *
- *     const char *user_id    = reservation_get_const_user_id(reservation);
- *     const char *hotel_name = reservation_get_const_hotel_name(reservation);
- *     size_t id              = reservation_get_id(reservation);
- *     int rating             = reservation_get_rating(reservation);
- *     int hotel_id           = reservation_get_hotel_id(reservation);
- *     int hotel_stars        = reservation_get_hotel_stars(reservation);
- *     int city_tax           = reservation_get_city_tax(reservation);
- *     int price_per_night    = reservation_get_price_per_night(reservation);
+ *     const char *user_id         = reservation_get_const_user_id(reservation);
+ *     const char *hotel_name      = reservation_get_const_hotel_name(reservation);
+ *     size_t      id              = reservation_get_id(reservation);
+ *     uint8_t     rating          = reservation_get_rating(reservation);
+ *     hotel_id_t  hotel_id        = reservation_get_hotel_id(reservation);
+ *     uint8_t     hotel_stars     = reservation_get_hotel_stars(reservation);
+ *     uint8_t     city_tax        = reservation_get_city_tax(reservation);
+ *     uint16_t    price_per_night = reservation_get_price_per_night(reservation);
  *
  *     char includes_breakfast[INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE];
  *     includes_breakfast_sprintf(includes_breakfast,
@@ -54,17 +54,23 @@
  *     char end_date[DATE_SPRINTF_MIN_BUFFER_SIZE];
  *     date_sprintf(end_date, reservation_get_end_date(reservation));
  *
+ *     char hotel_id_str[HOTEL_ID_SPRINTF_MIN_BUFFER_SIZE];
+ *     hotel_id_sprintf(hotel_id_str, hotel_id);
+ *
+ *     char reservation_id_str[RESERVATION_ID_SPRINTF_MIN_BUFFER_SIZE];
+ *     reservation_id_sprintf(reservation_id_str, id);
+ *
  *     printf("--- reservation ---\nuser_id: %s\nhotel_name: %s\nincludes_breakfast: %s\n"
- *            "begin_date: %s\nend_date: %s\nid: BOOK%zu\nrating: %d\nhotel_id: HTL%d\n"
- *            "hotel_stars: %d\n city_tax: %d\nprice_per_night: %d\n\n",
+ *            "begin_date: %s\nend_date: %s\nid: %s\nrating: " PRIu8 "\nhotel_id: %s\n"
+ *            "hotel_stars: " PRIu8 "\n city_tax: " PRIu8 "\nprice_per_night: " PRIu16 "\n\n",
  *            user_id,
  *            hotel_name,
  *            includes_breakfast,
  *            begin_date,
  *            end_date,
- *            id,
+ *            reservation_id_str,
  *            rating,
- *            hotel_id,
+ *            hotel_id_str,
  *            hotel_stars,
  *            city_tax,
  *            price_per_night);

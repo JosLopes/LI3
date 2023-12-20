@@ -15,31 +15,32 @@
  */
 
 /**
- * @file  account_status.c
- * @brief Implementation of methods in include/types/account_status.h
+ * @file  reservation_id.c
+ * @brief Implementation of methods in include/types/reservation_id.h
  */
 
-#include <ctype.h>
-
-/** @cond FALSE */
-#ifndef _BSD_SOURCE
-    #define _BSD_SOURCE
-#endif
-/** @endcond */
-
+#include <stdio.h>
 #include <string.h>
 
-#include "types/account_status.h"
+#include "types/reservation_id.h"
+#include "utils/int_utils.h"
 
-int account_status_from_string(account_status_t *output, const char *input) {
+int reservation_id_from_string(reservation_id_t *output, const char *input) {
+    size_t length = strnlen(input, 5);
+    if (length > 4) { /* Skip "Book" before any reservation ID */
+        uint64_t id;
+        int      retval = int_utils_parse_positive(&id, input + 4);
 
-    if (strcasecmp(input, "inactive") == 0) {
-        *output = ACCOUNT_STATUS_INACTIVE;
+        if (retval)
+            return 2;
+
+        *output = (reservation_id_t) id;
         return 0;
-    } else if (strcasecmp(input, "active") == 0) {
-        *output = ACCOUNT_STATUS_ACTIVE;
-        return 0;
-    } else {
-        return 1;
     }
+
+    return (length == 0) ? 1 : 2;
+}
+
+void reservation_id_sprintf(char *output, reservation_id_t id) {
+    sprintf(output, "Book%010" PRIu32, id);
 }

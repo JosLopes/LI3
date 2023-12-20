@@ -65,7 +65,7 @@ const single_pool_id_linked_list_t *
     return list->next;
 }
 
-uint64_t single_pool_id_linked_list_length(const single_pool_id_linked_list_t *list) {
+size_t single_pool_id_linked_list_length(const single_pool_id_linked_list_t *list) {
     size_t length = 0;
     while (list) {
         length++;

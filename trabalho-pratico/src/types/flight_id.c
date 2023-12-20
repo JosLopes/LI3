@@ -15,31 +15,25 @@
  */
 
 /**
- * @file  account_status.c
- * @brief Implementation of methods in include/types/account_status.h
+ * @file  flight_id.c
+ * @brief Implementation of methods in include/types/flight_id.h
  */
 
-#include <ctype.h>
+#include <stdio.h>
 
-/** @cond FALSE */
-#ifndef _BSD_SOURCE
-    #define _BSD_SOURCE
-#endif
-/** @endcond */
+#include "types/flight_id.h"
+#include "utils/int_utils.h"
 
-#include <string.h>
+int flight_id_from_string(flight_id_t *output, const char *input) {
+    uint64_t id;
+    int      retval = int_utils_parse_positive(&id, input);
+    if (retval)
+        return *input ? 2 : 1;
 
-#include "types/account_status.h"
+    *output = (flight_id_t) id;
+    return 0;
+}
 
-int account_status_from_string(account_status_t *output, const char *input) {
-
-    if (strcasecmp(input, "inactive") == 0) {
-        *output = ACCOUNT_STATUS_INACTIVE;
-        return 0;
-    } else if (strcasecmp(input, "active") == 0) {
-        *output = ACCOUNT_STATUS_ACTIVE;
-        return 0;
-    } else {
-        return 1;
-    }
+void flight_id_sprintf(char *output, flight_id_t id) {
+    sprintf(output, "%010" PRIu32, id);
 }

@@ -19,6 +19,7 @@
  * @brief Implementation of methods in include/types/sex.h
  */
 
+#include <stdint.h>
 #include <string.h>
 
 #include "types/sex.h"
@@ -36,10 +37,9 @@ int sex_from_string(sex_t *output, const char *input) {
 }
 
 void sex_sprintf(char *output, sex_t sex) {
-    if (sex == SEX_M) {
-        *output = 'M';
-    } else {
-        *output = 'F';
-    }
-    output[1] = '\0';
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    (*(uint16_t *) output) = sex == SEX_M ? ('M' << 8) : ('F' << 8);
+#else
+    (*(uint16_t *) output) = sex == SEX_M ? 'M' : 'F';
+#endif
 }

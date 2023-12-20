@@ -23,18 +23,31 @@
  */
 
 #include <ctype.h>
+#include <string.h>
 
 #include "types/airport_code.h"
 
-int airport_code_from_string(airport_code_t *output, const char *input) {
-    if (*input && *(input + 1) && *(input + 2) && !*(input + 3) && isalpha(*input) &&
-        isalpha(*(input + 1)) && isalpha(*(input + 2))) {
+/**
+ * @brief   Macro implementation of `isalpha`.
+ * @details See musl's implementation of `isalpha` for source.
+ */
+#define inline_isalpha(c) ((((unsigned) c | 32) - 'a') < 26)
 
-        *((char *) output)       = toupper(input[0]);
-        *(((char *) output) + 1) = toupper(input[1]);
-        *(((char *) output) + 2) = toupper(input[2]);
-        *(((char *) output) + 3) = '\0';
-        return 0;
+int airport_code_from_string(airport_code_t *output, const char *input) {
+    if (input[0] && input[1] && input[2] && !input[3]) { /* inline strlen(input) == 3 */
+        if (inline_isalpha(input[0]) && inline_isalpha(input[1]) && inline_isalpha(input[2])) {
+
+            /*
+             * "Vectorized" toupper, when all characters are certain to be letters.
+             * In musl's implementation of toupper, c & 0x5f is done.
+             */
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            *output = (*(int32_t *) input) & 0x5f5f5f00;
+#else
+            *output = (*(int32_t *) input) & 0x005f5f5f;
+#endif
+            return 0;
+        }
     }
     return 1;
 }
