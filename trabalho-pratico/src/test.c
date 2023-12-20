@@ -23,49 +23,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "utils/path_utils.h"
+#include "database/database.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for path utilities.
+ * @details Tests for structure sizes.
  * @retval 0 Success
  * @retval 1 Failure
  */
 int main(void) {
-    const char *test_paths[18] = {/* .. and . in absolute paths */
-                                  "/abc/def/..",
-                                  "/abc/def/.",
-
-                                  /* .. in absolute and relative paths */
-                                  "/abc/def/../../..",
-                                  "abc/def/../../..",
-                                  "./abc/def/../../..",
-                                  "././abc/def/../../..",
-                                  "./../abc/def/../../..",
-
-                                  /* Relative paths with parent directory */
-                                  "../abc",
-                                  "../../abc",
-                                  "../..//abc",
-                                  "/../../abc",
-
-                                  /* Multiple . and .. */
-                                  "/.",
-                                  "/././../.",
-                                  "././../.",
-                                  "/..",
-
-                                  /* Others */
-                                  "/",
-                                  "////",
-                                  ""};
-
-    for (size_t i = 0; i < 18; ++i) {
-        char path[PATH_MAX];
-        strcpy(path, test_paths[i]);
-
-        path_normalize(path);
-        printf("%25s -> %s\n", test_paths[i], path);
-    }
-    return 0;
+    printf("Size of user_t: %zu\nSize of flight_t: %zu\nSize of reservation_t: %zu\n",
+           user_sizeof(),
+           flight_sizeof(),
+           reservation_sizeof());
 }
