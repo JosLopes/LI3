@@ -238,13 +238,16 @@ int __q05_execute(database_t       *database,
         char destination_airport[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
         airport_code_sprintf(destination_airport, flight_get_destination(flight));
 
+        char flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
+        flight_id_sprintf(flight_id_str, flight_get_id(flight));
+
         /* TODO - use ID print methods when available */
         if (query_instance_get_formatted(instance)) {
             fprintf(output,
-                    "--- %zu ---\nid: %010" PRIu64 "\nschedule_departure_date: %s\n"
+                    "--- %zu ---\nid: %s\nschedule_departure_date: %s\n"
                     "destination: %s\nairline: %s\nplane_model: %s\n",
                     i + 1,
-                    flight_get_id(flight),
+                    flight_id_str,
                     scheduled_departure_str,
                     destination_airport,
                     flight_get_const_airline(flight),
@@ -255,8 +258,8 @@ int __q05_execute(database_t       *database,
 
         } else {
             fprintf(output,
-                    "%010" PRIu64 ";%s;%s;%s;%s\n",
-                    flight_get_id(flight),
+                    "%s;%s;%s;%s;%s\n",
+                    flight_id_str,
                     scheduled_departure_str,
                     destination_airport,
                     flight_get_const_airline(flight),
