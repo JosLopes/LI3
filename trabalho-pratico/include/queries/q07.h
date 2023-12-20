@@ -16,13 +16,16 @@
 
 /**
   * @file    q07.h
-  * @brief   
+  * @brief   A query to that lists the top N airports by median of departure delays.
   * @details
   *
   * ### Examples
   *
   * ```text
-  * 
+  * 7 10
+  * 7 20
+  * 7F 10
+  * 7F 20
   * ```
   */
 
