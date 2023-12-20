@@ -70,13 +70,13 @@ void __performance_metrics_output_choose_units(const performance_event_t **event
     const char *time_units[] = {"us", "ms", "s"};
     const char *mem_units[]  = {"KiB", "MiB", "GiB"};
 
-    int unit_multiplier_log = round(log10(time_avg) / 3);
+    int unit_multiplier_log = floor(log10(time_avg) / 3);
     if (unit_multiplier_log > 2)
         unit_multiplier_log = 2;
     *time_unit_string     = time_units[unit_multiplier_log];
     *time_unit_multiplier = pow(1000, unit_multiplier_log);
 
-    unit_multiplier_log = round(log10(time_avg) / 3);
+    unit_multiplier_log = floor(log10(mem_avg) / 3);
     if (unit_multiplier_log > 2)
         unit_multiplier_log = 2;
     *mem_unit_string     = mem_units[unit_multiplier_log];
