@@ -248,7 +248,7 @@ int __q04_execute(database_t       *database,
         date_t           begin_date     = reservation_get_begin_date(reservation);
         date_t           end_date       = reservation_get_end_date(reservation);
         const char      *user_id        = reservation_get_const_user_id(reservation);
-        int              rating         = reservation_get_rating(reservation);
+        uint8_t          rating         = reservation_get_rating(reservation);
         double           total_price    = reservation_calculate_price(reservation);
 
         char begin_date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
@@ -260,8 +260,8 @@ int __q04_execute(database_t       *database,
 
         if (query_instance_get_formatted(instance)) {
             fprintf(output,
-                    "--- %ld ---\nid: %s\nbegin_date: %s\nend_date: %s\nuser_id: %s\nrating: %d\n"
-                    "total_price: %.3f\n",
+                    "--- %ld ---\nid: %s\nbegin_date: %s\nend_date: %s\nuser_id: %s\n"
+                    "rating: %" PRIu8 "\ntotal_price: %.3f\n",
                     i + 1,
                     reservation_id_str,
                     begin_date_str,
@@ -274,7 +274,7 @@ int __q04_execute(database_t       *database,
                 fputc('\n', output);
         } else {
             fprintf(output,
-                    "%s;%s;%s;%s;%d;%.3f\n",
+                    "%s;%s;%s;%s;%" PRIu8 ";%.3f\n",
                     reservation_id_str,
                     begin_date_str,
                     end_date_str,

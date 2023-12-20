@@ -116,7 +116,7 @@ int __q03_generate_statistics_foreach_reservation(void                *user_data
     q03_foreach_reservation_data_t *foreach_data = (q03_foreach_reservation_data_t *) user_data;
 
     hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
-    int        rating   = reservation_get_rating(reservation);
+    uint8_t    rating   = reservation_get_rating(reservation);
 
     if (!g_array_binary_search(foreach_data->hotels_to_average,
                                &hotel_id,

@@ -141,7 +141,7 @@ void reservation_set_id(reservation_t *reservation, reservation_id_t id);
  * @param rating      Rating of the reservation. ::RESERVATION_NO_RATING means no rating was
  *                    provided.
  */
-void reservation_set_rating(reservation_t *reservation, int rating);
+void reservation_set_rating(reservation_t *reservation, uint8_t rating);
 
 /**
  * @brief Sets the reservation's hotel identifier.
@@ -155,21 +155,21 @@ void reservation_set_hotel_id(reservation_t *reservation, hotel_id_t hotel_id);
  * @param reservation Reservation to have its hotel stars set.
  * @param hotel_stars Hotel stars of the reservation.
  */
-void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars);
+void reservation_set_hotel_stars(reservation_t *reservation, uint8_t hotel_stars);
 
 /**
  * @brief Sets the reservation's city tax.
  * @param reservation Reservation to have its city tax set.
  * @param city_tax    City tax of the reservation.
  */
-void reservation_set_city_tax(reservation_t *reservation, int city_tax);
+void reservation_set_city_tax(reservation_t *reservation, uint8_t city_tax);
 
 /**
  * @brief Sets the reservation's price per night.
  * @param reservation     Reservation to have its price per night set.
  * @param price_per_night Price per night of the reservation.
  */
-void reservation_set_price_per_night(reservation_t *reservation, int price_per_night);
+void reservation_set_price_per_night(reservation_t *reservation, uint16_t price_per_night);
 
 /**
  * @brief  Gets the reservation's user identifier.
@@ -218,7 +218,7 @@ reservation_id_t reservation_get_id(const reservation_t *reservation);
  * @param  reservation Reservation to get the rating from.
  * @return The reservation's rating. ::RESERVATION_NO_RATING means no rating was provided.
  */
-int reservation_get_rating(const reservation_t *reservation);
+uint8_t reservation_get_rating(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's hotel identifier.
@@ -232,21 +232,21 @@ hotel_id_t reservation_get_hotel_id(const reservation_t *reservation);
  * @param  reservation Reservation to get the hotel stars from.
  * @return The reservation's hotel stars.
  */
-int reservation_get_hotel_stars(const reservation_t *reservation);
+uint8_t reservation_get_hotel_stars(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's city tax.
  * @param  reservation Reservation to get the city tax from.
  * @return The reservation's city tax.
  */
-int reservation_get_city_tax(const reservation_t *reservation);
+uint8_t reservation_get_city_tax(const reservation_t *reservation);
 
 /**
  * @brief  Gets the reservation's price per night.
  * @param  reservation Reservation to get the price per night from.
  * @return The reservation's price per night.
  */
-int reservation_get_price_per_night(const reservation_t *reservation);
+uint16_t reservation_get_price_per_night(const reservation_t *reservation);
 
 /**
  * @brief   Gets the size of a ::reservation_t in memory.

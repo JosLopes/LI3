@@ -66,17 +66,17 @@
 struct reservation {
     char                *user_id;
     const char          *hotel_name;
-    includes_breakfast_t includes_breakfast;
     date_t               begin_date;
     date_t               end_date;
     reservation_id_t     id;
-    int                  rating;
     hotel_id_t           hotel_id;
-    int                  hotel_stars;
-    int                  city_tax;
-    int                  price_per_night;
+    uint16_t             price_per_night;
+    uint8_t              city_tax;
+    uint8_t              rating;
+    uint8_t              hotel_stars;
+    includes_breakfast_t includes_breakfast : 1;
 
-    int owns_itself, owns_user_id, owns_hotel_name;
+    int owns_itself : 1, owns_user_id : 1, owns_hotel_name : 1;
 };
 
 reservation_t *reservation_create(pool_t *allocator) {
@@ -152,7 +152,7 @@ void reservation_set_id(reservation_t *reservation, reservation_id_t id) {
     reservation->id = id;
 }
 
-void reservation_set_rating(reservation_t *reservation, int rating) {
+void reservation_set_rating(reservation_t *reservation, uint8_t rating) {
     reservation->rating = rating;
 }
 
@@ -160,15 +160,15 @@ void reservation_set_hotel_id(reservation_t *reservation, hotel_id_t hotel_id) {
     reservation->hotel_id = hotel_id;
 }
 
-void reservation_set_hotel_stars(reservation_t *reservation, int hotel_stars) {
+void reservation_set_hotel_stars(reservation_t *reservation, uint8_t hotel_stars) {
     reservation->hotel_stars = hotel_stars;
 }
 
-void reservation_set_city_tax(reservation_t *reservation, int city_tax) {
+void reservation_set_city_tax(reservation_t *reservation, uint8_t city_tax) {
     reservation->city_tax = city_tax;
 }
 
-void reservation_set_price_per_night(reservation_t *reservation, int price_per_night) {
+void reservation_set_price_per_night(reservation_t *reservation, uint16_t price_per_night) {
     reservation->price_per_night = price_per_night;
 }
 
@@ -196,7 +196,7 @@ reservation_id_t reservation_get_id(const reservation_t *reservation) {
     return reservation->id;
 }
 
-int reservation_get_rating(const reservation_t *reservation) {
+uint8_t reservation_get_rating(const reservation_t *reservation) {
     return reservation->rating;
 }
 
@@ -204,15 +204,15 @@ hotel_id_t reservation_get_hotel_id(const reservation_t *reservation) {
     return reservation->hotel_id;
 }
 
-int reservation_get_hotel_stars(const reservation_t *reservation) {
+uint8_t reservation_get_hotel_stars(const reservation_t *reservation) {
     return reservation->hotel_stars;
 }
 
-int reservation_get_city_tax(const reservation_t *reservation) {
+uint8_t reservation_get_city_tax(const reservation_t *reservation) {
     return reservation->city_tax;
 }
 
-int reservation_get_price_per_night(const reservation_t *reservation) {
+uint16_t reservation_get_price_per_night(const reservation_t *reservation) {
     return reservation->price_per_night;
 }
 

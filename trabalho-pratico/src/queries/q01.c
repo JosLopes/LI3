@@ -236,7 +236,7 @@ int __q01_execute_reservation_entity(database_t       *database,
 
     if (query_instance_get_formatted(instance)) {
         fprintf(output,
-                "--- 1 ---\nhotel_id: %s\nhotel_name: %s\nhotel_stars: %d\n"
+                "--- 1 ---\nhotel_id: %s\nhotel_name: %s\nhotel_stars: %" PRIu8 "\n"
                 "begin_date: %s\nend_date: %s\nincludes_breakfast: %s\nnights: %" PRIi64 "\n"
                 "total_price: %.3f\n",
                 hotel_id_str,
@@ -249,7 +249,7 @@ int __q01_execute_reservation_entity(database_t       *database,
                 total_price);
     } else {
         fprintf(output,
-                "%s;%s;%d;%s;%s;%s;%" PRIi64 ";%.3f\n",
+                "%s;%s;%" PRIu8 ";%s;%s;%s;%" PRIi64 ";%.3f\n",
                 hotel_id_str,
                 reservation_get_const_hotel_name(reservation),
                 reservation_get_hotel_stars(reservation),
