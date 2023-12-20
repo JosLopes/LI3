@@ -51,6 +51,9 @@
 
 #include "queries/query_type.h"
 
+/** @brief Number of queries supported (1 to ::QUERY_TYPE_LIST_COUNT). */
+#define QUERY_TYPE_LIST_COUNT 10
+
 /** @brief A list of all supported queries. */
 typedef struct query_type_list query_type_list_t;
 

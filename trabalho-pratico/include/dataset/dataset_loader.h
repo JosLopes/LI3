@@ -35,6 +35,7 @@
 #define DATASET_LOADER_H
 
 #include "database/database.h"
+#include "performance/performance_metrics.h"
 
 /**
  * @brief Parses a dataset in @p path and stores the data in @p database.
@@ -42,6 +43,8 @@
  * @param database     Database where to store the dataset data in.
  * @param dataset_path Path to the directory containing the dataset.
  * @param errors_path  Path to the directory where to output error files to.
+ * @param metrics      Where to register program performance data to. Can be `NULL` for no
+ *                     profiling.
  *
  * @retval 0 Success
  * @retval 1 Fatal failure (this loader only fatally fails on IO errors).
@@ -49,6 +52,9 @@
  * #### Example
  * See [the header file's documentation](@ref dataset_loader_examples).
  */
-int dataset_loader_load(database_t *database, const char *dataset_path, const char *errors_path);
+int dataset_loader_load(database_t            *database,
+                        const char            *dataset_path,
+                        const char            *errors_path,
+                        performance_metrics_t *metrics);
 
 #endif

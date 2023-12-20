@@ -29,13 +29,11 @@
 #include "queries/q02.h"
 #include "queries/q03.h"
 #include "queries/q04.h"
+#include "queries/q05.h"
 #include "queries/q06.h"
 #include "queries/q09.h"
 #include "queries/qplaceholder.h"
 #include "queries/query_type_list.h"
-
-/** @brief Number of queries supported (1 to ::QUERY_TYPE_LIST_COUNT). */
-#define QUERY_TYPE_LIST_COUNT 10
 
 /**
  * @struct query_type_list
@@ -57,7 +55,7 @@ query_type_list_t *query_type_list_create(void) {
                                                                   q02_create,
                                                                   q03_create,
                                                                   q04_create,
-                                                                  qplaceholder_create,
+                                                                  q05_create,
                                                                   q06_create,
                                                                   qplaceholder_create,
                                                                   qplaceholder_create,

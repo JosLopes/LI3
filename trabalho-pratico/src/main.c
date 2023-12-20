@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     if (argc == 1) {
         return interactive_mode_run();
     } else if (argc == 3) {
-        return batch_mode_run(argv[1], argv[2]);
+        return batch_mode_run(argv[1], argv[2], NULL);
     } else {
         fputs("Invalid command-line arguments! Usage:\n\n", stderr);
         fputs("./programa-principal - Interactive mode\n", stderr);

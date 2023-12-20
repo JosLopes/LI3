@@ -79,7 +79,9 @@
  *
  * Don't forget to call `g_free` for `utf32` in the end.
  */
+
 #include <glib.h>
+#include <inttypes.h>
 
 /**
  * @brief   Renders a rectangle using ncurses.

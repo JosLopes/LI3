@@ -34,7 +34,7 @@ void query_dispatcher_dispatch_single(database_t        *database,
     query_instance_list_t *list = query_instance_list_create();
     query_instance_list_add(list, query_instance);
 
-    query_dispatcher_dispatch_list(database, list, query_type_list, &output);
+    query_dispatcher_dispatch_list(database, list, query_type_list, &output, NULL);
     query_instance_list_free_no_internals(list);
 }
 
@@ -50,12 +50,16 @@ void query_dispatcher_dispatch_single(database_t        *database,
  *     @brief Where to output query results to.
  * @var query_dispatcher_data_t::i
  *     @brief Number of queries processed until now.
+ * @var query_dispatcher_data_t::metrics
+ *     @brief Performance metrics where to write profiling information to.
  */
 typedef struct {
     database_t        *database;
     query_type_list_t *query_type_list;
     FILE             **outputs;
     size_t             i;
+
+    performance_metrics_t *metrics;
 } query_dispatcher_data_t;
 
 /**
@@ -70,8 +74,9 @@ typedef struct {
 int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *instances, size_t n) {
     query_dispatcher_data_t *dispatcher_data = (query_dispatcher_data_t *) user_data;
 
-    query_type_t *type = query_type_list_get_by_index(dispatcher_data->query_type_list,
-                                                      query_instance_get_type(instances));
+    size_t        type_num = query_instance_get_type(instances);
+    query_type_t *type = query_type_list_get_by_index(dispatcher_data->query_type_list, type_num);
+
     if (!type)
         return 0;
 
@@ -82,8 +87,11 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
     query_type_execute_callback_t execute = query_type_get_execute_callback(type);
 
     void *statistics = NULL;
-    if (generate_stats)
+    if (generate_stats) {
+        performance_metrics_start_measuring_query_statistics(dispatcher_data->metrics, type_num);
         statistics = generate_stats(dispatcher_data->database, instances, n);
+        performance_metrics_stop_measuring_query_statistics(dispatcher_data->metrics, type_num);
+    }
 
     for (size_t j = 0; j < n; ++j) {
         execute(dispatcher_data->database,
@@ -102,11 +110,13 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
 void query_dispatcher_dispatch_list(database_t            *database,
                                     query_instance_list_t *query_instance_list,
                                     query_type_list_t     *query_type_list,
-                                    FILE                 **outputs) {
+                                    FILE                 **outputs,
+                                    performance_metrics_t *metrics) {
 
     query_dispatcher_data_t dispatcher_data = {.database        = database,
                                                .query_type_list = query_type_list,
-                                               .outputs         = outputs};
+                                               .outputs         = outputs,
+                                               .metrics         = metrics};
 
     query_instance_list_iter_types(query_instance_list,
                                    __query_dispatcher_query_set_callback,

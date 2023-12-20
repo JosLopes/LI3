@@ -19,21 +19,39 @@
  * @brief Contains the entry point to the test program.
  */
 
-#include <limits.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "database/database.h"
+#include "batch_mode.h"
+#include "performance/performance_metrics_output.h"
 
 /**
  * @brief The entry point to the test program.
- * @details Tests for structure sizes.
  * @retval 0 Success
  * @retval 1 Failure
  */
-int main(void) {
-    printf("Size of user_t: %zu\nSize of flight_t: %zu\nSize of reservation_t: %zu\n",
-           user_sizeof(),
-           flight_sizeof(),
-           reservation_sizeof());
+int main(int argc, char **argv) {
+    if (argc == 4) {
+        performance_metrics_t *metrics = performance_metrics_create();
+        if (!metrics) {
+            fputs("Failed to allocate performance metrics!\n", stderr);
+            return 1;
+        }
+
+        int retval = batch_mode_run(argv[1], argv[2], metrics);
+        if (retval) {
+            performance_metrics_free(metrics);
+            return retval;
+        }
+
+        performance_metrics_output_print(stdout, metrics);
+        performance_metrics_free(metrics);
+        return 0;
+    } else {
+        fputs("Invalid command-line arguments! Usage:\n", stderr);
+        fputs("./programa-testes [dataset] [query file] [expected output]\n", stderr);
+        return 1;
+    }
 }
