@@ -63,14 +63,14 @@
 struct user {
     char            *id;
     char            *name;
-    date_t           birth_date;
     char            *passport;
-    country_code_t   country_code;
-    sex_t            sex;
-    account_status_t account_status;
     date_and_time_t  account_creation_date;
+    date_t           birth_date;
+    country_code_t   country_code;
+    sex_t            sex : 1;
+    account_status_t account_status : 1;
 
-    int owns_itself, owns_id, owns_name, owns_passport;
+    int owns_itself : 1, owns_id : 1, owns_name : 1, owns_passport : 1;
 };
 
 user_t *user_create(pool_t *allocator) {
