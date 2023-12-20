@@ -114,10 +114,9 @@ void __q06_generate_statistics_add_passengers(GHashTable    *airport_count,
         GPOINTER_TO_UINT(g_hash_table_lookup(airport_count, GUINT_TO_POINTER(airport)));
 
     if (origin_count) {
-        num_passengers += origin_count;
         g_hash_table_insert(airport_count,
                             GUINT_TO_POINTER(airport),
-                            GUINT_TO_POINTER(num_passengers));
+                            GUINT_TO_POINTER(num_passengers + origin_count));
     } else {
         g_hash_table_insert(airport_count,
                             GUINT_TO_POINTER(airport),
