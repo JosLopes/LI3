@@ -218,6 +218,10 @@ const performance_event_t *
     return metrics->statistical_events[query_type];
 }
 
+/**
+ * @brief   Comparison function, for `qsort` of an array of `size_t`.
+ * @details Auxiliary method for ::performance_metrics_get_query_execution_measurements.
+ */
 int __performance_metrics_size_compare_func(const void *a, const void *b) {
     return *(const size_t *) a - *(const size_t *) b;
 }
