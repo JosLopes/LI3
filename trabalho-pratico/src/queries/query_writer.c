@@ -216,4 +216,6 @@ void query_writer_free(query_writer_t *writer) {
         string_pool_free(writer->strings);
         g_ptr_array_unref(writer->lines);
     }
+
+    free(writer);
 }
