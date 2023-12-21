@@ -62,6 +62,7 @@
 
 #include "database/database.h"
 #include "queries/query_instance_typedef.h"
+#include "queries/query_writer.h"
 
 /** @brief A definition of a query. */
 typedef struct query_type query_type_t;
@@ -123,7 +124,7 @@ typedef void (*query_type_free_statistics_callback_t)(void *statistics);
 typedef int (*query_type_execute_callback_t)(database_t       *database,
                                              void             *statistics,
                                              query_instance_t *instance,
-                                             FILE             *output);
+                                             query_writer_t   *output);
 
 /**
  * @brief   Creates a query type, defining its behavior.

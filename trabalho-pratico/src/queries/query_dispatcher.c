@@ -29,7 +29,7 @@
 void query_dispatcher_dispatch_single(database_t        *database,
                                       query_instance_t  *query_instance,
                                       query_type_list_t *query_type_list,
-                                      FILE              *output) {
+                                      query_writer_t    *output) {
 
     query_instance_list_t *list = query_instance_list_create();
     query_instance_list_add(list, query_instance);
@@ -56,7 +56,7 @@ void query_dispatcher_dispatch_single(database_t        *database,
 typedef struct {
     database_t        *database;
     query_type_list_t *query_type_list;
-    FILE             **outputs;
+    query_writer_t   **outputs;
     size_t             i;
 
     performance_metrics_t *metrics;
@@ -110,7 +110,7 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
 void query_dispatcher_dispatch_list(database_t            *database,
                                     query_instance_list_t *query_instance_list,
                                     query_type_list_t     *query_type_list,
-                                    FILE                 **outputs,
+                                    query_writer_t       **outputs,
                                     performance_metrics_t *metrics) {
 
     query_dispatcher_data_t dispatcher_data = {.database        = database,
