@@ -242,10 +242,17 @@ void __performance_metrics_output_query(FILE           *output,
                                         const size_t   *line_numbers,
                                         const uint64_t *times,
                                         uint64_t        statistics_time) {
+    if (n == 0)
+        return;
+
     /* Calulate amortized times */
-    uint64_t *amortized = malloc(sizeof(uint64_t) * n);
-    for (size_t i = 0; i < n; ++i)
+    uint64_t *amortized = malloc(n * sizeof(uint64_t));
+    if (!amortized)
+        return;
+
+    for (size_t i = 0; i < n; ++i) {
         amortized[i] = times[i] + statistics_time / n;
+    }
 
     const char *units[3] = {"us", "ms", "s"};
 
