@@ -121,7 +121,7 @@ gint __q09_sort_compare_callback(gconstpointer a, gconstpointer b) {
 int __q09_execute(database_t       *database,
                   void             *statistics, /* NULL */
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
     (void) statistics;
 
     char *old_locale = strdup(setlocale(LC_COLLATE, NULL));
@@ -136,24 +136,11 @@ int __q09_execute(database_t       *database,
     user_manager_iter(database_get_users(database), __q09_execute_iter_callback, &user_data);
     g_ptr_array_sort(matches, __q09_sort_compare_callback);
 
-    int formatted = query_instance_get_formatted(instance);
-
-    /* Print output */
     for (size_t i = 0; i < matches->len; ++i) {
         user_t *user = (user_t *) g_ptr_array_index(matches, i);
-
-        if (formatted) {
-            fprintf(output,
-                    "--- %zu ---\nid: %s\nname: %s\n",
-                    i + 1,
-                    user_get_const_id(user),
-                    user_get_const_name(user));
-
-            if (i != matches->len - 1)
-                fputc('\n', output);
-        } else {
-            fprintf(output, "%s;%s\n", user_get_const_id(user), user_get_const_name(user));
-        }
+        query_writer_write_new_object(output);
+        query_writer_write_new_field(output, "id", "%s", user_get_const_id(user));
+        query_writer_write_new_field(output, "name", "%s", user_get_const_name(user));
     }
 
     g_ptr_array_free(matches, TRUE);

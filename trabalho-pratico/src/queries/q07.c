@@ -221,15 +221,13 @@ void __q07_free_statistics(void *statistics) {
 int __q07_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
     (void) database;
 
     uint64_t n               = *(uint64_t *) query_instance_get_argument_data(instance);
     GArray  *airport_medians = (GArray *) statistics;
 
-    int    formatted = query_instance_get_formatted(instance);
-    size_t i_max     = min(n, airport_medians->len);
-
+    size_t i_max = min(n, airport_medians->len);
     for (size_t i = 0; i < i_max; i++) {
         __q07_airport_median *airport_median =
             &g_array_index(airport_medians, __q07_airport_median, i);
@@ -237,18 +235,9 @@ int __q07_execute(database_t       *database,
         char airport_code_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
         airport_code_sprintf(airport_code_str, airport_median->airport_code);
 
-        if (formatted) {
-            fprintf(output,
-                    "--- %zu ---\nname: %s\nmedian: %" PRIi64 "\n",
-                    i + 1,
-                    airport_code_str,
-                    airport_median->median);
-
-            if (i != i_max - 1)
-                fputc('\n', output);
-        } else {
-            fprintf(output, "%s;%" PRIi64 "\n", airport_code_str, airport_median->median);
-        }
+        query_writer_write_new_object(output);
+        query_writer_write_new_field(output, "name", "%s", airport_code_str);
+        query_writer_write_new_field(output, "median", "%" PRIu64, airport_median->median);
     }
     return 0;
 }

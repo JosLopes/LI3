@@ -216,7 +216,7 @@ gint __q05_flights_date_compare_func(gconstpointer a, gconstpointer b) {
 int __q05_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
     (void) database;
 
     GHashTable             *origin_flights = (GHashTable *) statistics;
@@ -241,30 +241,18 @@ int __q05_execute(database_t       *database,
         char flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
         flight_id_sprintf(flight_id_str, flight_get_id(flight));
 
-        /* TODO - use ID print methods when available */
-        if (query_instance_get_formatted(instance)) {
-            fprintf(output,
-                    "--- %zu ---\nid: %s\nschedule_departure_date: %s\n"
-                    "destination: %s\nairline: %s\nplane_model: %s\n",
-                    i + 1,
-                    flight_id_str,
-                    scheduled_departure_str,
-                    destination_airport,
-                    flight_get_const_airline(flight),
-                    flight_get_const_plane_model(flight));
-
-            if (i != flights->len - 1)
-                fputc('\n', output);
-
-        } else {
-            fprintf(output,
-                    "%s;%s;%s;%s;%s\n",
-                    flight_id_str,
-                    scheduled_departure_str,
-                    destination_airport,
-                    flight_get_const_airline(flight),
-                    flight_get_const_plane_model(flight));
-        }
+        query_writer_write_new_object(output);
+        query_writer_write_new_field(output, "id", "%s", flight_id_str);
+        query_writer_write_new_field(output,
+                                     "schedule_departure_date",
+                                     "%s",
+                                     scheduled_departure_str);
+        query_writer_write_new_field(output, "destination", "%s", destination_airport);
+        query_writer_write_new_field(output, "airline", "%s", flight_get_const_airline(flight));
+        query_writer_write_new_field(output,
+                                     "plane_model",
+                                     "%s",
+                                     flight_get_const_plane_model(flight));
     }
 
     return 0;

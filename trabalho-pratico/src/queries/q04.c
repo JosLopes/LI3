@@ -232,7 +232,7 @@ void __q04_free_statistics(void *statistics) {
 int __q04_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
     (void) database;
 
     hotel_id_t hotel_id = *((hotel_id_t *) query_instance_get_argument_data(instance));
@@ -258,30 +258,13 @@ int __q04_execute(database_t       *database,
         date_sprintf(end_date_str, end_date);
         reservation_id_sprintf(reservation_id_str, reservation_id);
 
-        if (query_instance_get_formatted(instance)) {
-            fprintf(output,
-                    "--- %ld ---\nid: %s\nbegin_date: %s\nend_date: %s\nuser_id: %s\n"
-                    "rating: %" PRIu8 "\ntotal_price: %.3f\n",
-                    i + 1,
-                    reservation_id_str,
-                    begin_date_str,
-                    end_date_str,
-                    user_id,
-                    rating,
-                    total_price);
-
-            if (i != reservations->len - 1)
-                fputc('\n', output);
-        } else {
-            fprintf(output,
-                    "%s;%s;%s;%s;%" PRIu8 ";%.3f\n",
-                    reservation_id_str,
-                    begin_date_str,
-                    end_date_str,
-                    user_id,
-                    rating,
-                    total_price);
-        }
+        query_writer_write_new_object(output);
+        query_writer_write_new_field(output, "id", "%s", reservation_id_str);
+        query_writer_write_new_field(output, "begin_date", "%s", begin_date_str);
+        query_writer_write_new_field(output, "end_date", "%s", end_date_str);
+        query_writer_write_new_field(output, "user_id", "%s", user_id);
+        query_writer_write_new_field(output, "rating", "%" PRIu8, rating);
+        query_writer_write_new_field(output, "total_price", "%.3f", total_price);
     }
 
     return 0;

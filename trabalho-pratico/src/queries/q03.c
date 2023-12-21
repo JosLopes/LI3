@@ -208,7 +208,7 @@ void __q03_free_statistics(void *statistics) {
 int __q03_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
     (void) database;
 
     GHashTable *ratings_averages = (GHashTable *) statistics;
@@ -220,12 +220,8 @@ int __q03_execute(database_t       *database,
         return 1;
     }
 
-    if (query_instance_get_formatted(instance)) {
-        fprintf(output, "--- 1 ---\nrating: %.3f\n", (double) avg->sum / (double) avg->count);
-    } else {
-        fprintf(output, "%.3f\n", (double) avg->sum / (double) avg->count);
-    }
-
+    query_writer_write_new_object(output);
+    query_writer_write_new_field(output, "rating", "%.3f", (double) avg->sum / (double) avg->count);
     return 0;
 }
 

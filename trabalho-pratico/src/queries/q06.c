@@ -343,7 +343,7 @@ void __q06_free_statistics(void *statistics) {
 int __q06_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
 
     (void) database;
 
@@ -362,18 +362,9 @@ int __q06_execute(database_t       *database,
         char airport_code_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
         airport_code_sprintf(airport_code_str, item->airport);
 
-        if (query_instance_get_formatted(instance)) {
-            fprintf(output,
-                    "--- %zu ---\nname: %s\npassengers: %" PRIu64 "\n",
-                    i + 1,
-                    airport_code_str,
-                    item->count);
-
-            if (i != args->n - 1)
-                fputc('\n', output);
-        } else {
-            fprintf(output, "%s;%" PRIu64 "\n", airport_code_str, item->count);
-        }
+        query_writer_write_new_object(output);
+        query_writer_write_new_field(output, "name", "%s", airport_code_str);
+        query_writer_write_new_field(output, "passengers", "%" PRIu64, item->count);
     }
 
     return 0;
