@@ -76,8 +76,9 @@ void performance_metrics_measure_dataset(performance_metrics_t             *metr
  *          query.
  * @details Measuring failures are reported to `stderr`.
  *
- * @param metrics Performance metrics to be modified. Can be `NULL`, for no performance profiling.
- * @param step    Query type for which statistical data is being generated.
+ * @param metrics    Performance metrics to be modified. Can be `NULL`, for no performance
+ *                   profiling.
+ * @param query_type Query type for which statistical data is being generated.
  */
 void performance_metrics_start_measuring_query_statistics(performance_metrics_t *metrics,
                                                           size_t                 query_type);
@@ -87,11 +88,39 @@ void performance_metrics_start_measuring_query_statistics(performance_metrics_t 
  *          query.
  * @details Measuring failures are reported to `stderr`.
  *
- * @param metrics Performance metrics to be modified. Can be `NULL`, for no performance profiling.
- * @param step    Query type for which statistical data is being generated.
+ * @param metrics    Performance metrics to be modified. Can be `NULL`, for no performance
+ *                   profiling.
+ * @param query_type Query type for which statistical data is being generated.
  */
 void performance_metrics_stop_measuring_query_statistics(performance_metrics_t *metrics,
                                                          size_t                 query_type);
+
+/**
+ * @brief   Measures a performance event for starting the execution of a query.
+ * @details Measuring failures are reported to `stderr`.
+ *
+ * @param metrics      Performance metrics to be modified. Can be `NULL`, for no performance
+ *                     profiling.
+ * @param query_type   Query type for which statistical data is being generated.
+ * @param line_in_file Line the query in the batch input file.
+ */
+void performance_metrics_start_measuring_query_execution(performance_metrics_t *metrics,
+                                                         size_t                 query_type,
+                                                         size_t                 line_in_file);
+
+/**
+ * @brief   Measures a performance event for finishing the generation of statistical data for a
+ *          query.
+ * @details Measuring failures are reported to `stderr`.
+ *
+ * @param metrics      Performance metrics to be modified. Can be `NULL`, for no performance
+ *                     profiling.
+ * @param query_type   Query type for which statistical data is being generated.
+ * @param line_in_file Line the query in the batch input file.
+ */
+void performance_metrics_stop_measuring_query_execution(performance_metrics_t *metrics,
+                                                        size_t                 query_type,
+                                                        size_t                 line_in_file);
 
 /**
  * @brief Gets a measurement of dataset performance from @p metrics.
@@ -109,8 +138,8 @@ const performance_event_t *
 /**
  * @brief Gets a measurement of query statistical data generation from @p metrics.
  *
- * @param metrics Performance metrics to get performance information from.
- * @param step    Query whose statistical data has been profiled.
+ * @param metrics    Performance metrics to get performance information from.
+ * @param query_type Query type whose statistical data generation has been profiled.
  *
  * @return Performance information about generating statistical data for a query, or `NULL` if that
  *         hasn't been measured / failed to be measured.
@@ -118,6 +147,23 @@ const performance_event_t *
 const performance_event_t *
     performance_metrics_get_query_statistics_measurement(const performance_metrics_t *metrics,
                                                          size_t                       query_type);
+
+/**
+ * @brief   Gets the time measurements from executions of all queries of type @p query_type.
+ * @details On success, `g_malloc`-allocated pointers will be written to @p out_line_numbers and
+ *          @p out_times, which subsequently need to be `g_free`'d.
+ *
+ * @param metrics          Performance metrics to get performance information from.
+ * @param query_type       Query type whose executions have been profiled.
+ * @param out_line_numbers Where to output the lines where the queries were.
+ * @param out_times        Where to output the times that it took to execute queries.
+ *
+ * @return The number of elements in @p out_line_numbers and @p out_times otherwise.
+ */
+size_t performance_metrics_get_query_execution_measurements(const performance_metrics_t *metrics,
+                                                            size_t                       query_type,
+                                                            size_t   **out_line_numbers,
+                                                            uint64_t **out_times);
 
 /**
  * @brief Frees memory allocated in ::performance_metrics_create.
