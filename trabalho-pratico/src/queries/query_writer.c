@@ -206,7 +206,8 @@ const char *const *query_writer_get_lines(query_writer_t *writer, size_t *out_n)
 
 void query_writer_free(query_writer_t *writer) {
     /* Flush missing last line before closing file */
-    if (!writer->formatted && writer->stream)
+    if (!writer->formatted && writer->stream &&
+        !(writer->is_first_field && writer->current_object == 1))
         fputc('\n', writer->stream);
 
     if (writer->stream) {
