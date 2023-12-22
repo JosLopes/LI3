@@ -17,6 +17,9 @@
 /**
  * @file  query_writer.c
  * @brief Implementation of methods in include/queries/query_writer.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref query_writer_examples).
  */
 
 #include <glib.h>
@@ -28,8 +31,8 @@
 #include "utils/string_pool.h"
 
 /**
- * @struct  query_writer
- * @details Information about where to output query results to.
+ * @struct query_writer
+ * @brief  Information about where to output query results to.
  *
  * @var query_writer::stream
  *     @brief Where to write query outputs to. May be `NULL` (see ::query_writer::lines in that

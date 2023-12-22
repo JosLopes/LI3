@@ -103,12 +103,18 @@ typedef struct query_writer query_writer_t;
  *
  * @return A ::query_writer_t that must be deleted with ::query_writer_free. `NULL` will be returned
  *         on both IO and allocation failures.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_writer_examples).
  */
 query_writer_t *query_writer_create(const char *out_file_path, int formatted);
 
 /**
  * @brief Marks that a new object will start to be written (a new flight, a new user, ...).
  * @param writer Where to write the query output to.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_writer_examples).
  */
 void query_writer_write_new_object(query_writer_t *writer);
 
@@ -119,6 +125,9 @@ void query_writer_write_new_object(query_writer_t *writer);
  * @param key    Name of the field being outputted.
  * @param format How to format the output (`printf` format string).
  * @param ...    Objects to be formatted accoring to @p format.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_writer_examples).
  */
 void query_writer_write_new_field(query_writer_t *writer, const char *key, const char *format, ...)
     __attribute__((format(printf, 3, 4)));
@@ -132,12 +141,18 @@ void query_writer_write_new_field(query_writer_t *writer, const char *key, const
  * @param out_n  Where to output the number of lines to.
  *
  * @return The lines outputted by a query.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_writer_examples).
  */
 const char *const *query_writer_get_lines(query_writer_t *writer, size_t *out_n);
 
 /**
  * @brief Frees memory allocated by ::query_writer_create.
  * @param Non-`NULL` value returned by ::query_writer_create.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_writer_examples).
  */
 void query_writer_free(query_writer_t *writer);
 
