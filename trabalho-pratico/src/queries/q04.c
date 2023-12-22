@@ -80,7 +80,7 @@ void __q04_free_query_instance_argument_data(void *argument_data) {
 int __q04_generate_statistics_foreach_reservation(void                *user_data,
                                                   const reservation_t *reservation) {
     GHashTable *hotel_reservations = (GHashTable *) user_data;
-    hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
+    hotel_id_t  hotel_id           = reservation_get_hotel_id(reservation);
 
     GPtrArray *reservations = g_hash_table_lookup(hotel_reservations, GUINT_TO_POINTER(hotel_id));
     if (!reservations)
@@ -122,14 +122,13 @@ void *__q04_generate_statistics(database_t *database, query_instance_t *instance
     (void) instances;
     (void) n;
 
-    GHashTable *hotel_reservations =
-        g_hash_table_new_full(g_direct_hash,
-                              g_direct_equal,
-                              NULL,
-                              (GDestroyNotify) g_ptr_array_unref);
+    GHashTable *hotel_reservations = g_hash_table_new_full(g_direct_hash,
+                                                           g_direct_equal,
+                                                           NULL,
+                                                           (GDestroyNotify) g_ptr_array_unref);
 
     for (size_t i = 0; i < n; ++i) {
-        hotel_id_t hotel_id = * (hotel_id_t *) query_instance_get_argument_data(instances);
+        hotel_id_t hotel_id = *(hotel_id_t *) query_instance_get_argument_data(instances);
         g_hash_table_insert(hotel_reservations, GUINT_TO_POINTER(hotel_id), g_ptr_array_new());
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
@@ -139,7 +138,7 @@ void *__q04_generate_statistics(database_t *database, query_instance_t *instance
                              hotel_reservations);
 
     GHashTableIter iter;
-    gpointer to_sort_array;
+    gpointer       to_sort_array;
     g_hash_table_iter_init(&iter, hotel_reservations);
     while (g_hash_table_iter_next(&iter, NULL, &to_sort_array))
         g_ptr_array_sort((GPtrArray *) to_sort_array, __q04_sort_reservations_by_date);

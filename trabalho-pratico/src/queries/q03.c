@@ -92,12 +92,12 @@ int __q03_generate_statistics_foreach_reservation(void                *user_data
                                                   const reservation_t *reservation) {
     GHashTable *ratings_averages = (GHashTable *) user_data;
 
-    hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
-    q03_average_t *avg  = g_hash_table_lookup(ratings_averages, GUINT_TO_POINTER(hotel_id));
+    hotel_id_t     hotel_id = reservation_get_hotel_id(reservation);
+    q03_average_t *avg      = g_hash_table_lookup(ratings_averages, GUINT_TO_POINTER(hotel_id));
     if (!avg)
         return 0;
 
-    uint8_t  rating = reservation_get_rating(reservation);
+    uint8_t rating = reservation_get_rating(reservation);
     avg->sum += rating;
     avg->count++;
     return 0;
@@ -119,7 +119,7 @@ void *__q03_generate_statistics(database_t *database, query_instance_t *instance
         g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free);
 
     for (size_t i = 0; i < n; ++i) {
-        hotel_id_t hotel_id = * (hotel_id_t *) query_instance_get_argument_data(instances);
+        hotel_id_t hotel_id = *(hotel_id_t *) query_instance_get_argument_data(instances);
 
         q03_average_t *average = malloc(sizeof(q03_average_t));
         if (!average) {
