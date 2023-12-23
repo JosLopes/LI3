@@ -89,14 +89,6 @@ void *__q06_parse_arguments(char **argv, size_t argc) {
 }
 
 /**
- * @brief Frees the value returned by ::__q06_parse_arguments.
- * @param argument_data Value returned by ::__q06_parse_arguments.
- */
-void __q06_free_query_instance_argument_data(void *argument_data) {
-    free(argument_data);
-}
-
-/**
  * @brief   Adds a number of passengers to an airport in a `airport code -> passengers` hash table.
  * @details Auxiliary function for ::__q06_generate_statistics_foreach_flight, itself an auxiliary
  *          method for ::__q06_generate_statistics.
@@ -264,14 +256,6 @@ void *__q06_generate_statistics(database_t *database, query_instance_t *instance
 }
 
 /**
- * @brief Frees the value returned by ::__q06_generate_statistics.
- * @param statistics Value returned by ::__q06_generate_statistics.
- */
-void __q06_free_statistics(void *statistics) {
-    g_hash_table_unref(statistics);
-}
-
-/**
  * @brief   Executes a query of type 6.
  * @details Prints the top N airports with the most passangers in a given year.
  *
@@ -315,8 +299,8 @@ int __q06_execute(database_t       *database,
 
 query_type_t *q06_create(void) {
     return query_type_create(__q06_parse_arguments,
-                             __q06_free_query_instance_argument_data,
+                             free,
                              __q06_generate_statistics,
-                             __q06_free_statistics,
+                             (query_type_free_statistics_callback_t) g_hash_table_unref,
                              __q06_execute);
 }
