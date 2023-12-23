@@ -21,18 +21,25 @@
  * ### Examples
  * See [the header file's documentation](@ref activity_paging_examples).
  */
+#include <math.h>
 #include <ncurses.h>
 
 #include "interactive_mode/activity_paging.h"
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/int_utils.h"
 
+typedef enum {
+    ACTIVITY_PAGING_ACTION_NEXT_PAGE,
+    ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE,
+    ACTIVITY_PAGING_ACTION_KEEP
+} activity_paging_action_t;
+
 typedef struct {
     gunichar **lines;
     size_t     lines_length, block_length;
 
-    size_t current_page;
-    int    advance_page;
+    size_t                   page_reference_index;
+    activity_paging_action_t advance_page;
 } activity_paging_data_t;
 
 int __activity_paging_keypress(void *activity_data, wint_t key, int is_key_code) {
@@ -44,15 +51,18 @@ int __activity_paging_keypress(void *activity_data, wint_t key, int is_key_code)
     } else if (is_key_code) {
         switch (key) {
             case KEY_LEFT:
-                paging->advance_page = -1;
+                paging->advance_page = ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE;
                 return 0;
             case KEY_RIGHT:
-                paging->advance_page = 1;
+                paging->advance_page = ACTIVITY_PAGING_ACTION_NEXT_PAGE;
                 return 0;
             default:
+                paging->advance_page = ACTIVITY_PAGING_ACTION_KEEP;
                 return 0;
         }
     }
+
+    paging->advance_page = ACTIVITY_PAGING_ACTION_KEEP;
     return 0;
 }
 
@@ -79,22 +89,35 @@ int __activity_paging_render(void *activity_data) {
     move(menu_y - 1, menu_x + menu_width / 2 - 3);
     printw("%s", title);
 
-    /* Paging */
-    size_t total_lines_until_page = (size_t) menu_height * (1 + paging->current_page);
+    size_t max_on_screen_lines =
+        min(menu_height / paging->block_length * paging->block_length, paging->lines_length);
 
-    for (size_t i = menu_height * paging->current_page;
-         i < min(total_lines_until_page, paging->lines_length);
-         i++) {
+    size_t max_page_number = ceil((double) paging->lines_length / (double) max_on_screen_lines) - 1;
+    size_t page_number     = paging->page_reference_index / max_on_screen_lines;
 
-        /* Find position for the current output */
-        if (i && i % paging->block_length == 0)
-            menu_y++;
-        move(menu_y + i, menu_x + 1);
+    if (paging->advance_page == ACTIVITY_PAGING_ACTION_NEXT_PAGE && page_number < max_page_number) {
+        page_number++;
+    } else if (paging->advance_page == ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE && page_number > 0) {
+        page_number--;
+    }
+    paging->page_reference_index = page_number * max_on_screen_lines;
 
-        size_t line_max_chars =
-            ncurses_prefix_from_maximum_length(paging->lines[i], max(menu_width - 3, 0), NULL);
+    size_t lines_until_end_of_page =
+        min((page_number + 1) * max_on_screen_lines, paging->lines_length);
 
-        addnwstr((wchar_t *) paging->lines[i], line_max_chars);
+    for (size_t i = paging->page_reference_index;
+         i + paging->block_length <= lines_until_end_of_page;
+         i += paging->block_length) {
+
+        for (size_t j = 0; j < paging->block_length; j++) {
+            move(menu_y++, menu_x + 1);
+
+            size_t line_max_chars = ncurses_prefix_from_maximum_length(paging->lines[i + j],
+                                                                       max(menu_width - 3, 0),
+                                                                       NULL);
+
+            addnwstr((wchar_t *) paging->lines[i + j], line_max_chars);
+        }
     }
 
     return 0;
@@ -125,10 +148,10 @@ activity_t *__activity_paging_create(const char **lines, size_t lines_length, si
     for (size_t i = 0; i < lines_length; i++)
         activity_data->lines[i] = g_utf8_to_ucs4_fast(lines[i], -1, NULL);
 
-    activity_data->lines_length = lines_length;
-    activity_data->block_length = block_length;
-    activity_data->current_page = 0;
-    activity_data->advance_page = 0;
+    activity_data->lines_length         = lines_length;
+    activity_data->block_length         = block_length;
+    activity_data->page_reference_index = 0;
+    activity_data->advance_page         = ACTIVITY_PAGING_ACTION_KEEP;
 
     return activity_create(__activity_paging_keypress,
                            __activity_paging_render,
