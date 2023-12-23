@@ -74,7 +74,7 @@ int __activity_paging_render(void *activity_data) {
 
     /* Reference diagram for positions and sizes: see header file */
 
-    if ((size_t) window_height < paging->block_length + 4 || window_width < 4)
+    if ((size_t) window_height < paging->block_length + 4 || window_width < 52)
         return 0; /* Don't attempt rendering on small windows */
 
     int menu_height = window_height - 4;
@@ -119,6 +119,16 @@ int __activity_paging_render(void *activity_data) {
             addnwstr((wchar_t *) paging->lines[i + j], line_max_chars);
         }
     }
+
+    move(menu_height + 1, 3);
+    if (page_number < max_page_number) {
+        printw("Use -> / <- to navigate (...)");
+    } else if (page_number == max_page_number) {
+        printw("Use -> / <- to navigate");
+    }
+
+    move(menu_height + 1, menu_width - 14);
+    printw("page %zu out of %zu", page_number, max_page_number);
 
     return 0;
 }
