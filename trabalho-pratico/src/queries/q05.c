@@ -106,7 +106,7 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
 
     /* Add flight to all query answers whose filter matches */
     for (size_t i = 0; i < foreach_data->filter_data->len; i++) {
-        q05_parsed_arguments_t *args = g_ptr_array_index(foreach_data->filter_data, i);
+        const q05_parsed_arguments_t *args = g_ptr_array_index(foreach_data->filter_data, i);
 
         /* Check if the flight meets the filters in the arguments */
         if (airport == args->airport_code &&
@@ -115,11 +115,6 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
 
             /* Add flight to answer (create answer array if needed) */
             GPtrArray *flights = g_hash_table_lookup(foreach_data->origin_flights, args);
-            if (!flights) {
-                flights = g_ptr_array_new();
-                g_hash_table_insert(foreach_data->origin_flights, args, flights);
-            }
-
             /* TODO - find a way to keep const */
             g_ptr_array_add(flights, (flight_t *) flight);
         }
@@ -139,25 +134,22 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
  *         `GPtrArray` of ::flight_t `*`s.
  */
 void *__q05_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+    GPtrArray  *filter_data    = g_ptr_array_new();
+    GHashTable *origin_flights = g_hash_table_new_full(g_direct_hash,
+                                                       g_direct_equal,
+                                                       NULL,
+                                                       (GDestroyNotify) g_ptr_array_unref);
 
-    /*
-     * TODO - Use faster filter using sets and ordered lists of date ranges.
-     * Generate an array of all filters (airport code + date ranges)
-     */
-    GPtrArray *filter_data = g_ptr_array_new();
     for (size_t i = 0; i < n; ++i) {
         q05_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
+
+        g_hash_table_insert(origin_flights, argument_data, g_ptr_array_new());
         g_ptr_array_add(filter_data, argument_data);
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
 
-    /* Create statistical data, associating queries to their answers */
-    GHashTable                *origin_flights = g_hash_table_new_full(g_direct_hash,
-                                                       g_direct_equal,
-                                                       NULL,
-                                                       (GDestroyNotify) g_ptr_array_unref);
-    q05_foreach_airport_data_t callback_data  = {.filter_data    = filter_data,
-                                                 .origin_flights = origin_flights};
+    q05_foreach_airport_data_t callback_data = {.filter_data    = filter_data,
+                                                .origin_flights = origin_flights};
 
     flight_manager_iter(database_get_flights(database),
                         __q05_generate_statistics_foreach_flight,
