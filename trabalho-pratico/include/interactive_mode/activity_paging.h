@@ -20,6 +20,26 @@
  *
  * @anchor activity_paging_examples
  * ### Examples
+ *
+ * Creating a menu is as simple as calling ::activity_paging_run. Provide an array of strings (with
+ * all the restrictions specified in the documentation for ::activity_paging_run), the number of
+ * strings in the said array, and the number of lines per block (the definition of block can also be
+ * found on the documentation for ::activity_paging_run).
+ *
+ * The pages generated will look like the following on screen (in this particular case there are
+ * three lines per block and three total blocks, one hidden on the next page):
+ *
+ * ```text
+ * +-----------------------output------------------------+
+ * | 1º line of the 1º block                             |
+ * | 2º line of the 1º block                             |
+ * |                                                     |
+ * | 1º line of the 2º block                             |
+ * | 2º line of the 2º block                             |
+ * |                                                     |
+ * | Use -> / <- to navigate (...)       page 0 out of 1 |
+ * +-----------------------------------------------------+
+ * ```
  */
 #ifndef ACTIVITY_PAGING_H
 #define ACTIVITY_PAGING_H
@@ -28,6 +48,25 @@
 
 #include "interactive_mode/activity.h"
 
+/**
+ * @brief Runs a TUI activity for a paginator.
+ *
+ * @details The @p lines array needs to be composed of chunks of lines (strings) with a fixed size,
+ *          called blocks. Each block must contain an empty string at the end, that should be
+ *          considered for the @p blocks_length, which means, in practice, that the lower possible
+ *          size for a block should be two. This restrictions are implied to simplify the process of
+ *          displaying multiple chunks of lines through possible multiple pages.
+ *
+ * @param lines        The lines of output be shown on the screen.
+ * @param lines_length The length of @p lines.
+ * @param block_length The number of lines in a block.
+ *
+ * @retval 0 Success.
+ * @retval 1 Allocation Failure.
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref activity_paging_examples).
+ */
 int activity_paging_run(const char **lines, size_t lines_length, size_t block_length);
 
 #endif

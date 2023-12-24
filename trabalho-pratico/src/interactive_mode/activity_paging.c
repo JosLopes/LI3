@@ -28,20 +28,50 @@
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/int_utils.h"
 
+/**
+ * @struct activity_paging_action_data_t
+ * @brief  Stores an action performed in the paginator.
+ */
 typedef enum {
-    ACTIVITY_PAGING_ACTION_NEXT_PAGE,
-    ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE,
-    ACTIVITY_PAGING_ACTION_KEEP
+    ACTIVITY_PAGING_ACTION_NEXT_PAGE,     /**< @brief Move to the next page */
+    ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE, /**< @brief Move to the previous page */
+    ACTIVITY_PAGING_ACTION_KEEP           /**< @brief Keep on the current page */
 } activity_paging_action_t;
 
+/**
+ * @struct activity_paging_data_t
+ * @brief  Data in a paging TUI activity.
+ *
+ * @var activity_paging_data_t::lines
+ *     @brief An Array of null-terminated UCS-4 strings for menu options.
+ * @var activity_paging_data_t::lines_length
+ *     @brief The number of lines to be displayed.
+ * @var activity_paging_data_t::block_length
+ *     @brief The number of lines in a block.
+ * @var activity_paging_data_t::page_reference_index
+ *     @brief A reference to display the correct page.
+ * @var activity_paging_data_t::change_page
+ *     @brief An action to change, or keep, the current page.
+ */
 typedef struct {
     gunichar **lines;
-    size_t     lines_length, block_length;
+    size_t   lines_length, block_length;
 
-    size_t                   page_reference_index;
-    activity_paging_action_t advance_page;
+    size_t   page_reference_index;    
+    activity_paging_action_t change_page;
 } activity_paging_data_t;
 
+/**
+ * @brief   Responds to user input in a paging activity.
+ * @details Handles user input to navigate through the pages of outputs, if necessary. 
+ *
+ * @param activity_data Pointer to a ::activity_paging_data_t.
+ * @param key           Key that was pressed. May be an ncurses `KEY_*` value.
+ * @param is_key_code   If the pressed key is not a character, but an ncurses `KEY_*` value.
+ *
+ * @retval 0 The user didn't quit or performed an action; continue.
+ * @retval 1 The user quit the menu using `\x1b` (Escape key).
+ */
 int __activity_paging_keypress(void *activity_data, wint_t key, int is_key_code) {
     activity_paging_data_t *paging = (activity_paging_data_t *) activity_data;
 
@@ -51,21 +81,26 @@ int __activity_paging_keypress(void *activity_data, wint_t key, int is_key_code)
     } else if (is_key_code) {
         switch (key) {
             case KEY_LEFT:
-                paging->advance_page = ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE;
+                paging->change_page = ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE;
                 return 0;
             case KEY_RIGHT:
-                paging->advance_page = ACTIVITY_PAGING_ACTION_NEXT_PAGE;
+                paging->change_page = ACTIVITY_PAGING_ACTION_NEXT_PAGE;
                 return 0;
             default:
-                paging->advance_page = ACTIVITY_PAGING_ACTION_KEEP;
+                paging->change_page = ACTIVITY_PAGING_ACTION_KEEP;
                 return 0;
         }
     }
 
-    paging->advance_page = ACTIVITY_PAGING_ACTION_KEEP;
+    paging->change_page = ACTIVITY_PAGING_ACTION_KEEP;
     return 0;
 }
 
+/**
+ * @brief Renders a paging activity.
+ * @param activity_data Pointer to a ::activity_paging_data_t.
+ * @retval 0 Always, to continue running this activity.
+ */
 int __activity_paging_render(void *activity_data) {
     activity_paging_data_t *paging = (activity_paging_data_t *) activity_data;
 
@@ -85,6 +120,7 @@ int __activity_paging_render(void *activity_data) {
 
     ncurses_render_rectangle(menu_x, menu_y, menu_width, menu_height);
 
+    /* Print the title */
     const char title[6] = "output";
     move(menu_y - 1, menu_x + menu_width / 2 - 3);
     printw("%s", title);
@@ -95,18 +131,30 @@ int __activity_paging_render(void *activity_data) {
     size_t max_page_number = ceil((double) paging->lines_length / (double) max_on_screen_lines) - 1;
     size_t page_number     = paging->page_reference_index / max_on_screen_lines;
 
-    if (paging->advance_page == ACTIVITY_PAGING_ACTION_NEXT_PAGE && page_number < max_page_number) {
+    /* Handles page changes */
+    if (paging->change_page == ACTIVITY_PAGING_ACTION_NEXT_PAGE && page_number < max_page_number) {
         page_number++;
-    } else if (paging->advance_page == ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE && page_number > 0) {
+    } else if (paging->change_page == ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE && page_number > 0) {
         page_number--;
     }
     paging->page_reference_index = page_number * max_on_screen_lines;
 
-    size_t lines_until_end_of_page =
+    /* Prints paging information relevant to the user */
+    move(menu_height + 1, 3);
+    if (page_number <= max_page_number) {
+        printw("Use -> / <- to navigate");     
+        if (page_number < max_page_number)
+            printw(" (...)");
+    }
+    move(menu_height + 1, menu_width - 14);
+    printw("page %zu out of %zu", page_number, max_page_number);
+
+    size_t lines_until_end_of_current_page =
         min((page_number + 1) * max_on_screen_lines, paging->lines_length);
 
+    /* Prints the blocks of lines that fit in the current page */
     for (size_t i = paging->page_reference_index;
-         i + paging->block_length <= lines_until_end_of_page;
+         i + paging->block_length <= lines_until_end_of_current_page;
          i += paging->block_length) {
 
         for (size_t j = 0; j < paging->block_length; j++) {
@@ -120,19 +168,13 @@ int __activity_paging_render(void *activity_data) {
         }
     }
 
-    move(menu_height + 1, 3);
-    if (page_number < max_page_number) {
-        printw("Use -> / <- to navigate (...)");
-    } else if (page_number == max_page_number) {
-        printw("Use -> / <- to navigate");
-    }
-
-    move(menu_height + 1, menu_width - 14);
-    printw("page %zu out of %zu", page_number, max_page_number);
-
     return 0;
 }
 
+/**
+ * @brief Frees a paging activity, generated by ::__activity_paging_create.
+ * @param activity_data Pointer to a ::activity_paging_data_t.
+ */
 void __activity_paging_free_data(void *activity_data) {
     activity_paging_data_t *paging = (activity_paging_data_t *) activity_data;
 
@@ -143,6 +185,12 @@ void __activity_paging_free_data(void *activity_data) {
     free(paging);
 }
 
+/**
+ * @brief   Creates an ::activity_t for a paginator.
+ * @details See ::activity_paging_run for parameter information.
+ * @return  An ::activity_t for a paginator, that must be deleted using ::activity_free. `NULL` is
+ *          also a possibility, when an allocation failure occurs.
+ */
 activity_t *__activity_paging_create(const char **lines, size_t lines_length, size_t block_length) {
 
     activity_paging_data_t *activity_data = malloc(sizeof(activity_paging_data_t));
@@ -161,7 +209,7 @@ activity_t *__activity_paging_create(const char **lines, size_t lines_length, si
     activity_data->lines_length         = lines_length;
     activity_data->block_length         = block_length;
     activity_data->page_reference_index = 0;
-    activity_data->advance_page         = ACTIVITY_PAGING_ACTION_KEEP;
+    activity_data->change_page         = ACTIVITY_PAGING_ACTION_KEEP;
 
     return activity_create(__activity_paging_keypress,
                            __activity_paging_render,
@@ -172,7 +220,7 @@ activity_t *__activity_paging_create(const char **lines, size_t lines_length, si
 int activity_paging_run(const char **lines, size_t lines_length, size_t block_length) {
     activity_t *activity = __activity_paging_create(lines, lines_length, block_length);
     if (!activity)
-        return -1;
+        return 1;
 
     activity_run(activity);
 
