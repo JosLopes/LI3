@@ -55,15 +55,15 @@ typedef enum {
  */
 typedef struct {
     gunichar **lines;
-    size_t   lines_length, block_length;
+    size_t     lines_length, block_length;
 
-    size_t   page_reference_index;    
+    size_t                   page_reference_index;
     activity_paging_action_t change_page;
 } activity_paging_data_t;
 
 /**
  * @brief   Responds to user input in a paging activity.
- * @details Handles user input to navigate through the pages of outputs, if necessary. 
+ * @details Handles user input to navigate through the pages of outputs, if necessary.
  *
  * @param activity_data Pointer to a ::activity_paging_data_t.
  * @param key           Key that was pressed. May be an ncurses `KEY_*` value.
@@ -142,7 +142,7 @@ int __activity_paging_render(void *activity_data) {
     /* Prints paging information relevant to the user */
     move(menu_height + 1, 3);
     if (page_number <= max_page_number) {
-        printw("Use -> / <- to navigate");     
+        printw("Use -> / <- to navigate");
         if (page_number < max_page_number)
             printw(" (...)");
     }
@@ -209,7 +209,7 @@ activity_t *__activity_paging_create(const char **lines, size_t lines_length, si
     activity_data->lines_length         = lines_length;
     activity_data->block_length         = block_length;
     activity_data->page_reference_index = 0;
-    activity_data->change_page         = ACTIVITY_PAGING_ACTION_KEEP;
+    activity_data->change_page          = ACTIVITY_PAGING_ACTION_KEEP;
 
     return activity_create(__activity_paging_keypress,
                            __activity_paging_render,
