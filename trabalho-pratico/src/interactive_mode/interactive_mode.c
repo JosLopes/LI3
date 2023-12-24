@@ -34,7 +34,6 @@
 #include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/activity_main_menu.h"
 #include "interactive_mode/activity_messagebox.h"
-#include "interactive_mode/activity_paging.h"
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
 #include "interactive_mode/screen_loading_dataset.h"
@@ -161,16 +160,25 @@ int interactive_mode_run(void) {
     }
 
     database_t *database = NULL;
-    (void) database;
 
     while (1) {
-        const char *lines[8] = {"Fire", "Tuna", "I love", "", "Dish", "Honored", "Avenged", ""};
-        size_t      number_of_lines = 8;
-        size_t      block_length    = 4;
+        activity_main_menu_chosen_option_t option = activity_main_menu_run();
 
-        activity_paging_run(lines, number_of_lines, block_length);
-        query_type_list_free(query_type_list);
-        __interactive_mode_terminate_ncurses();
-        return 0;
+        switch (option) {
+            case ACTIVITY_MAIN_MENU_LOAD_DATASET:
+                __interactive_mode_load_dataset(&database);
+                break;
+            case ACTIVITY_MAIN_MENU_RUN_QUERY:
+                __interactive_mode_run_query(query_type_list, database);
+                break;
+            case ACTIVITY_MAIN_MENU_LEAVE:
+                query_type_list_free(query_type_list);
+                if (database)
+                    database_free(database);
+
+                if (__interactive_mode_terminate_ncurses())
+                    return 1;
+                return 0;
+        }
     }
 }
