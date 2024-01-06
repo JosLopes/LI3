@@ -43,13 +43,13 @@ typedef enum {
  * @brief  Data in a paging TUI activity.
  *
  * @var activity_paging_data_t::lines
- *     @brief An Array of null-terminated UCS-4 strings for menu options.
+ *     @brief An Array of null-terminated UTF-32 strings for menu options.
  * @var activity_paging_data_t::lines_length
  *     @brief The number of lines to be displayed.
  * @var activity_paging_data_t::block_length
  *     @brief The number of lines in a block.
  * @var activity_paging_data_t::page_reference_index
- *     @brief A reference to display the correct page.
+ *     @brief The line where the current page being displayed starts.
  * @var activity_paging_data_t::change_page
  *     @brief An action to change, or keep, the current page.
  */
@@ -97,8 +97,8 @@ int __activity_paging_keypress(void *activity_data, wint_t key, int is_key_code)
 }
 
 /**
- * @brief Renders a paging activity.
- * @param activity_data Pointer to a ::activity_paging_data_t.
+ * @brief  Renders a paging activity.
+ * @param  activity_data Pointer to a ::activity_paging_data_t.
  * @retval 0 Always, to continue running this activity.
  */
 int __activity_paging_render(void *activity_data) {
@@ -109,21 +109,20 @@ int __activity_paging_render(void *activity_data) {
 
     /* Reference diagram for positions and sizes: see header file */
 
-    if ((size_t) window_height < paging->block_length + 4 || window_width < 52)
+    if ((size_t) window_height < paging->block_length + 4 || window_width < 56)
         return 0; /* Don't attempt rendering on small windows */
 
     int menu_height = window_height - 4;
     int menu_width  = window_width - 4;
 
-    int menu_y = 2;
-    int menu_x = 2;
+    const int menu_y = 2;
+    const int menu_x = 2;
 
     ncurses_render_rectangle(menu_x, menu_y, menu_width, menu_height);
 
     /* Print the title */
-    const char title[6] = "output";
-    move(menu_y - 1, menu_x + menu_width / 2 - 3);
-    printw("%s", title);
+    move(menu_y - 1, menu_x + (menu_width - strlen("Query output")) / 2);
+    printw("%s", "Query output");
 
     size_t max_on_screen_lines =
         min(menu_height / paging->block_length * paging->block_length, paging->lines_length);
@@ -131,7 +130,10 @@ int __activity_paging_render(void *activity_data) {
     size_t max_page_number = ceil((double) paging->lines_length / (double) max_on_screen_lines) - 1;
     size_t page_number     = paging->page_reference_index / max_on_screen_lines;
 
-    /* Handles page changes */
+    /*
+     * Handles page changes. This is done here because only the renderer known about screen
+     * dimensions
+     */
     if (paging->change_page == ACTIVITY_PAGING_ACTION_NEXT_PAGE && page_number < max_page_number) {
         page_number++;
     } else if (paging->change_page == ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE && page_number > 0) {
@@ -140,25 +142,33 @@ int __activity_paging_render(void *activity_data) {
     paging->page_reference_index = page_number * max_on_screen_lines;
 
     /* Prints paging information relevant to the user */
-    move(menu_height + 1, 3);
-    if (page_number <= max_page_number) {
-        printw("Use -> / <- to navigate");
-        if (page_number < max_page_number)
-            printw(" (...)");
+    if (max_page_number != 0) {
+        move(menu_y + menu_height - 1, menu_x + 1);
+        if (page_number <= max_page_number) {
+            printw("Use the left and right arrows to navigate");
+        }
+
+        char   ratio[256];
+        size_t len = snprintf(ratio, 256, "%zu / %zu", page_number + 1, max_page_number + 1);
+        move(menu_y + menu_height - 1, menu_x + menu_width - len - 1);
+        printw("%s", ratio);
     }
-    move(menu_height + 1, menu_width - 14);
-    printw("page %zu out of %zu", page_number, max_page_number);
 
     size_t lines_until_end_of_current_page =
         min((page_number + 1) * max_on_screen_lines, paging->lines_length);
 
     /* Prints the blocks of lines that fit in the current page */
+    int text_y = menu_y;
     for (size_t i = paging->page_reference_index;
          i + paging->block_length <= lines_until_end_of_current_page;
          i += paging->block_length) {
 
         for (size_t j = 0; j < paging->block_length; j++) {
-            move(menu_y++, menu_x + 1);
+            move(text_y, menu_x + 1);
+            text_y++;
+
+            if (i + j >= paging->lines_length)
+                return 0; /* Reached end of text */
 
             size_t line_max_chars = ncurses_prefix_from_maximum_length(paging->lines[i + j],
                                                                        max(menu_width - 3, 0),

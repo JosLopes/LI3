@@ -21,8 +21,8 @@
  * @anchor activity_paging_examples
  * ### Examples
  *
- * Creating a menu is as simple as calling ::activity_paging_run. Provide an array of strings (with
- * all the restrictions specified in the documentation for ::activity_paging_run), the number of
+ * Paging output is as simple as calling ::activity_paging_run. Provide an array of strings (lines,
+ * with the restrictions specified in the documentation for ::activity_paging_run), the number of
  * strings in the said array, and the number of lines per block (the definition of block can also be
  * found on the documentation for ::activity_paging_run).
  *
@@ -30,21 +30,19 @@
  * three lines per block and three total blocks, one hidden on the next page):
  *
  * ```text
- * +-----------------------output------------------------+
+ * +---------------------Query output--------------------+
  * | 1º line of the 1º block                             |
  * | 2º line of the 1º block                             |
  * |                                                     |
  * | 1º line of the 2º block                             |
  * | 2º line of the 2º block                             |
  * |                                                     |
- * | Use -> / <- to navigate (...)       page 0 out of 1 |
+ * | Use the left and right arrows to navigate     1 / 2 |
  * +-----------------------------------------------------+
  * ```
  */
 #ifndef ACTIVITY_PAGING_H
 #define ACTIVITY_PAGING_H
-
-#include <glib.h>
 
 #include "interactive_mode/activity.h"
 
