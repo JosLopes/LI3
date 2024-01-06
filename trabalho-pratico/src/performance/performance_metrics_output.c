@@ -33,61 +33,82 @@
 #include "utils/int_utils.h"
 
 /**
+ * @brief Calulates which unit should be used to display data.
+ *
+ * @param n             Number of data points.
+ * @param data          Data points.
+ * @param unit_dates    Name of the units to choose from. Must increase in factors of 1000 (e.g.:
+ *                      `{"us", "ms", "s"}`).
+ * @param out_unit_name Where to output the name of the chosen unit.
+ *
+ * @return The value to divide each data point by, in order to get the data point in the chosen
+ *         unit. This value will be `1`, `2`, or `3`.
+ */
+int __performance_metrics_choose_unit(size_t          n,
+                                      const uint64_t *data,
+                                      const char     *unit_names[3],
+                                      const char    **out_unit_name) {
+    uint64_t avg = 0;
+    for (size_t i = 0; i < n; ++i)
+        avg += data[i];
+
+    if (n != 0)
+        avg /= n;
+    avg = max(1, avg); /* Don't fail on log10(0) */
+
+    int unit_multiplier_log = floor(log10(avg) / 3);
+    if (unit_multiplier_log > 2)
+        unit_multiplier_log = 2;
+    *out_unit_name = unit_names[unit_multiplier_log];
+    return pow(1000, unit_multiplier_log);
+}
+
+/**
  * @brief Calculates the units that should be used to present data in @p events.
  *
- * @param events               Set of performance events to be presented.
  * @param n                    Number of performance events in @p events.
+ * @param events               Set of performance events to be presented. Some may be `NULL`, but
+ *                             must be counted toweards @p n.
  * @param time_unit_multiplier Where to write the factor to divide time units.
  * @param mem_unit_multiplier  Where to write the factor to divide memory units.
- * @param time_unit_string     Where to write the name of the time unit to.
- * @param mem_unit_string      Where to write the name of the memory unit to.
+ * @param time_unit_name       Where to write the name of the time unit to.
+ * @param mem_unit_name        Where to write the name of the memory unit to.
  */
-void __performance_metrics_output_choose_units(const performance_event_t **events,
-                                               size_t                      n,
-                                               int                        *time_unit_multiplier,
-                                               int                        *mem_unit_multiplier,
-                                               const char                **time_unit_string,
-                                               const char                **mem_unit_string) {
-    /* Calculate time and memory averages */
-    uint64_t time_avg = 0;
-    size_t   mem_avg  = 0;
+void __performance_metrics_output_choose_units_from_performance_events(
+    size_t                      n,
+    const performance_event_t **events,
+    int                        *time_unit_multiplier,
+    int                        *mem_unit_multiplier,
+    const char                **time_unit_name,
+    const char                **mem_unit_name) {
+
+    uint64_t *times = malloc(n * sizeof(uint64_t)), *mems = malloc(n * sizeof(uint64_t));
+    size_t    count = 0;
     for (size_t i = 0; i < n; ++i) {
-        if (!events[i])
-            continue;
-
-        time_avg += performance_event_get_elapsed_time(events[i]);
-        mem_avg += performance_event_get_used_memory(events[i]);
+        if (events[i]) {
+            times[count] = performance_event_get_elapsed_time(events[i]);
+            mems[count]  = performance_event_get_used_memory(events[i]);
+            ++count;
+        }
     }
 
-    if (n != 0) {
-        time_avg /= n;
-        mem_avg /= n;
-    }
-    time_avg = max(1, time_avg);
-    mem_avg  = max(1, mem_avg);
+    const char *time_unit_names[3] = {"us", "ms", "s"};
+    const char *mem_unit_names[3]  = {"KiB", "MiB", "GiB"};
 
-    /* Choose correct units */
-    const char *time_units[] = {"us", "ms", "s"};
-    const char *mem_units[]  = {"KiB", "MiB", "GiB"};
+    *time_unit_multiplier =
+        __performance_metrics_choose_unit(count, times, time_unit_names, time_unit_name);
+    *mem_unit_multiplier =
+        __performance_metrics_choose_unit(count, mems, mem_unit_names, mem_unit_name);
 
-    int unit_multiplier_log = round(log10(time_avg) / 3);
-    if (unit_multiplier_log > 2)
-        unit_multiplier_log = 2;
-    *time_unit_string     = time_units[unit_multiplier_log];
-    *time_unit_multiplier = pow(1000, unit_multiplier_log);
-
-    unit_multiplier_log = round(log10(time_avg) / 3);
-    if (unit_multiplier_log > 2)
-        unit_multiplier_log = 2;
-    *mem_unit_string     = mem_units[unit_multiplier_log];
-    *mem_unit_multiplier = pow(1000, unit_multiplier_log);
+    free(times);
+    free(mems);
 }
 
 /**
  * @brief Prints a table with performance events.
  *
  * @param output      Where to print the table to.
- * @param events      Events to be printed.
+ * @param events      Events to be printed. Some may be `NULL`, but must be counted toweards @p n.
  * @param event_names Names of the events on the table.
  * @param n           Number of @p events and @p event_names.
  */
@@ -98,13 +119,13 @@ void __performance_metrics_output_print_table(FILE                       *output
 
     /* Choose best units to fit data */
     int         time_unit_multiplier, mem_unit_multiplier;
-    const char *time_unit_string, *mem_unit_string;
-    __performance_metrics_output_choose_units(events,
-                                              n,
-                                              &time_unit_multiplier,
-                                              &mem_unit_multiplier,
-                                              &time_unit_string,
-                                              &mem_unit_string);
+    const char *time_unit_name, *mem_unit_name;
+    __performance_metrics_output_choose_units_from_performance_events(n,
+                                                                      events,
+                                                                      &time_unit_multiplier,
+                                                                      &mem_unit_multiplier,
+                                                                      &time_unit_name,
+                                                                      &mem_unit_name);
 
     /* Calculate table measurements */
     int left_width = 0;
@@ -125,8 +146,8 @@ void __performance_metrics_output_print_table(FILE                       *output
             "  %*s | Time (%3s) | Memory (%3s) |\n",
             left_width,
             "",
-            time_unit_string,
-            mem_unit_string);
+            time_unit_name,
+            mem_unit_name);
     fprintf(output, "  %*s |            |              |\n", left_width, "");
     fprintf(output, "+-%s-+------------+--------------+\n", left_hyphens);
 
@@ -207,18 +228,120 @@ void __performance_metrics_output_print_query_statistics(FILE                   
         free(event_names[i]);
 }
 
+/**
+ * @brief Prints performance information about execution of all queries of the same type.
+ *
+ * @param output          Stream where to output data.
+ * @param n               Number of @p line_numbers and @p times.
+ * @param line_numbers    Numbers of the lines where queries of a given type occurred.
+ * @param times           Times (us) it took to process each query (by line number).
+ * @param statistics_time Time it took to generate query statistics.
+ */
+void __performance_metrics_output_query(FILE           *output,
+                                        size_t          n,
+                                        const size_t   *line_numbers,
+                                        const uint64_t *times,
+                                        uint64_t        statistics_time) {
+    if (n == 0)
+        return;
+
+    /* Calulate amortized times */
+    uint64_t *amortized = malloc(n * sizeof(uint64_t));
+    if (!amortized)
+        return;
+
+    for (size_t i = 0; i < n; ++i) {
+        amortized[i] = times[i] + statistics_time / n;
+    }
+
+    const char *units[3] = {"us", "ms", "s"};
+
+    /* Choose best units to fit data */
+    int         time_unit_multiplier, amortized_unit_multiplier;
+    const char *time_unit_name, *amortized_unit_name;
+
+    time_unit_multiplier = __performance_metrics_choose_unit(n, times, units, &time_unit_name);
+    amortized_unit_multiplier =
+        __performance_metrics_choose_unit(n, amortized, units, &amortized_unit_name);
+
+    /* Prepare width of the left-most column */
+    const int left_width   = 10;
+    char     *left_hyphens = malloc(left_width + 1);
+    memset(left_hyphens, '-', left_width);
+    left_hyphens[left_width] = '\0';
+
+    /* Actually print table */
+    fprintf(output, "  %*s +------------+-----------------+\n", left_width, "");
+    fprintf(output, "  %*s |            |                 |\n", left_width, "");
+    fprintf(output,
+            "  %*s | Time (%3s) | Amortized (%3s) |\n",
+            left_width,
+            "",
+            time_unit_name,
+            amortized_unit_name);
+    fprintf(output, "  %*s |            |                 |\n", left_width, "");
+    fprintf(output, "+-%s-+------------+-----------------+\n", left_hyphens);
+
+    for (size_t i = 0; i < n; ++i) {
+        fprintf(output, "| %*s |            |                 |\n", left_width, "");
+
+        if (statistics_time)
+            fprintf(output,
+                    "| Line %5zu | %10.2lf | %15.2lf |\n",
+                    line_numbers[i],
+                    (double) times[i] / time_unit_multiplier,
+                    (double) amortized[i] / amortized_unit_multiplier);
+        else
+            fprintf(output,
+                    "| Line %5zu | %10.2lf |        -        |\n",
+                    line_numbers[i],
+                    (double) times[i] / time_unit_multiplier);
+
+        fprintf(output, "| %*s |            |                 |\n", left_width, "");
+        fprintf(output, "+-%s-+------------+-----------------+\n", left_hyphens);
+    }
+
+    free(amortized);
+    free(left_hyphens);
+}
+
 void performance_metrics_output_print(FILE *output, const performance_metrics_t *metrics) {
     if (output == stdout)
-        printf("\n\x1b[1;4mDATASET LOADING\x1b[22;24m\n\n");
+        fprintf(output, "\n\x1b[1;4mDATASET LOADING\x1b[22;24m\n\n");
     else
-        printf("\nDATASET LOADING\n\n");
+        fprintf(output, "\nDATASET LOADING\n\n");
     __performance_metrics_output_print_dataset(output, metrics);
 
     if (output == stdout)
-        printf("\n\x1b[1;4mQUERY STATISTICAL DATA GENERATION\x1b[22;24m\n\n");
+        fprintf(output, "\n\x1b[1;4mQUERY STATISTICAL DATA GENERATION\x1b[22;24m\n\n");
     else
-        printf("\nQUERY STATISTICAL DATA GENERATION\n\n");
+        fprintf(output, "\nQUERY STATISTICAL DATA GENERATION\n\n");
     __performance_metrics_output_print_query_statistics(output, metrics);
+
+    if (output == stdout)
+        fprintf(output, "\n\x1b[1;4mQUERY EXECUTION\x1b[22;24m\n\n");
+    else
+        fprintf(output, "\nQUERY EXECUTION\n");
+
+    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
+        size_t   *line_numbers;
+        uint64_t *times;
+
+        fprintf(output, "\nQuery %zu\n\n", i + 1);
+
+        const performance_event_t *statistics_event =
+            performance_metrics_get_query_statistics_measurement(metrics, i);
+        uint64_t statistics_time =
+            statistics_event ? performance_event_get_elapsed_time(statistics_event) : 0;
+
+        ssize_t len =
+            performance_metrics_get_query_execution_measurements(metrics, i, &line_numbers, &times);
+
+        __performance_metrics_output_query(output, len, line_numbers, times, statistics_time);
+
+        g_free(line_numbers);
+        g_free(times);
+    }
 
     putchar('\n');
 }

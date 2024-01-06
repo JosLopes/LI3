@@ -94,10 +94,21 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
     }
 
     for (size_t j = 0; j < n; ++j) {
+        size_t line = query_instance_get_number_in_file(instances);
+
+        performance_metrics_start_measuring_query_execution(dispatcher_data->metrics,
+                                                            type_num,
+                                                            line);
+
         execute(dispatcher_data->database,
                 statistics,
                 instances,
                 dispatcher_data->outputs[dispatcher_data->i + j]); /* Ignore returned result */
+
+        performance_metrics_stop_measuring_query_execution(dispatcher_data->metrics,
+                                                           type_num,
+                                                           line);
+
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
     dispatcher_data->i += n;
