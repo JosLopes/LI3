@@ -109,7 +109,7 @@ int __activity_paging_render(void *activity_data) {
 
     /* Reference diagram for positions and sizes: see header file */
 
-    if ((size_t) window_height < paging->block_length + 4 || window_width < 56)
+    if ((size_t) window_height < paging->block_length + 5 || window_width < 56)
         return 0; /* Don't attempt rendering on small windows */
 
     int menu_height = window_height - 4;
@@ -125,7 +125,7 @@ int __activity_paging_render(void *activity_data) {
     printw("%s", "Query output");
 
     size_t max_on_screen_lines =
-        min(menu_height / paging->block_length * paging->block_length, paging->lines_length);
+        min((menu_height - 1) / paging->block_length * paging->block_length, paging->lines_length);
 
     size_t max_page_number = ceil((double) paging->lines_length / (double) max_on_screen_lines) - 1;
     size_t page_number     = paging->page_reference_index / max_on_screen_lines;
@@ -227,7 +227,28 @@ activity_t *__activity_paging_create(const char **lines, size_t lines_length, si
                            activity_data);
 }
 
-int activity_paging_run(const char **lines, size_t lines_length, size_t block_length) {
+int activity_paging_run(const char **lines, size_t lines_length, int blocking) {
+    const char *single_empty_line[] = {""};
+    if (lines_length == 0) {
+        lines        = single_empty_line;
+        lines_length = 1;
+    }
+
+    size_t block_length = 0;
+    if (blocking) {
+        for (size_t i = 0; i < lines_length; ++i) {
+            if (!*lines[i]) {
+                block_length = i + 1;
+                break;
+            }
+        }
+
+        if (block_length == 0)
+            block_length = lines_length; /* All text is a single block */
+    } else {
+        block_length = 1;
+    }
+
     activity_t *activity = __activity_paging_create(lines, lines_length, block_length);
     if (!activity)
         return 1;
