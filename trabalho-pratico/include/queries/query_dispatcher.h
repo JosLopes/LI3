@@ -35,8 +35,8 @@
 #include <stdio.h>
 
 #include "database/database.h"
-#include "performance/performance_metrics.h"
 #include "queries/query_instance_list.h"
+#include "testing/performance_metrics.h"
 
 /**
  * @brief Runs a single query.

@@ -28,7 +28,7 @@
 #ifndef PERFORMANCE_METRICS_H
 #define PERFORMANCE_METRICS_H
 
-#include "performance/performance_event.h"
+#include "testing/performance_event.h"
 
 /** @brief Step of loading a dataset, whose performance must be measured. */
 typedef enum {

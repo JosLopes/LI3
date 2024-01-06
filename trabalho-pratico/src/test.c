@@ -25,7 +25,7 @@
 #include <string.h>
 
 #include "batch_mode.h"
-#include "performance/performance_metrics_output.h"
+#include "testing/performance_metrics_output.h"
 
 /**
  * @brief The entry point to the test program.
