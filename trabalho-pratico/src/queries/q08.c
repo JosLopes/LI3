@@ -153,6 +153,7 @@ int __q08_execute(database_t       *database,
     query_writer_write_new_object(output);
     query_writer_write_new_field(output, "revenue", "%d", *(revenue));
 
+    free(revenue);
     return 0;
 }
 
