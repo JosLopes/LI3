@@ -23,6 +23,8 @@
  */
 
 #include <ctype.h>
+#include <glib.h>
+#include <limits.h>
 #include <string.h>
 
 #include "testing/test_diff_output.h"
@@ -92,6 +94,30 @@ void test_diff_output_print(FILE *output, const test_diff_t *diff) {
                                       n,
                                       "missing file",
                                       "missing files");
+
+    const char *const *common;
+    ssize_t const     *errors;
+    n = test_diff_get_common_file_errors(diff, &common, &errors);
+
+    GPtrArray *errors_str = g_ptr_array_new_with_free_func((GDestroyNotify) free);
+    for (size_t i = 0; i < n; ++i) {
+        if (errors[i] == -1) {
+            char msg[PATH_MAX];
+            snprintf(msg, PATH_MAX, "IO error loading \"%s\"", common[i]);
+            g_ptr_array_add(errors_str, strdup(msg));
+        } else if (errors[i] > 0) {
+            char msg[PATH_MAX];
+            snprintf(msg, PATH_MAX, "Error in line %zd of \"%s\"", errors[i], common[i]);
+            g_ptr_array_add(errors_str, strdup(msg));
+        }
+    }
+    __test_diff_output_print_category(output,
+                                      "Errors in files",
+                                      (const char *const *) errors_str->pdata,
+                                      errors_str->len,
+                                      "error",
+                                      "errors");
+    g_ptr_array_unref(errors_str);
 
     if (n == 0)
         putchar('\n');
