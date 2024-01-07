@@ -26,6 +26,7 @@
 
 #include "batch_mode.h"
 #include "testing/performance_metrics_output.h"
+#include "testing/test_diff_output.h"
 
 /**
  * @brief The entry point to the test program.
@@ -47,7 +48,17 @@ int main(int argc, char **argv) {
         }
 
         performance_metrics_output_print(stdout, metrics);
+
+        test_diff_t *diff = test_diff_create("Resultados", argv[3]);
+        if (!diff) {
+            fputs("Failed to compare generated and expected results!\n", stderr);
+            performance_metrics_free(metrics);
+            return 1;
+        }
+        test_diff_output_print(stdout, diff);
+
         performance_metrics_free(metrics);
+        test_diff_free(diff);
         return 0;
     } else {
         fputs("Invalid command-line arguments! Usage:\n", stderr);
