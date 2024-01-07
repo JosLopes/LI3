@@ -53,17 +53,33 @@ test_diff_t *test_diff_clone(const test_diff_t *diff);
 
 /**
  * @brief  Gets the list of files present in the generated results but not in the expected ones.
- * @param  n Where to write the number of files to.
+ * @param  diff Test results to get the files from.
+ * @param  n    Where to write the number of files to.
  * @return Pointers to the file names.
  */
 const char *const *test_diff_get_extra_files(const test_diff_t *diff, size_t *n);
 
 /**
  * @brief  Gets the list of files present in the expected results but not in the generated ones.
- * @param  n Where to write the number of files to.
+ * @param  diff Test results to get the files from.
+ * @param  n    Where to write the number of files to.
  * @return Pointers to the file names.
  */
 const char *const *test_diff_get_missing_files(const test_diff_t *diff, size_t *n);
+
+/**
+ * @brief Gets the lines where differences were found between files.
+ *
+ * @param diff         Test results to get the files and errors from.
+ * @param common_files Where to output the list of files to.
+ * @param errors       First line where a difference was found for each file. `0` means no error and
+ *                     `-1` means an IO occurred.
+ *
+ * @return The number of values in both @p common_files and @p errors.
+ */
+size_t test_diff_get_common_file_errors(const test_diff_t  *diff,
+                                        const char *const **common_files,
+                                        ssize_t const     **errors);
 
 /**
  * @brief Frees memory allocated by ::test_diff_create.
