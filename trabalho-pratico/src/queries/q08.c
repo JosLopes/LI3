@@ -68,44 +68,21 @@ int __q08_generate_statistics_foreach_flight(void *user_data, const reservation_
         /* Check if the hotel meets the hotel_code filter in the arguments */
         if (hotel_code == args->hotel_code) {
 
-            date_t   reservation_begin_date      = reservation_get_begin_date(reservation);
-            date_t   reservation_end_date        = reservation_get_end_date(reservation);
             uint16_t reservation_price_per_night = reservation_get_price_per_night(reservation);
 
-            if (date_diff(reservation_begin_date, args->begin_date) >= 0 &&
-                date_diff(reservation_end_date, args->end_date) <= 0) {
+            date_t begin_date =
+                date_diff(reservation_get_begin_date(reservation), args->begin_date) < 0
+                    ? args->begin_date
+                    : reservation_get_begin_date(reservation);
+            date_t end_date = date_diff(reservation_get_end_date(reservation), args->end_date) > 0
+                                  ? args->end_date
+                                  : reservation_get_end_date(reservation);
 
-                uint16_t *revenue =
-                    (uint16_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
-                *revenue += reservation_price_per_night *
-                            (date_diff(reservation_end_date, reservation_begin_date) + 1);
+            if (date_diff(end_date, begin_date) < 0)
+                continue;
 
-            } else if (date_diff(reservation_begin_date, args->begin_date) <= 0 &&
-                       date_diff(reservation_end_date, args->end_date) <= 0 &&
-                       date_diff(reservation_end_date, args->begin_date) >= 0) {
-
-                uint16_t *revenue =
-                    (uint16_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
-                *revenue += reservation_price_per_night *
-                            (date_diff(reservation_end_date, args->begin_date) + 1);
-
-            } else if (date_diff(reservation_begin_date, args->begin_date) >= 0 &&
-                       date_diff(reservation_begin_date, args->end_date) <= 0 &&
-                       date_diff(reservation_end_date, args->end_date) >= 0) {
-
-                uint16_t *revenue =
-                    (uint16_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
-                *revenue += reservation_price_per_night *
-                            (date_diff(args->end_date, reservation_begin_date) + 1);
-
-            } else if (date_diff(reservation_begin_date, args->begin_date) <= 0 &&
-                       date_diff(reservation_end_date, args->end_date) >= 0) {
-
-                uint16_t *revenue =
-                    (uint16_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
-                *revenue +=
-                    reservation_price_per_night * (date_diff(args->end_date, args->begin_date) + 1);
-            }
+            uint16_t *revenue = (uint16_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
+            *revenue += reservation_price_per_night * (date_diff(end_date, begin_date) + 1);
         }
     }
 
