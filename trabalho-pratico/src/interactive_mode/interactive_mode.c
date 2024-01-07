@@ -39,6 +39,7 @@
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
 #include "interactive_mode/screen_loading_dataset.h"
+#include "queries/query_dispatcher.h"
 #include "queries/query_parser.h"
 
 /**
@@ -129,8 +130,22 @@ void __interactive_mode_run_query(query_type_list_t *query_type_list, const data
             query_instance_free(query_parsed, query_type_list);
             activity_messagebox_run("Failed to parse query.");
         } else {
-            const char *lines[] = {"TODO", "Use query_writer when that's in main"};
-            activity_paging_run(lines, 2, query_instance_get_formatted(query_parsed));
+            query_writer_t *writer =
+                query_writer_create(NULL, query_instance_get_formatted(query_parsed));
+            if (!writer) {
+                activity_messagebox_run("Failed to create writer for query output.");
+            } else {
+                /* TODO - fix cast when query system is fixed */
+                query_dispatcher_dispatch_single((database_t *) database,
+                                                 query_parsed,
+                                                 query_type_list,
+                                                 writer);
+                size_t             nlines;
+                const char *const *lines = query_writer_get_lines(writer, &nlines);
+                activity_paging_run(lines, nlines, query_instance_get_formatted(query_parsed));
+
+                query_writer_free(writer);
+            }
 
             query_instance_free(query_parsed, query_type_list);
             g_free(query_old_str);

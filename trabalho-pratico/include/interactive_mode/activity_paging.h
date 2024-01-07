@@ -64,6 +64,6 @@
  * #### Examples
  * See [the header file's documentation](@ref activity_paging_examples).
  */
-int activity_paging_run(const char **lines, size_t lines_length, int blocking);
+int activity_paging_run(const char *const *lines, size_t lines_length, int blocking);
 
 #endif
