@@ -26,6 +26,7 @@
 #define _XOPEN_SOURCE_EXTENDED
 /** @endcond */
 
+#include <glib.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@
 #include "interactive_mode/activity_dataset_picker.h"
 #include "interactive_mode/activity_main_menu.h"
 #include "interactive_mode/activity_messagebox.h"
+#include "interactive_mode/activity_paging.h"
 #include "interactive_mode/activity_textbox.h"
 #include "interactive_mode/interactive_mode.h"
 #include "interactive_mode/screen_loading_dataset.h"
@@ -127,7 +129,8 @@ void __interactive_mode_run_query(query_type_list_t *query_type_list, const data
             query_instance_free(query_parsed, query_type_list);
             activity_messagebox_run("Failed to parse query.");
         } else {
-            activity_messagebox_run("Running a query not yet supported!");
+            const char *lines[] = {"TODO", "Use query_writer when that's in main"};
+            activity_paging_run(lines, 2, query_instance_get_formatted(query_parsed));
 
             query_instance_free(query_parsed, query_type_list);
             g_free(query_old_str);
