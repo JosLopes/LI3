@@ -180,9 +180,9 @@ char *__test_diff_read_file(const char *path, size_t *n) {
         goto END;
 
     /* Read file contents */
-    ret = malloc(sizeof(char) * len);
-    fread(ret, 1, len, f);
-    if (ferror(f)) {
+    ret          = malloc(sizeof(char) * len);
+    ssize_t read = fread(ret, 1, len, f);
+    if (read != len || ferror(f)) {
         ret = NULL;
         free(ret);
         goto END;
