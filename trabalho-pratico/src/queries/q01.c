@@ -135,15 +135,11 @@ double __q01_calculate_user_total_spent(const single_pool_id_linked_list_t *list
  *
  * @param database Database do get the users and reservations from.
  * @param id       Identifier to find the user and its data.
- * @param instance Query instance to be executed.
  * @param output   Where to write the query's output to.
  *
  * @retval 0 Never fails.
  */
-int __q01_execute_user_entity(database_t       *database,
-                              char             *id,
-                              query_instance_t *instance,
-                              FILE             *output) {
+int __q01_execute_user_entity(database_t *database, char *id, query_writer_t *output) {
 
     user_manager_t        *user_manager        = database_get_users(database);
     reservation_manager_t *reservation_manager = database_get_reservations(database);
@@ -167,31 +163,15 @@ int __q01_execute_user_entity(database_t       *database,
     char country_code[COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE];
     country_code_sprintf(country_code, user_get_country_code(user));
 
-    if (query_instance_get_formatted(instance)) {
-        fprintf(output,
-                "--- 1 ---\nname: %s\nsex: %s\nage: %" PRIi32 "\ncountry_code: %s\n"
-                "passport: %s\nnumber_of_flights: %zu\nnumber_of_reservations: %zu\n"
-                "total_spent: %.3f\n",
-                user_get_const_name(user),
-                sex,
-                age,
-                country_code,
-                user_get_const_passport(user),
-                number_of_flights,
-                number_of_reservations,
-                total_spent);
-    } else {
-        fprintf(output,
-                "%s;%s;%" PRIi32 ";%s;%s;%zu;%zu;%.3f\n",
-                user_get_const_name(user),
-                sex,
-                age,
-                country_code,
-                user_get_const_passport(user),
-                number_of_flights,
-                number_of_reservations,
-                total_spent);
-    }
+    query_writer_write_new_object(output);
+    query_writer_write_new_field(output, "name", "%s", user_get_const_name(user));
+    query_writer_write_new_field(output, "sex", "%s", sex);
+    query_writer_write_new_field(output, "age", "%" PRIi32, age);
+    query_writer_write_new_field(output, "country_code", "%s", country_code);
+    query_writer_write_new_field(output, "passport", "%s", user_get_const_passport(user));
+    query_writer_write_new_field(output, "number_of_flights", "%zu", number_of_flights);
+    query_writer_write_new_field(output, "number_of_reservations", "%zu", number_of_reservations);
+    query_writer_write_new_field(output, "total_spent", "%.3lf", total_spent);
 
     return 0;
 }
@@ -201,15 +181,13 @@ int __q01_execute_user_entity(database_t       *database,
  *
  * @param database Database do get the users and reservations from.
  * @param id       Identifier to find the reservation and its data.
- * @param instance Query instance to be executed.
  * @param output   Where to write the query's output to.
  *
  * @retval 0 Always successful.
  */
-int __q01_execute_reservation_entity(database_t       *database,
-                                     reservation_id_t  id,
-                                     query_instance_t *instance,
-                                     FILE             *output) {
+int __q01_execute_reservation_entity(database_t      *database,
+                                     reservation_id_t id,
+                                     query_writer_t  *output) {
 
     reservation_manager_t *reservation_manager = database_get_reservations(database);
     reservation_t         *reservation = reservation_manager_get_by_id(reservation_manager, id);
@@ -234,31 +212,21 @@ int __q01_execute_reservation_entity(database_t       *database,
     char hotel_id_str[HOTEL_ID_SPRINTF_MIN_BUFFER_SIZE];
     hotel_id_sprintf(hotel_id_str, reservation_get_hotel_id(reservation));
 
-    if (query_instance_get_formatted(instance)) {
-        fprintf(output,
-                "--- 1 ---\nhotel_id: %s\nhotel_name: %s\nhotel_stars: %" PRIu8 "\n"
-                "begin_date: %s\nend_date: %s\nincludes_breakfast: %s\nnights: %" PRIi64 "\n"
-                "total_price: %.3f\n",
-                hotel_id_str,
-                reservation_get_const_hotel_name(reservation),
-                reservation_get_hotel_stars(reservation),
-                begin_date_str,
-                end_date_str,
-                includes_breakfast_str,
-                nights,
-                total_price);
-    } else {
-        fprintf(output,
-                "%s;%s;%" PRIu8 ";%s;%s;%s;%" PRIi64 ";%.3f\n",
-                hotel_id_str,
-                reservation_get_const_hotel_name(reservation),
-                reservation_get_hotel_stars(reservation),
-                begin_date_str,
-                end_date_str,
-                includes_breakfast_str,
-                nights,
-                total_price);
-    }
+    query_writer_write_new_object(output);
+    query_writer_write_new_field(output, "hotel_id", "%s", hotel_id_str);
+    query_writer_write_new_field(output,
+                                 "hotel_name",
+                                 "%s",
+                                 reservation_get_const_hotel_name(reservation));
+    query_writer_write_new_field(output,
+                                 "hotel_stars",
+                                 "%" PRIu8,
+                                 reservation_get_hotel_stars(reservation));
+    query_writer_write_new_field(output, "begin_date", "%s", begin_date_str);
+    query_writer_write_new_field(output, "end_date", "%s", end_date_str);
+    query_writer_write_new_field(output, "includes_breakfast", "%s", includes_breakfast_str);
+    query_writer_write_new_field(output, "nights", "%" PRIi64, nights);
+    query_writer_write_new_field(output, "total_price", "%.3lf", total_price);
 
     return 0;
 }
@@ -268,15 +236,11 @@ int __q01_execute_reservation_entity(database_t       *database,
  *
  * @param database Database do get the flights from.
  * @param id       Id to find the flight.
- * @param instance Query instance to be executed.
  * @param output   Where to write the query's output to.
  *
  * @retval 0 Always successful.
  */
-int __q01_execute_flight_entity(database_t       *database,
-                                flight_id_t       id,
-                                query_instance_t *instance,
-                                FILE             *output) {
+int __q01_execute_flight_entity(database_t *database, flight_id_t id, query_writer_t *output) {
 
     flight_manager_t *flight_manager = database_get_flights(database);
     flight_t         *flight         = flight_manager_get_by_id(flight_manager, id);
@@ -299,31 +263,18 @@ int __q01_execute_flight_entity(database_t       *database,
     int64_t delay =
         date_and_time_diff(flight_get_real_departure_date(flight), schedule_departure_date);
 
-    if (query_instance_get_formatted(instance)) {
-        fprintf(output,
-                "--- 1 ---\nairline: %s\nplane_model: %s\norigin: %s\n"
-                "destination: %s\nschedule_departure_date: %s\nschedule_arrival_date: %s\n"
-                "passengers: %" PRIu16 "\ndelay: %" PRIi64 "\n",
-                flight_get_const_airline(flight),
-                flight_get_const_plane_model(flight),
-                origin_airport,
-                destination_airport,
-                scheduled_departure_str,
-                scheduled_arrival_str,
-                flight_get_number_of_passengers(flight),
-                delay);
-    } else {
-        fprintf(output,
-                "%s;%s;%s;%s;%s;%s;%" PRIu16 ";%" PRIi64 "\n",
-                flight_get_const_airline(flight),
-                flight_get_const_plane_model(flight),
-                origin_airport,
-                destination_airport,
-                scheduled_departure_str,
-                scheduled_arrival_str,
-                flight_get_number_of_passengers(flight),
-                delay);
-    }
+    query_writer_write_new_object(output);
+    query_writer_write_new_field(output, "airline", "%s", flight_get_const_airline(flight));
+    query_writer_write_new_field(output, "plane_model", "%s", flight_get_const_plane_model(flight));
+    query_writer_write_new_field(output, "origin", "%s", origin_airport);
+    query_writer_write_new_field(output, "destination", "%s", destination_airport);
+    query_writer_write_new_field(output, "schedule_departure_date", "%s", scheduled_departure_str);
+    query_writer_write_new_field(output, "schedule_arrival_date", "%s", scheduled_arrival_str);
+    query_writer_write_new_field(output,
+                                 "passengers",
+                                 "%" PRIu16,
+                                 flight_get_number_of_passengers(flight));
+    query_writer_write_new_field(output, "delay", "%" PRIi64, delay);
 
     return 0;
 }
@@ -342,7 +293,7 @@ int __q01_execute_flight_entity(database_t       *database,
 int __q01_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
 
     (void) statistics;
 
@@ -351,14 +302,11 @@ int __q01_execute(database_t       *database,
 
     switch (arguments->id_entity) {
         case ID_ENTITY_USER:
-            return __q01_execute_user_entity(database, id, instance, output);
+            return __q01_execute_user_entity(database, id, output);
         case ID_ENTITY_RESERVATION:
-            return __q01_execute_reservation_entity(database,
-                                                    *(reservation_id_t *) id,
-                                                    instance,
-                                                    output);
+            return __q01_execute_reservation_entity(database, *(reservation_id_t *) id, output);
         case ID_ENTITY_FLIGHT:
-            return __q01_execute_flight_entity(database, *(flight_id_t *) id, instance, output);
+            return __q01_execute_flight_entity(database, *(flight_id_t *) id, output);
         default:
             return 1; /* unreachable */
     }

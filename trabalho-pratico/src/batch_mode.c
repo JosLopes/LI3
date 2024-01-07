@@ -35,13 +35,13 @@
  * @brief  Data structure used for query iteration in ::__batch_mode_init_file_callback.
  *
  * @var batch_mode_iter_data::outputs
- *     @brief Where to write opened files to.
+ *     @brief Where to write opened query output writers to.
  * @var batch_mode_iter_data::i
  *     @brief Index of the query being currently dealt with.
  */
 typedef struct {
-    FILE **outputs;
-    size_t i;
+    query_writer_t **outputs;
+    size_t           i;
 } batch_mode_iter_data_t;
 
 /**
@@ -53,15 +53,17 @@ typedef struct {
 int __batch_mode_init_file_callback(void *user_data, query_instance_t *instance) {
     batch_mode_iter_data_t *iter_data = (batch_mode_iter_data_t *) user_data;
 
+    /* Parent directory creation is assured by error file output while loading the dataset */
     char path[PATH_MAX];
     sprintf(path, "Resultados/command%zu_output.txt", query_instance_get_number_in_file(instance));
 
-    /* Parent directory creation is assured by error file output while loading the dataset */
-    iter_data->outputs[iter_data->i] = fopen(path, "w");
+    iter_data->outputs[iter_data->i] =
+        query_writer_create(path, query_instance_get_formatted(instance));
+
     if (!iter_data->outputs[iter_data->i]) {
-        /* On failure, close all already-opened files */
+        /* On failure, delete all writers already created */
         for (size_t j = 0; j < iter_data->i; ++j)
-            fclose(iter_data->outputs[j]);
+            query_writer_free(iter_data->outputs[j]);
         return 1;
     }
 
@@ -113,8 +115,8 @@ int batch_mode_run(const char            *dataset_dir,
         return 1;
     }
 
-    FILE **query_outputs =
-        malloc(sizeof(FILE *) * query_instance_list_get_length(query_instance_list));
+    query_writer_t **query_outputs =
+        malloc(sizeof(query_writer_t *) * query_instance_list_get_length(query_instance_list));
     if (!query_outputs) {
         query_instance_list_free(query_instance_list, query_type_list);
         query_type_list_free(query_type_list);
@@ -145,7 +147,7 @@ int batch_mode_run(const char            *dataset_dir,
                                    metrics);
 
     for (size_t i = 0; i < query_instance_list_get_length(query_instance_list); ++i)
-        fclose(query_outputs[i]);
+        query_writer_free(query_outputs[i]);
     free(query_outputs);
 
     query_instance_list_free(query_instance_list, query_type_list);

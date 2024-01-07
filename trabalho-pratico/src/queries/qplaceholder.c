@@ -53,7 +53,7 @@ void __qplaceholder_free_statistics(void *statistics) {
 int __qplaceholder_execute(database_t       *database,
                            void             *statistics,
                            query_instance_t *instance,
-                           FILE             *output) {
+                           query_writer_t   *output) {
     (void) database;
     (void) statistics;
     (void) instance;

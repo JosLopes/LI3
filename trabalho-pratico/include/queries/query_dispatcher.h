@@ -49,7 +49,7 @@
 void query_dispatcher_dispatch_single(database_t        *database,
                                       query_instance_t  *query_instance,
                                       query_type_list_t *query_type_list,
-                                      FILE              *output);
+                                      query_writer_t    *output);
 
 /**
  * @brief Runs a list of queries.
@@ -64,7 +64,7 @@ void query_dispatcher_dispatch_single(database_t        *database,
 void query_dispatcher_dispatch_list(database_t            *database,
                                     query_instance_list_t *query_instance_list,
                                     query_type_list_t     *query_type_list,
-                                    FILE                 **outputs,
+                                    query_writer_t       **outputs,
                                     performance_metrics_t *metrics);
 
 #endif

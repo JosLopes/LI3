@@ -58,14 +58,6 @@ void *__q03_parse_arguments(char **argv, size_t argc) {
 }
 
 /**
- * @brief Frees the value returned by ::__q03_parse_arguments.
- * @param argument_data Value returned by ::__q03_parse_arguments.
- */
-void __q03_free_query_instance_argument_data(void *argument_data) {
-    free(argument_data);
-}
-
-/**
  * @struct q03_average_t
  * @brief Data structure containing the fields needed to calculate a flying average.
  *
@@ -80,63 +72,24 @@ typedef struct {
 } q03_average_t;
 
 /**
- * @struct q03_foreach_reservation_data_t
- * @brief  Data needed while iterating over reservations.
- *
- * @var q03_foreach_reservation_data_t::hotels_to_average
- *     @brief Sorted array of hotels (identifiers) whose average rating was queried.
- * @var q03_foreach_reservation_data_t::ratings_averages
- *     @brief Association between hotel identifiers and pointers to ::q03_average_t.
- */
-typedef struct {
-    GArray     *hotels_to_average;
-    GHashTable *ratings_averages;
-} q03_foreach_reservation_data_t;
-
-/**
- * @brief   A comparison function for sorting an `GArray` of ::hotel_id_t.
- * @details Auxiliary method for ::__q03_generate_statistics.
- */
-gint __q03_generate_statistics_hotel_id_compare_func(gconstpointer a, gconstpointer b) {
-    return ((hotel_id_t) * (hotel_id_t *) a) - ((hotel_id_t) * (hotel_id_t *) b);
-}
-
-/**
  * @brief   A method called for each reservation, to consider it in averages being calculated.
  * @details An auxiliary method for ::__q03_generate_statistics.
  *
- * @param user_data   A pointer to a ::q03_foreach_reservation_data_t.
+ * @param user_data   `GHashTable` between hotel identifiers and pointers to ::q03_average_t.
  * @param reservation Reservation being processed.
  *
- * @retval 0 Success
- * @retval 1 Allocation failure
+ * @retval 0 Always successful
  */
 int __q03_generate_statistics_foreach_reservation(void                *user_data,
                                                   const reservation_t *reservation) {
-    q03_foreach_reservation_data_t *foreach_data = (q03_foreach_reservation_data_t *) user_data;
+    GHashTable *ratings_averages = (GHashTable *) user_data;
 
-    hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
-    uint8_t    rating   = reservation_get_rating(reservation);
+    hotel_id_t     hotel_id = reservation_get_hotel_id(reservation);
+    q03_average_t *avg      = g_hash_table_lookup(ratings_averages, GUINT_TO_POINTER(hotel_id));
+    if (!avg)
+        return 0;
 
-    if (!g_array_binary_search(foreach_data->hotels_to_average,
-                               &hotel_id,
-                               __q03_generate_statistics_hotel_id_compare_func,
-                               NULL))
-        return 0; /* This hotel wasn't mentioned in queries */
-
-    q03_average_t *avg =
-        g_hash_table_lookup(foreach_data->ratings_averages, GUINT_TO_POINTER(hotel_id));
-
-    if (!avg) {
-        avg = malloc(sizeof(q03_average_t));
-        if (!avg)
-            return 1; /* Allocation failure */
-
-        avg->sum   = 0;
-        avg->count = 0;
-        g_hash_table_insert(foreach_data->ratings_averages, GUINT_TO_POINTER(hotel_id), avg);
-    }
-
+    uint8_t rating = reservation_get_rating(reservation);
     avg->sum += rating;
     avg->count++;
     return 0;
@@ -154,43 +107,29 @@ int __q03_generate_statistics_foreach_reservation(void                *user_data
  */
 void *__q03_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
 
-    /*
-     * Generate an array of all hotel IDs that will be asked for in queries, to avoid storing
-     * rating information about all hotels.
-     */
-    GArray *hotels_to_average = g_array_new(FALSE, FALSE, sizeof(hotel_id_t));
-    for (size_t i = 0; i < n; ++i) {
-        hotel_id_t *hotel_id = (hotel_id_t *) query_instance_get_argument_data(instances);
-        g_array_append_val(hotels_to_average, *hotel_id);
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
-    }
-    g_array_sort(hotels_to_average, __q03_generate_statistics_hotel_id_compare_func);
-
-    /* Iterate through all reservations to calculate rating averages. */
     GHashTable *ratings_averages =
         g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free);
-    q03_foreach_reservation_data_t callback_data = {.hotels_to_average = hotels_to_average,
-                                                    .ratings_averages  = ratings_averages};
 
-    if (reservation_manager_iter(database_get_reservations(database),
-                                 __q03_generate_statistics_foreach_reservation,
-                                 &callback_data)) { /* Allocation failure */
+    for (size_t i = 0; i < n; ++i) {
+        hotel_id_t hotel_id = *(hotel_id_t *) query_instance_get_argument_data(instances);
 
-        g_array_free(hotels_to_average, TRUE);
-        g_hash_table_destroy(ratings_averages);
-        return NULL;
+        q03_average_t *average = malloc(sizeof(q03_average_t));
+        if (!average) {
+            g_hash_table_unref(ratings_averages);
+            return NULL;
+        }
+
+        average->sum   = 0;
+        average->count = 0;
+        g_hash_table_insert(ratings_averages, GUINT_TO_POINTER(hotel_id), average);
+
+        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
 
-    g_array_free(hotels_to_average, TRUE);
+    reservation_manager_iter(database_get_reservations(database),
+                             __q03_generate_statistics_foreach_reservation,
+                             ratings_averages);
     return ratings_averages;
-}
-
-/**
- * @brief Frees statistical data generated by ::__q03_generate_statistics.
- * @param statistics Data generated by ::__q03_generate_statistics.
- */
-void __q03_free_statistics(void *statistics) {
-    g_hash_table_destroy(statistics);
 }
 
 /**
@@ -208,7 +147,7 @@ void __q03_free_statistics(void *statistics) {
 int __q03_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
     (void) database;
 
     GHashTable *ratings_averages = (GHashTable *) statistics;
@@ -220,19 +159,15 @@ int __q03_execute(database_t       *database,
         return 1;
     }
 
-    if (query_instance_get_formatted(instance)) {
-        fprintf(output, "--- 1 ---\nrating: %.3f\n", (double) avg->sum / (double) avg->count);
-    } else {
-        fprintf(output, "%.3f\n", (double) avg->sum / (double) avg->count);
-    }
-
+    query_writer_write_new_object(output);
+    query_writer_write_new_field(output, "rating", "%.3f", (double) avg->sum / (double) avg->count);
     return 0;
 }
 
 query_type_t *q03_create(void) {
     return query_type_create(__q03_parse_arguments,
-                             __q03_free_query_instance_argument_data,
+                             free,
                              __q03_generate_statistics,
-                             __q03_free_statistics,
+                             (query_type_free_statistics_callback_t) g_hash_table_unref,
                              __q03_execute);
 }

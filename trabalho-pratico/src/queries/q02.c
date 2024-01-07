@@ -29,7 +29,7 @@
 
 /** @brief Argument values of the query of type 2. */
 typedef enum {
-    Q02_ARGUMENTS_NO_ARGUMENT, /**< No arguments provided (display both flights and reservations). */
+    Q02_ARGUMENTS_NO_ARGUMENT, /**< Display both flights and reservations. */
     Q02_ARGUMENTS_FLIGHTS,     /**< List only flights. */
     Q02_ARGUMENTS_RESERVATIONS /**< List only reservations. */
 } q02_arguments_output_filter_t;
@@ -135,12 +135,10 @@ gint __q02_execute_sort_compare(gconstpointer a_data, gconstpointer b_data) {
  * @param output    Where to output the query's results to.
  * @param items     Array of ::q02_output_item_t, to be written as text.
  * @param filter    Whether the query requested flights, reservations or both.
- * @param fotmatted Whether the query's output should be formatted.
  */
-void __q02_print_output(FILE                         *output,
+void __q02_print_output(query_writer_t               *output,
                         GArray                       *items,
-                        q02_arguments_output_filter_t filter,
-                        int                           formatted) {
+                        q02_arguments_output_filter_t filter) {
 
     for (size_t i = 0; i < items->len; ++i) {
         q02_output_item_t *item = &g_array_index(items, q02_output_item_t, i);
@@ -151,52 +149,22 @@ void __q02_print_output(FILE                         *output,
         char flight_id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
         char reservation_id_str[RESERVATION_ID_SPRINTF_MIN_BUFFER_SIZE];
 
-        if (!formatted) {
-            switch (item->type) {
-                case Q02_OUTPUT_ITEM_FLIGHT:
-                    flight_id_sprintf(flight_id_str, item->id);
-                    fprintf(output, "%s;%s", flight_id_str, date_string);
-                    break;
-                case Q02_OUTPUT_ITEM_RESERVATION:
-                    reservation_id_sprintf(reservation_id_str, item->id);
-                    fprintf(output, "%s;%s", reservation_id_str, date_string);
-                    break;
-            }
+        query_writer_write_new_object(output);
+        switch (item->type) {
+            case Q02_OUTPUT_ITEM_FLIGHT:
+                flight_id_sprintf(flight_id_str, item->id);
+                query_writer_write_new_field(output, "id", "%s", flight_id_str);
+                break;
+            case Q02_OUTPUT_ITEM_RESERVATION:
+                reservation_id_sprintf(reservation_id_str, item->id);
+                query_writer_write_new_field(output, "id", "%s", reservation_id_str);
+                break;
+        }
+        query_writer_write_new_field(output, "date", "%s", date_string);
 
-            if (filter == Q02_ARGUMENTS_NO_ARGUMENT) {
-                fputs((item->type == Q02_OUTPUT_ITEM_FLIGHT) ? ";flight\n" : ";reservation\n",
-                      output);
-            } else {
-                fputc('\n', output);
-            }
-        } else {
-            switch (item->type) {
-                case Q02_OUTPUT_ITEM_FLIGHT:
-                    flight_id_sprintf(flight_id_str, item->id);
-                    fprintf(output,
-                            "--- %zu ---\nid: %s\ndate: %s\n",
-                            i + 1,
-                            flight_id_str,
-                            date_string);
-                    break;
-                case Q02_OUTPUT_ITEM_RESERVATION:
-                    reservation_id_sprintf(reservation_id_str, item->id);
-                    fprintf(output,
-                            "--- %zu ---\nid: %s\ndate: %s\n",
-                            i + 1,
-                            reservation_id_str,
-                            date_string);
-                    break;
-            }
-
-            if (filter == Q02_ARGUMENTS_NO_ARGUMENT) {
-                fprintf(output,
-                        "type: %s\n",
-                        item->type == Q02_OUTPUT_ITEM_FLIGHT ? "flight" : "reservation");
-            }
-
-            if (i != items->len - 1)
-                fputc('\n', output);
+        if (filter == Q02_ARGUMENTS_NO_ARGUMENT) {
+            const char *type = (item->type == Q02_OUTPUT_ITEM_FLIGHT) ? "flight" : "reservation";
+            query_writer_write_new_field(output, "type", "%s", type);
         }
     }
 }
@@ -214,7 +182,7 @@ void __q02_print_output(FILE                         *output,
 int __q02_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
-                  FILE             *output) {
+                  query_writer_t   *output) {
 
     (void) statistics;
     q02_argument_data_t *args = (q02_argument_data_t *) query_instance_get_argument_data(instance);
@@ -270,7 +238,7 @@ int __q02_execute(database_t       *database,
     }
 
     g_array_sort(output_items, __q02_execute_sort_compare);
-    __q02_print_output(output, output_items, args->filter, query_instance_get_formatted(instance));
+    __q02_print_output(output, output_items, args->filter);
 
     g_array_free(output_items, TRUE);
     return 0;
