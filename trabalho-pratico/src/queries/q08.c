@@ -30,22 +30,22 @@
  * @struct q08_parsed_arguments_t
  * @brief  Data needed for the execution of a query of type 8.
  *
- * @var q08_parsed_arguments_t::hotel_code
- *     @brief Hotel code to filter by.
+ * @var q08_parsed_arguments_t::hotel_id
+ *     @brief Hotel identifier to filter by.
  * @var q08_parsed_arguments_t::begin_date
  *     @brief Beginning date for date range filter.
  * @var q08_parsed_arguments_t::end_date
  *     @brief End date for date range filter.
  */
 typedef struct {
-    hotel_id_t hotel_code;
+    hotel_id_t hotel_id;
     date_t     begin_date;
     date_t     end_date;
 } q08_parsed_arguments_t;
 
 /**
  * @brief   Parses arguments for query 8.
- * @details Asserts that there's three arguments, an hotel code, and two dates.
+ * @details Asserts that there's three arguments, an hotel identifier, and two dates.
  *
  * @param argv Values of the arguments.
  * @param argc Number of arguments.
@@ -60,7 +60,7 @@ void *__q08_parse_arguments(char **argv, size_t argc) {
     if (!parsed_arguments)
         return NULL;
 
-    int hotel_retval      = hotel_id_from_string(&parsed_arguments->hotel_code, argv[0]);
+    int hotel_retval      = hotel_id_from_string(&parsed_arguments->hotel_id, argv[0]);
     int begin_date_retval = date_from_string(&parsed_arguments->begin_date, argv[1]);
     int end_date_retval   = date_from_string(&parsed_arguments->end_date, argv[2]);
 
@@ -95,32 +95,41 @@ typedef struct {
  *
  * @retval 0 Always successful.
  */
-int __q08_generate_statistics_foreach_flight(void *user_data, const reservation_t *reservation) {
+int __q08_generate_statistics_foreach_reservation(void                *user_data,
+                                                  const reservation_t *reservation) {
     q08_foreach_reservation_data_t *foreach_data = (q08_foreach_reservation_data_t *) user_data;
 
-    hotel_id_t hotel_code = reservation_get_hotel_id(reservation);
+    hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
 
     for (size_t i = 0; i < foreach_data->filter_data->len; i++) {
         q08_parsed_arguments_t *args = g_ptr_array_index(foreach_data->filter_data, i);
 
-        /* Check if the hotel meets the hotel_code filter in the arguments */
-        if (hotel_code == args->hotel_code) {
+        if (hotel_id == args->hotel_id) {
+            uint16_t price_per_night = reservation_get_price_per_night(reservation);
 
-            uint16_t reservation_price_per_night = reservation_get_price_per_night(reservation);
+            date_t reservation_begin = reservation_get_begin_date(reservation),
+                   reservation_end   = reservation_get_end_date(reservation);
 
-            date_t begin_date =
-                date_diff(reservation_get_begin_date(reservation), args->begin_date) < 0
-                    ? args->begin_date
-                    : reservation_get_begin_date(reservation);
-            date_t end_date = date_diff(reservation_get_end_date(reservation), args->end_date) > 0
-                                  ? args->end_date
-                                  : reservation_get_end_date(reservation);
+            /* Reservations don't make money on their last day */
+            date_set_day(&reservation_end, date_get_day(reservation_end) - 1);
 
-            if (date_diff(end_date, begin_date) < 0)
+            if (date_diff(args->begin_date, reservation_end) > 0 ||
+                date_diff(reservation_begin, args->end_date) > 0)
                 continue;
 
-            uint32_t *revenue = (uint32_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
-            *revenue += reservation_price_per_night * (date_diff(end_date, begin_date) + 1);
+            date_t range_begin = date_diff(reservation_begin, args->begin_date) < 0
+                                     ? args->begin_date
+                                     : reservation_begin;
+            date_t range_end =
+                date_diff(reservation_end, args->end_date) < 0 ? reservation_end : args->end_date;
+
+            uint64_t reservation_revenue =
+                price_per_night * (date_diff(range_end, range_begin) + 1);
+            uint64_t revenue =
+                GPOINTER_TO_UINT(g_hash_table_lookup(foreach_data->hotel_revenue, args));
+            g_hash_table_insert(foreach_data->hotel_revenue,
+                                args,
+                                GUINT_TO_POINTER(revenue + reservation_revenue));
         }
     }
 
@@ -134,7 +143,7 @@ int __q08_generate_statistics_foreach_flight(void *user_data, const reservation_
  * @param instances  Instances of the query 8.
  * @param n          Number of query instances.
  *
- * @return A `GHashTable` associating a ::q08_parsed_arguments_t to a `uint16_t` with the revenue.
+ * @return A `GHashTable` associating a ::q08_parsed_arguments_t to an integer revenue as a pointer.
  */
 void *__q08_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
     GPtrArray  *filter_data   = g_ptr_array_new();
@@ -142,11 +151,7 @@ void *__q08_generate_statistics(database_t *database, query_instance_t *instance
 
     for (size_t i = 0; i < n; ++i) {
         q08_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
-
-        uint32_t *revenue = malloc(sizeof(uint32_t));
-        *revenue          = 0;
-
-        g_hash_table_insert(hotel_revenue, argument_data, revenue);
+        g_hash_table_insert(hotel_revenue, argument_data, 0);
         g_ptr_array_add(filter_data, argument_data);
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
@@ -155,7 +160,7 @@ void *__q08_generate_statistics(database_t *database, query_instance_t *instance
                                                     .hotel_revenue = hotel_revenue};
 
     reservation_manager_iter(database_get_reservations(database),
-                             __q08_generate_statistics_foreach_flight,
+                             __q08_generate_statistics_foreach_reservation,
                              &callback_data);
 
     g_ptr_array_unref(filter_data);
@@ -171,7 +176,8 @@ void *__q08_generate_statistics(database_t *database, query_instance_t *instance
  * @param instance   Query instance to be executed.
  * @param output     Where to write the query's result to.
  *
- * @retval 0 Always successful
+ * @retval 0 Always succesl
+ * @retval 1 Fatal failure (will only happen if a cosmic ray flips some bit in your memory).
  */
 int __q08_execute(database_t       *database,
                   void             *statistics,
@@ -179,16 +185,18 @@ int __q08_execute(database_t       *database,
                   query_writer_t   *output) {
     (void) database;
 
-    GHashTable             *hotel_revenue = (GHashTable *) statistics;
-    q08_parsed_arguments_t *arguments =
-        (q08_parsed_arguments_t *) query_instance_get_argument_data(instance);
+    GHashTable                   *hotel_revenue = (GHashTable *) statistics;
+    const q08_parsed_arguments_t *arguments     = query_instance_get_argument_data(instance);
 
-    uint32_t *revenue = (uint32_t *) g_hash_table_lookup(hotel_revenue, arguments);
-
-    query_writer_write_new_object(output);
-    query_writer_write_new_field(output, "revenue", "%d", *(revenue));
-
-    free(revenue);
+    gpointer revenue_ptr;
+    if (g_hash_table_lookup_extended(hotel_revenue, arguments, NULL, &revenue_ptr)) {
+        uint64_t revenue = GPOINTER_TO_UINT(revenue_ptr);
+        query_writer_write_new_object(output);
+        query_writer_write_new_field(output, "revenue", "%" PRIu64, revenue);
+    } else {
+        fprintf(stderr, "Bad statistical data in query 3! This should not happen!\n");
+        return 1;
+    }
     return 0;
 }
 
