@@ -39,8 +39,8 @@
  *
  * @var flights_loader_t::output
  *     @brief Where to output dataset errors to.
- * @var flights_loader_t::flights
- *     @brief Flight manager to add new flights to.
+ * @var flights_loader_t::database
+ *     @brief Database to add new flights to.
  * @var flights_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
  * @var flights_loader_t::current_flight
@@ -48,7 +48,7 @@
  */
 typedef struct {
     dataset_error_output_t *output;
-    flight_manager_t       *flights;
+    database_t             *database;
 
     const char *error_line;
     flight_t   *current_flight;
@@ -251,7 +251,7 @@ int __flights_loader_after_parse_line(void *loader_data, int retval) {
         dataset_error_output_report_flight_error(loader->output, loader->error_line);
     } else {
         flight_set_number_of_passengers(loader->current_flight, 0);
-        return flight_manager_add_flight(loader->flights, loader->current_flight) == NULL;
+        return database_add_flight(loader->database, loader->current_flight);
     }
     return 0;
 }
@@ -259,7 +259,7 @@ int __flights_loader_after_parse_line(void *loader_data, int retval) {
 int flights_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
     dataset_error_output_report_flight_error(output, FLIGHTS_LOADER_HEADER);
     flights_loader_t data = {.output         = output,
-                             .flights        = database_get_flights(database),
+                             .database       = database,
                              .current_flight = flight_create(NULL)};
 
     if (!data.current_flight)
