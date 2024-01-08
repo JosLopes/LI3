@@ -28,7 +28,7 @@
 #ifndef PERFORMANCE_OUTPUT_H
 #define PERFORMANCE_OUTPUT_H
 
-#include "performance/performance_metrics.h"
+#include "testing/performance_metrics.h"
 
 /**
  * @brief Prints data in @p metrics to @p output.
