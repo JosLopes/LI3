@@ -69,7 +69,6 @@ query_type_list_t *query_type_list_create(void) {
         if (!list->list[i]) { /* Allocation failure */
             for (size_t j = 0; j < i; ++j)
                 query_type_free(list->list[j]);
-
             free(list);
             return NULL;
         }
@@ -78,7 +77,27 @@ query_type_list_t *query_type_list_create(void) {
     return list;
 }
 
-const query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index) {
+query_type_list_t *query_type_list_clone(const query_type_list_t *query_type_list) {
+    query_type_list_t *clone = malloc(sizeof(query_type_list_t));
+    if (!clone)
+        return NULL;
+
+    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
+        clone->list[i] = query_type_clone(query_type_list->list[i]);
+
+        if (!clone->list[i]) { /* Allocation failure */
+            for (size_t j = 0; j < i; ++j)
+                query_type_free(clone->list[j]);
+            free(clone);
+            return NULL;
+        }
+    }
+
+    return clone;
+}
+
+const query_type_t *query_type_list_get_by_index(const query_type_list_t *query_type_list,
+                                                 size_t                   index) {
     if (1 <= index && index <= QUERY_TYPE_LIST_COUNT)
         return query_type_list->list[index - 1];
     return NULL;
