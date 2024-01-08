@@ -19,7 +19,6 @@
  * @brief   Contains and manages all flights in a database.
  * @details Usually, a flight manager won't be created by itself, but inside a ::database_t.
  *
- *
  * @anchor flight_manager_examples
  * ### Examples
  *
@@ -37,10 +36,10 @@
  * int iter_callback(void *user_data, const flight_t *flight) {
  *     (void) user_data;
  *
- *     flight_id_t id          = flight_get_id(flight);
- *     const char *airline     = flight_get_const_airline(flight);
- *     const char *passport    = flight_get_const_plane_model(flight);
- *     uint16_t    total_seats = flight_get_total_seats(flight);
+ *     const flight_id_t id          = flight_get_id(flight);
+ *     const char       *airline     = flight_get_const_airline(flight);
+ *     const char       *passport    = flight_get_const_plane_model(flight);
+ *     uint16_t          total_seats = flight_get_total_seats(flight);
  *
  *     char origin[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
  *     airport_code_sprintf(origin, flight_get_origin(flight));
@@ -131,9 +130,22 @@ flight_manager_t *flight_manager_create(void);
  * @param manager Flight manager to add @p flight to.
  * @param flight  Flight to add to @p manager.
  *
- * @return @p flight if it was successfully added, or `NULL` if there was not enough memory.
+ * @retval 0 Success
+ * @retval 1 Allocation failure.
  */
-flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight);
+int flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight);
+
+/**
+ * @brief Adds a number of passengers to a flight in @p manager.
+ *
+ * @param manager Manager whose flight needs to be modified.
+ * @param id      Identifier of the flight to have its number of passagers added.
+ * @param count   Number of passengers to add to the flight.
+ *
+ * @retval 0 Success.
+ * @retval 1 Flight didn't exist.
+ */
+int flight_manager_add_passagers(flight_manager_t *manager, flight_id_t id, int count);
 
 /**
  * @brief Gets a flight from a flight manager by its identifier.
@@ -143,10 +155,12 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
  *
  * @return The flight with identifier @p id, or `NULL` if it does not exist.
  */
-flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id);
+const flight_t *flight_manager_get_by_id(const flight_manager_t *manager, flight_id_t id);
 
 /**
- * @brief Invalidates a flight stored in a manager.
+ * @brief   Invalidates a flight stored in a manager.
+ * @details Memory can't be cleared by deleting a flight, given the internal structure of the
+ *          manager. However, the deleted flight won't appear in later lookups or iterations.
  *
  * @param manager Flight manager to get a flight removed from.
  * @param id      Identifier of the flight to invalidate.
@@ -154,7 +168,7 @@ flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id)
  * @retval 0 Flight was in the manager and was invalidated.
  * @retval 1 Flight not in the manager to begin with.
  */
-int flight_manager_invalidate_by_id(flight_manager_t *manager, uint64_t id);
+int flight_manager_invalidate_by_id(flight_manager_t *manager, flight_id_t id);
 
 /**
  * @brief   Iterates over all flights in a flight manager.
@@ -167,7 +181,7 @@ int flight_manager_invalidate_by_id(flight_manager_t *manager, uint64_t id);
  * @return `0` if iteration was successful, or any other value if @p callback returned a non-zero
  *         value.
  */
-int flight_manager_iter(flight_manager_t              *manager,
+int flight_manager_iter(const flight_manager_t        *manager,
                         flight_manager_iter_callback_t callback,
                         void                          *user_data);
 
