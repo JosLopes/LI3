@@ -95,7 +95,7 @@
  *
  * @param output          Where the parsed query is placed. This **will be modified on failure**
  *                        too.
- * @param input           String to parse, that **will be modified** in the parsing process.
+ * @param input           String to parse, that **will be modified** as a byproduct of parsing.
  * @param query_type_list List of available queries.
  * @param aux             Auxiliary `GPtrArray`, that can be provided to be modified and avoid
  *                        memory allocations. If `NULL`, a new array will be instantiated.
@@ -106,10 +106,10 @@
  * ### Examples
  * See [the header file's documentation](@ref query_parser_examples).
  */
-int query_parser_parse_string(query_instance_t  *output,
-                              char              *input,
-                              query_type_list_t *query_type_list,
-                              GPtrArray         *aux);
+int query_parser_parse_string(query_instance_t        *output,
+                              char                    *input,
+                              const query_type_list_t *query_type_list,
+                              GPtrArray               *aux);
 
 /**
  * @brief   Parses a string containing a query.
@@ -118,7 +118,8 @@ int query_parser_parse_string(query_instance_t  *output,
  *          before calling ::query_parser_parse_string, so **it's very inefficient** and should not
  *          be used for large strings.
  *
- * @param output          Where the parsed query is placed. This will be modified on failure too.
+ * @param output          Where the parsed query is placed. This **will be modified on failure**
+ *                        too.
  * @param input           String to parse.
  * @param query_type_list List of available queries.
  * @param aux             Auxiliary `GPtrArray`, that can be provided to be modified and avoid
@@ -130,9 +131,9 @@ int query_parser_parse_string(query_instance_t  *output,
  * ### Examples
  * See [the header file's documentation](@ref query_parser_examples).
  */
-int query_parser_parse_string_const(query_instance_t  *output,
-                                    const char        *input,
-                                    query_type_list_t *query_type_list,
-                                    GPtrArray         *aux);
+int query_parser_parse_string_const(query_instance_t        *output,
+                                    const char              *input,
+                                    const query_type_list_t *query_type_list,
+                                    GPtrArray               *aux);
 
 #endif
