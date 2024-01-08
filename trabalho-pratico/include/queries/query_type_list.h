@@ -37,7 +37,7 @@
  * list, you can get the methods that define this query type, `1`:
  *
  * ```c
- * query_type_t *type = query_type_list_get_by_index(query_type_list, 1);
+ * const query_type_t *type = query_type_list_get_by_index(query_type_list, 1);
  * ```
  *
  * If your query were `"200 EdSousa"`, because there aren't 200 queries,
@@ -81,7 +81,7 @@ query_type_list_t *query_type_list_create(void);
  * #### Examples
  * See [the header file's documentation](@ref query_type_list_examples).
  */
-query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index);
+const query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index);
 
 /**
  * @brief Frees memory allocated by ::query_type_list_create.

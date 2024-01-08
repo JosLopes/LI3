@@ -78,7 +78,7 @@ query_type_list_t *query_type_list_create(void) {
     return list;
 }
 
-query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index) {
+const query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index) {
     if (1 <= index && index <= QUERY_TYPE_LIST_COUNT)
         return query_type_list->list[index - 1];
     return NULL;
