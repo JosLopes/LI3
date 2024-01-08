@@ -89,8 +89,8 @@ int __q04_generate_statistics_foreach_reservation(void                *user_data
   *          auxiliary method for ::__q04_generate_statistics.
   */
 gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b) {
-    const reservation_t *reservation_a = *((const reservation_t **) a);
-    const reservation_t *reservation_b = *((const reservation_t **) b);
+    const reservation_t *reservation_a = *((const reservation_t *const *) a);
+    const reservation_t *reservation_b = *((const reservation_t *const *) b);
 
     int64_t diff = date_diff(reservation_get_begin_date(reservation_b),
                              reservation_get_begin_date(reservation_a));
@@ -157,11 +157,13 @@ int __q04_execute(database_t       *database,
                   query_writer_t   *output) {
     (void) database;
 
-    hotel_id_t hotel_id = *((hotel_id_t *) query_instance_get_argument_data(instance));
+    hotel_id_t hotel_id = *((const hotel_id_t *) query_instance_get_argument_data(instance));
     GPtrArray *reservations =
         g_hash_table_lookup((GHashTable *) statistics, GUINT_TO_POINTER(hotel_id));
-    if (!reservations)
+    if (!reservations) {
+        fprintf(stderr, "Bad statistical data in query 4! This should not happen!\n");
         return 1; /* Only happens on bad statistics, which itself shouldn't happen. */
+    }
 
     for (size_t i = 0; i < reservations->len; i++) {
         const reservation_t *reservation = g_ptr_array_index(reservations, i);

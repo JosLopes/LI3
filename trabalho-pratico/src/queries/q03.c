@@ -111,7 +111,7 @@ void *__q03_generate_statistics(database_t *database, query_instance_t *instance
         g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free);
 
     for (size_t i = 0; i < n; ++i) {
-        hotel_id_t hotel_id = *(hotel_id_t *) query_instance_get_argument_data(instances);
+        hotel_id_t hotel_id = *(const hotel_id_t *) query_instance_get_argument_data(instances);
 
         q03_average_t *average = malloc(sizeof(q03_average_t));
         if (!average) {
@@ -151,7 +151,7 @@ int __q03_execute(database_t       *database,
     (void) database;
 
     GHashTable *ratings_averages = (GHashTable *) statistics;
-    hotel_id_t  hotel_id         = *(hotel_id_t *) query_instance_get_argument_data(instance);
+    hotel_id_t  hotel_id         = *(const hotel_id_t *) query_instance_get_argument_data(instance);
 
     q03_average_t *avg = g_hash_table_lookup(ratings_averages, GUINT_TO_POINTER(hotel_id));
     if (!avg) {

@@ -62,7 +62,7 @@ void *__q07_parse_arguments(char **argv, size_t argc) {
  * @details Auxiliary method for ::__q07_generate_statistics.
  */
 gint __q07_generate_statistics_int64_compare_func(gconstpointer a, gconstpointer b) {
-    return *(int64_t *) a - *(int64_t *) b;
+    return *(const int64_t *) a - *(const int64_t *) b;
 }
 
 /**
@@ -145,8 +145,8 @@ void __q07_generate_statistics_foreach_airport(gpointer key, gpointer value, gpo
  * @return Comparison value between @p a and @p b.
  */
 gint __q07_generate_statistics_airport_median_compare_func(gconstpointer a, gconstpointer b) {
-    const __q07_airport_median *airport_median_a = (const __q07_airport_median *) a;
-    const __q07_airport_median *airport_median_b = (const __q07_airport_median *) b;
+    const __q07_airport_median *airport_median_a = a;
+    const __q07_airport_median *airport_median_b = b;
 
     uint64_t crit1 = airport_median_b->median - airport_median_a->median;
     if (crit1)
@@ -208,7 +208,7 @@ int __q07_execute(database_t       *database,
                   query_writer_t   *output) {
     (void) database;
 
-    uint64_t n               = *(uint64_t *) query_instance_get_argument_data(instance);
+    uint64_t n               = *(const uint64_t *) query_instance_get_argument_data(instance);
     GArray  *airport_medians = (GArray *) statistics;
 
     size_t i_max = min(n, airport_medians->len);

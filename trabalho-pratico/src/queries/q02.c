@@ -49,7 +49,7 @@ typedef struct {
 } q02_argument_data_t;
 
 /**
- * @brief   Parses arguments for the third query.
+ * @brief   Parses arguments for the second query type.
  * @details The first argument, a user identifier, is mandatory. A optional second argument, taking
  *          the value of either `"flights"` or `"reservations"`, is allowed.
  *
@@ -185,13 +185,13 @@ int __q02_execute(database_t       *database,
                   query_writer_t   *output) {
 
     (void) statistics;
-    q02_argument_data_t *args = (q02_argument_data_t *) query_instance_get_argument_data(instance);
+    const q02_argument_data_t *args = query_instance_get_argument_data(instance);
 
-    user_manager_t        *users        = database_get_users(database);
-    reservation_manager_t *reservations = database_get_reservations(database);
-    flight_manager_t      *flights      = database_get_flights(database);
+    const user_manager_t        *users        = database_get_users(database);
+    const reservation_manager_t *reservations = database_get_reservations(database);
+    const flight_manager_t      *flights      = database_get_flights(database);
 
-    user_t *user = user_manager_get_by_id(users, args->user_id);
+    const user_t *user = user_manager_get_by_id(users, args->user_id);
     if (!user || user_get_account_status(user) == ACCOUNT_STATUS_INACTIVE)
         return 0;
 

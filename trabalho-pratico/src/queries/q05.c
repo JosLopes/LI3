@@ -141,10 +141,13 @@ void *__q05_generate_statistics(database_t *database, query_instance_t *instance
                                                        (GDestroyNotify) g_ptr_array_unref);
 
     for (size_t i = 0; i < n; ++i) {
-        q05_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
+        const q05_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
 
-        g_hash_table_insert(origin_flights, argument_data, g_ptr_array_new());
-        g_ptr_array_add(filter_data, argument_data);
+        /* TODO - find way of keeping const */
+        g_hash_table_insert(origin_flights,
+                            (q05_parsed_arguments_t *) argument_data,
+                            g_ptr_array_new());
+        g_ptr_array_add(filter_data, (q05_parsed_arguments_t *) argument_data);
         instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
 
@@ -165,8 +168,8 @@ void *__q05_generate_statistics(database_t *database, query_instance_t *instance
   *          auxiliary method for ::__q05_generate_statistics.
   */
 gint __q05_flights_date_compare_func(gconstpointer a, gconstpointer b) {
-    const flight_t *flight_a = *((const flight_t **) a);
-    const flight_t *flight_b = *((const flight_t **) b);
+    const flight_t *flight_a = *((const flight_t *const *) a);
+    const flight_t *flight_b = *((const flight_t *const *) b);
 
     int64_t crit1 = date_and_time_diff(flight_get_schedule_departure_date(flight_b),
                                        flight_get_schedule_departure_date(flight_a));
@@ -195,9 +198,8 @@ int __q05_execute(database_t       *database,
                   query_writer_t   *output) {
     (void) database;
 
-    GHashTable             *origin_flights = (GHashTable *) statistics;
-    q05_parsed_arguments_t *arguments =
-        (q05_parsed_arguments_t *) query_instance_get_argument_data(instance);
+    GHashTable                   *origin_flights = (GHashTable *) statistics;
+    const q05_parsed_arguments_t *arguments      = query_instance_get_argument_data(instance);
 
     GPtrArray *flights = g_hash_table_lookup(origin_flights, arguments);
     if (!flights)

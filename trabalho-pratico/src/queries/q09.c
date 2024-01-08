@@ -99,8 +99,8 @@ int __q09_generate_statistics_iter_callback(void *user_data, const user_t *user)
 
 /** @brief User comparison function for user ordering for final output. */
 gint __q09_sort_compare_callback(gconstpointer a, gconstpointer b) {
-    const user_t *user_a = *(const user_t **) a;
-    const user_t *user_b = *(const user_t **) b;
+    const user_t *user_a = *(const user_t *const *) a;
+    const user_t *user_b = *(const user_t *const *) b;
 
     gint crit1 = strcoll(user_get_const_name(user_a), user_get_const_name(user_b));
     if (crit1)
@@ -240,7 +240,7 @@ int __q09_execute(database_t       *database,
 
             GPtrArray *matches = stats->matches[i];
             for (size_t j = 0; j < matches->len; ++j) {
-                const user_t *user = (user_t *) g_ptr_array_index(matches, j);
+                const user_t *user = g_ptr_array_index(matches, j);
                 query_writer_write_new_object(output);
                 query_writer_write_new_field(output, "id", "%s", user_get_const_id(user));
                 query_writer_write_new_field(output, "name", "%s", user_get_const_name(user));

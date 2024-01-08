@@ -117,7 +117,7 @@ void __q01_free_query_instance_argument_data(void *argument_data) {
  * @return The total spent by a ::user_t.
  */
 double __q01_calculate_user_total_spent(const single_pool_id_linked_list_t *list,
-                                        reservation_manager_t              *manager) {
+                                        const reservation_manager_t        *manager) {
     double total_spent = 0.0;
 
     while (list) {
@@ -139,15 +139,15 @@ double __q01_calculate_user_total_spent(const single_pool_id_linked_list_t *list
  *
  * @retval 0 Never fails.
  */
-int __q01_execute_user_entity(database_t *database, char *id, query_writer_t *output) {
+int __q01_execute_user_entity(const database_t *database, const char *id, query_writer_t *output) {
 
-    user_manager_t        *user_manager        = database_get_users(database);
-    reservation_manager_t *reservation_manager = database_get_reservations(database);
-    user_t                *user                = user_manager_get_by_id(user_manager, id);
+    const user_manager_t        *user_manager        = database_get_users(database);
+    const reservation_manager_t *reservation_manager = database_get_reservations(database);
+    const user_t                *user                = user_manager_get_by_id(user_manager, id);
     if (!user || user_get_account_status(user) == ACCOUNT_STATUS_INACTIVE)
         return 0;
 
-    single_pool_id_linked_list_t *reservation_list =
+    const single_pool_id_linked_list_t *reservation_list =
         user_manager_get_reservations_by_id(user_manager, id);
     size_t number_of_flights =
         single_pool_id_linked_list_length(user_manager_get_flights_by_id(user_manager, id));
@@ -185,12 +185,12 @@ int __q01_execute_user_entity(database_t *database, char *id, query_writer_t *ou
  *
  * @retval 0 Always successful.
  */
-int __q01_execute_reservation_entity(database_t      *database,
-                                     reservation_id_t id,
-                                     query_writer_t  *output) {
+int __q01_execute_reservation_entity(const database_t *database,
+                                     reservation_id_t  id,
+                                     query_writer_t   *output) {
 
-    reservation_manager_t *reservation_manager = database_get_reservations(database);
-    reservation_t         *reservation = reservation_manager_get_by_id(reservation_manager, id);
+    const reservation_manager_t *reservation_manager = database_get_reservations(database);
+    const reservation_t *reservation = reservation_manager_get_by_id(reservation_manager, id);
     if (!reservation)
         return 0;
 
@@ -240,10 +240,12 @@ int __q01_execute_reservation_entity(database_t      *database,
  *
  * @retval 0 Always successful.
  */
-int __q01_execute_flight_entity(database_t *database, flight_id_t id, query_writer_t *output) {
+int __q01_execute_flight_entity(const database_t *database,
+                                flight_id_t       id,
+                                query_writer_t   *output) {
 
-    flight_manager_t *flight_manager = database_get_flights(database);
-    flight_t         *flight         = flight_manager_get_by_id(flight_manager, id);
+    const flight_manager_t *flight_manager = database_get_flights(database);
+    const flight_t         *flight         = flight_manager_get_by_id(flight_manager, id);
     if (!flight)
         return 0;
 
@@ -294,15 +296,14 @@ int __q01_execute(database_t       *database,
                   void             *statistics,
                   query_instance_t *instance,
                   query_writer_t   *output) {
-
     (void) statistics;
 
-    q01_parsed_arguments_t *arguments = query_instance_get_argument_data(instance);
-    void                   *id        = arguments->parsed_id;
+    const q01_parsed_arguments_t *arguments = query_instance_get_argument_data(instance);
+    const void                   *id        = arguments->parsed_id;
 
     switch (arguments->id_entity) {
         case ID_ENTITY_USER:
-            return __q01_execute_user_entity(database, id, output);
+            return __q01_execute_user_entity(database, (const char *) id, output);
         case ID_ENTITY_RESERVATION:
             return __q01_execute_reservation_entity(database, *(reservation_id_t *) id, output);
         case ID_ENTITY_FLIGHT:

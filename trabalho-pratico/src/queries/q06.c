@@ -231,7 +231,7 @@ void *__q06_generate_statistics(database_t *database, query_instance_t *instance
 
     for (size_t i = 0; i < n; ++i) {
         int16_t year =
-            ((q06_parsed_arguments_t *) query_instance_get_argument_data(instances))->year;
+            ((const q06_parsed_arguments_t *) query_instance_get_argument_data(instances))->year;
 
         GHashTable *airport_count = g_hash_table_new(g_direct_hash, g_direct_equal);
         g_hash_table_insert(years_airport_count, GUINT_TO_POINTER(year), airport_count);
@@ -272,8 +272,7 @@ int __q06_execute(database_t       *database,
                   query_writer_t   *output) {
     (void) database;
 
-    q06_parsed_arguments_t *args =
-        (q06_parsed_arguments_t *) query_instance_get_argument_data(instance);
+    const q06_parsed_arguments_t *args = query_instance_get_argument_data(instance);
 
     GHashTable *years_airport_count_array = (GHashTable *) statistics;
     GArray     *airport_count =
@@ -284,7 +283,7 @@ int __q06_execute(database_t       *database,
     }
 
     for (size_t i = 0; i < min(args->n, airport_count->len); ++i) {
-        q06_array_item_t *item = &g_array_index(airport_count, q06_array_item_t, i);
+        const q06_array_item_t *item = &g_array_index(airport_count, q06_array_item_t, i);
 
         char airport_code_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
         airport_code_sprintf(airport_code_str, item->airport);
