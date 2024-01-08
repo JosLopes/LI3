@@ -119,7 +119,7 @@ int __q08_generate_statistics_foreach_flight(void *user_data, const reservation_
             if (date_diff(end_date, begin_date) < 0)
                 continue;
 
-            uint16_t *revenue = (uint16_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
+            uint32_t *revenue = (uint32_t *) g_hash_table_lookup(foreach_data->hotel_revenue, args);
             *revenue += reservation_price_per_night * (date_diff(end_date, begin_date) + 1);
         }
     }
@@ -143,7 +143,7 @@ void *__q08_generate_statistics(database_t *database, query_instance_t *instance
     for (size_t i = 0; i < n; ++i) {
         q08_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
 
-        uint16_t *revenue = malloc(sizeof(uint16_t));
+        uint32_t *revenue = malloc(sizeof(uint32_t));
         *revenue          = 0;
 
         g_hash_table_insert(hotel_revenue, argument_data, revenue);
@@ -183,7 +183,7 @@ int __q08_execute(database_t       *database,
     q08_parsed_arguments_t *arguments =
         (q08_parsed_arguments_t *) query_instance_get_argument_data(instance);
 
-    uint16_t *revenue = (uint16_t *) g_hash_table_lookup(hotel_revenue, arguments);
+    uint32_t *revenue = (uint32_t *) g_hash_table_lookup(hotel_revenue, arguments);
 
     query_writer_write_new_object(output);
     query_writer_write_new_field(output, "revenue", "%d", *(revenue));
