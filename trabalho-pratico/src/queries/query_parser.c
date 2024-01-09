@@ -143,7 +143,12 @@ int query_parser_parse_string(query_instance_t        *output,
             g_ptr_array_free(parser_data.args, TRUE);
         return 1;
     }
-    query_instance_set_argument_data(output, argument_data);
+
+    query_instance_set_argument_data(output, argument_data, query_type_list);
+
+    query_type_free_query_instance_argument_data_callback_t free_cb =
+        query_type_get_free_query_instance_argument_data_callback(query_type);
+    free_cb(argument_data);
 
     if (!aux)
         g_ptr_array_free(parser_data.args, TRUE);
