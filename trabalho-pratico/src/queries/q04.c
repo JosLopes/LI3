@@ -37,7 +37,7 @@
   *
   * @return `NULL` on failure, a pointer to a hotel ID otherwise.
   */
-void *__q04_parse_arguments(char **argv, size_t argc) {
+void *__q04_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 1)
         return NULL;
 
@@ -56,6 +56,14 @@ void *__q04_parse_arguments(char **argv, size_t argc) {
                   token);*/
     }
     return NULL;
+}
+
+void *__q04_clone_arguments(const void *args_data) {
+    hotel_id_t *clone = malloc(sizeof(hotel_id_t));
+    if (!clone)
+        return NULL;
+    *clone = *(const hotel_id_t *) args_data;
+    return clone;
 }
 
 /**
@@ -110,9 +118,9 @@ gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b) {
   *
   * @return A `GHashTable` associating hotel identifiers to `GPtrArray`s of `reservation_t`s.
   */
-void *__q04_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
-    (void) instances;
-    (void) n;
+void *__q04_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
 
     GHashTable *hotel_reservations = g_hash_table_new_full(g_direct_hash,
                                                            g_direct_equal,
@@ -120,9 +128,8 @@ void *__q04_generate_statistics(database_t *database, query_instance_t *instance
                                                            (GDestroyNotify) g_ptr_array_unref);
 
     for (size_t i = 0; i < n; ++i) {
-        hotel_id_t hotel_id = *(hotel_id_t *) query_instance_get_argument_data(instances);
+        hotel_id_t hotel_id = *(hotel_id_t *) query_instance_get_argument_data(instances[i]);
         g_hash_table_insert(hotel_reservations, GUINT_TO_POINTER(hotel_id), g_ptr_array_new());
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
 
     reservation_manager_iter(database_get_reservations(database),
@@ -151,10 +158,10 @@ void *__q04_generate_statistics(database_t *database, query_instance_t *instance
  * @retval 0 Success
  * @retval 1 Fatal failure (shouldn't happen nunder normal circumstances).
  */
-int __q04_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q04_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
     hotel_id_t hotel_id = *((const hotel_id_t *) query_instance_get_argument_data(instance));
@@ -196,6 +203,7 @@ int __q04_execute(database_t       *database,
 
 query_type_t *q04_create(void) {
     return query_type_create(__q04_parse_arguments,
+                             __q04_clone_arguments,
                              free,
                              __q04_generate_statistics,
                              (query_type_free_statistics_callback_t) g_hash_table_unref,

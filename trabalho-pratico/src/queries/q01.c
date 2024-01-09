@@ -57,7 +57,7 @@ typedef struct {
  *
  * @return `NULL` for invalid arguments, a copy of the only @p argv and its identifier on success.
  */
-void *__q01_parse_arguments(char **argv, size_t argc) {
+void *__q01_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 1)
         return NULL;
 
@@ -95,6 +95,37 @@ void *__q01_parse_arguments(char **argv, size_t argc) {
     }
 
     return parsed_argument;
+}
+
+void *__q01_clone_arguments(const void *args_data) {
+    const q01_parsed_arguments_t *args  = args_data;
+    q01_parsed_arguments_t       *clone = malloc(sizeof(q01_parsed_arguments_t));
+    if (!clone)
+        return NULL;
+
+    clone->id_entity = args->id_entity;
+    switch (args->id_entity) {
+        case ID_ENTITY_FLIGHT:
+            clone->parsed_id = malloc(sizeof(sizeof(flight_id_t)));
+            memcpy(clone->parsed_id, args->parsed_id, sizeof(flight_id_t));
+            break;
+        case ID_ENTITY_RESERVATION:
+            clone->parsed_id = malloc(sizeof(sizeof(reservation_id_t)));
+            memcpy(clone->parsed_id, args->parsed_id, sizeof(reservation_id_t));
+            break;
+        case ID_ENTITY_USER:
+            clone->parsed_id = strdup(args->parsed_id);
+            break;
+        default:
+            clone->parsed_id = NULL; /* unreachable */
+            break;
+    }
+
+    if (!clone->parsed_id) {
+        free(clone);
+        return NULL;
+    }
+    return clone;
 }
 
 /**
@@ -292,10 +323,10 @@ int __q01_execute_flight_entity(const database_t *database,
  * @retval 0 On success.
  * @retval 1 On failure.
  */
-int __q01_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q01_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) statistics;
 
     const q01_parsed_arguments_t *arguments = query_instance_get_argument_data(instance);
@@ -315,6 +346,7 @@ int __q01_execute(database_t       *database,
 
 query_type_t *q01_create(void) {
     return query_type_create(__q01_parse_arguments,
+                             __q01_clone_arguments,
                              __q01_free_query_instance_argument_data,
                              NULL,
                              NULL,

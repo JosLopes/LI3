@@ -51,7 +51,7 @@ typedef struct {
  *
  * @return A pointer to a ::q06_parsed_arguments_t, or `NULL` on failure.
  */
-void *__q06_parse_arguments(char **argv, size_t argc) {
+void *__q06_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 2)
         return NULL;
 
@@ -86,6 +86,16 @@ void *__q06_parse_arguments(char **argv, size_t argc) {
     args->n = (size_t) n;
 
     return args;
+}
+
+void *__q06_clone_arguments(const void *args_data) {
+    const q06_parsed_arguments_t *args  = args_data;
+    q06_parsed_arguments_t       *clone = malloc(sizeof(q06_parsed_arguments_t));
+    if (!clone)
+        return NULL;
+
+    memcpy(clone, args, sizeof(q06_parsed_arguments_t));
+    return clone;
 }
 
 /**
@@ -172,8 +182,8 @@ void __q06_foreach_airport_count(gpointer key, gpointer value, gpointer user_dat
  * @details Used for array sorting in ::__q06_generate_statistics_foreach_year.
  */
 gint __q06_sort_airports_by_count(gconstpointer a, gconstpointer b) {
-    q06_array_item_t *item_a = (q06_array_item_t *) a;
-    q06_array_item_t *item_b = (q06_array_item_t *) b;
+    const q06_array_item_t *item_a = a;
+    const q06_array_item_t *item_b = b;
 
     if (item_b->count == item_a->count) {
         char a_airport_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
@@ -223,7 +233,9 @@ void __q06_generate_statistics_foreach_year(gpointer key_year,
  * @return A `GHashTable` that associates years with sorted `GArray`s of ::q06_array_item_t
  *         (airport + passenger count tuples).
  */
-void *__q06_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+void *__q06_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
     GHashTable *years_airport_count = g_hash_table_new_full(g_direct_hash,
                                                             g_direct_equal,
                                                             NULL,
@@ -231,12 +243,10 @@ void *__q06_generate_statistics(database_t *database, query_instance_t *instance
 
     for (size_t i = 0; i < n; ++i) {
         int16_t year =
-            ((const q06_parsed_arguments_t *) query_instance_get_argument_data(instances))->year;
+            ((const q06_parsed_arguments_t *) query_instance_get_argument_data(instances[i]))->year;
 
         GHashTable *airport_count = g_hash_table_new(g_direct_hash, g_direct_equal);
         g_hash_table_insert(years_airport_count, GUINT_TO_POINTER(year), airport_count);
-
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
 
     flight_manager_iter(database_get_flights(database),
@@ -266,10 +276,10 @@ void *__q06_generate_statistics(database_t *database, query_instance_t *instance
  *
  * @retval 0 Always successful
  */
-int __q06_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q06_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
     const q06_parsed_arguments_t *args = query_instance_get_argument_data(instance);
@@ -298,6 +308,7 @@ int __q06_execute(database_t       *database,
 
 query_type_t *q06_create(void) {
     return query_type_create(__q06_parse_arguments,
+                             __q06_clone_arguments,
                              free,
                              __q06_generate_statistics,
                              (query_type_free_statistics_callback_t) g_hash_table_unref,

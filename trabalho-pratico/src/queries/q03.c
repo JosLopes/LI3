@@ -36,7 +36,7 @@
  *
  * @return `NULL` on failure, a pointer to a hotel ID otherwise.
  */
-void *__q03_parse_arguments(char **argv, size_t argc) {
+void *__q03_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 1)
         return NULL;
 
@@ -55,6 +55,14 @@ void *__q03_parse_arguments(char **argv, size_t argc) {
                   token);*/
     }
     return NULL;
+}
+
+void *__q03_clone_arguments(const void *args_data) {
+    hotel_id_t *clone = malloc(sizeof(hotel_id_t));
+    if (!clone)
+        return NULL;
+    *clone = *(const hotel_id_t *) args_data;
+    return clone;
 }
 
 /**
@@ -105,13 +113,15 @@ int __q03_generate_statistics_foreach_reservation(void                *user_data
  * @return A `GHashTable` that associates hotel identifiers with ::q03_average_t for those hotels,
  *         or `NULL` on failure.
  */
-void *__q03_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+void *__q03_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
 
     GHashTable *ratings_averages =
         g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free);
 
     for (size_t i = 0; i < n; ++i) {
-        hotel_id_t hotel_id = *(const hotel_id_t *) query_instance_get_argument_data(instances);
+        hotel_id_t hotel_id = *(const hotel_id_t *) query_instance_get_argument_data(instances[i]);
 
         q03_average_t *average = malloc(sizeof(q03_average_t));
         if (!average) {
@@ -122,8 +132,6 @@ void *__q03_generate_statistics(database_t *database, query_instance_t *instance
         average->sum   = 0;
         average->count = 0;
         g_hash_table_insert(ratings_averages, GUINT_TO_POINTER(hotel_id), average);
-
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
 
     reservation_manager_iter(database_get_reservations(database),
@@ -144,10 +152,10 @@ void *__q03_generate_statistics(database_t *database, query_instance_t *instance
  * @retval 0 Success
  * @retval 1 Fatal failure (will only happen if a cosmic ray flips some bit in your memory).
  */
-int __q03_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q03_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
     GHashTable *ratings_averages = (GHashTable *) statistics;
@@ -166,6 +174,7 @@ int __q03_execute(database_t       *database,
 
 query_type_t *q03_create(void) {
     return query_type_create(__q03_parse_arguments,
+                             __q03_clone_arguments,
                              free,
                              __q03_generate_statistics,
                              (query_type_free_statistics_callback_t) g_hash_table_unref,

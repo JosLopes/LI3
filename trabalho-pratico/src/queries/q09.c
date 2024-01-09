@@ -38,7 +38,7 @@
  *
  * @return `NULL` for invalid arguments, a copy of the only @p argv on success.
  */
-void *__q09_parse_arguments(char **argv, size_t argc) {
+void *__q09_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 1)
         return NULL;
     else
@@ -129,7 +129,9 @@ int __q09_sort_prefixes_callback(const void *a, const void *b) {
  *
  * @return A pointer to a ::q09_statistical_data_t.
  */
-void *__q09_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+void *__q09_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
 
     /* Set locale for sorting and restore older locale later */
     char *old_locale = strdup(setlocale(LC_COLLATE, NULL));
@@ -159,7 +161,7 @@ void *__q09_generate_statistics(database_t *database, query_instance_t *instance
 
     size_t count = 0;
     for (size_t i = 0; i < n; ++i) {
-        const char *prefix = query_instance_get_argument_data(instances);
+        const char *prefix = query_instance_get_argument_data(instances[i]);
 
         int found = 0;
         for (size_t j = 0; j < count; ++j) {
@@ -173,8 +175,6 @@ void *__q09_generate_statistics(database_t *database, query_instance_t *instance
             stats->prefixes[count] = prefix;
             count++;
         }
-
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
     stats->n = count;
 
@@ -226,10 +226,10 @@ void __q09_free_statistics(void *statistical_data) {
  * @retval 0 Always succcessful.
  * @retval 1 Bad statistical data (should not happen, please raise an issue if it does).
  */
-int __q09_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q09_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
     const char             *prefix = query_instance_get_argument_data(instance);
@@ -255,6 +255,7 @@ int __q09_execute(database_t       *database,
 
 query_type_t *q09_create(void) {
     return query_type_create(__q09_parse_arguments,
+                             (query_type_clone_arguments_callback_t) strdup,
                              free,
                              __q09_generate_statistics,
                              __q09_free_statistics,

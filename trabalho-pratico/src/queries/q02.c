@@ -58,7 +58,7 @@ typedef struct {
  *
  * @return `NULL` on failure, a pointer to a `q02_argument_data_t` otherwise.
  */
-void *__q02_parse_arguments(char **argv, size_t argc) {
+void *__q02_parse_arguments(char *const *argv, size_t argc) {
     if (argc == 1) {
         q02_argument_data_t *ret = malloc(sizeof(q02_argument_data_t));
         ret->user_id             = strdup(argv[0]);
@@ -81,6 +81,21 @@ void *__q02_parse_arguments(char **argv, size_t argc) {
     }
 
     return NULL;
+}
+
+void *__q02_clone_arguments(const void *args_data) {
+    const q02_argument_data_t *args  = args_data;
+    q02_argument_data_t       *clone = malloc(sizeof(q02_argument_data_t));
+    if (!clone)
+        return NULL;
+
+    clone->user_id = strdup(args->user_id);
+    if (!clone->user_id) {
+        free(clone);
+        return NULL;
+    }
+    clone->filter = args->filter;
+    return clone;
 }
 
 /**
@@ -118,8 +133,8 @@ typedef struct {
  * @details Auxiliary function for ::__q02_execute.
  */
 gint __q02_execute_sort_compare(gconstpointer a_data, gconstpointer b_data) {
-    const q02_output_item_t *a = (const q02_output_item_t *) a_data;
-    const q02_output_item_t *b = (const q02_output_item_t *) b_data;
+    const q02_output_item_t *a = a_data;
+    const q02_output_item_t *b = b_data;
 
     int64_t crit1 = date_and_time_diff(b->date, a->date);
     if (crit1)
@@ -179,10 +194,10 @@ void __q02_print_output(query_writer_t               *output,
  *
  * @retval 0 Always. This query does not fail.
  */
-int __q02_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q02_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
 
     (void) statistics;
     const q02_argument_data_t *args = query_instance_get_argument_data(instance);
@@ -246,6 +261,7 @@ int __q02_execute(database_t       *database,
 
 query_type_t *q02_create(void) {
     return query_type_create(__q02_parse_arguments,
+                             __q02_clone_arguments,
                              __q02_free_query_instance_argument_data,
                              NULL,
                              NULL,
