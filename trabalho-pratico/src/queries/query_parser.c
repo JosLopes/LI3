@@ -63,7 +63,7 @@ typedef struct {
  * @retval 1 Parsing failure
  */
 int __query_parser_tokenize_callback(void *user_data, char *token) {
-    query_parser_data_t *parser = (query_parser_data_t *) user_data;
+    query_parser_data_t *parser = user_data;
 
     if (!parser->first_token_parsed) { /* First argument: query number */
 
@@ -136,7 +136,7 @@ int query_parser_parse_string(query_instance_t        *output,
     const query_type_t *query_type =
         query_type_list_get_by_index(query_type_list, query_instance_get_type(output));
     void *argument_data = query_type_get_parse_arguments_callback(
-        query_type)((char **) parser_data.args->pdata, parser_data.args->len);
+        query_type)((char *const *) parser_data.args->pdata, parser_data.args->len);
 
     if (!argument_data) { /* Argument parsing failure */
         if (!aux)
@@ -161,5 +161,5 @@ int query_parser_parse_string_const(query_instance_t        *output,
     int retval = query_parser_parse_string(output, buffer, query_type_list, aux);
 
     free(buffer);
-    return retval;
+    return retval != 0;
 }

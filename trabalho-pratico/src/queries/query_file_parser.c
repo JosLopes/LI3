@@ -45,11 +45,10 @@
  *     @brief List of known query types (numerical identifiers).
  */
 typedef struct {
-    GPtrArray             *aux_buffer;
-    query_instance_t      *aux_query;
-    size_t                 line_number;
-    query_instance_list_t *query_instance_list;
-    query_type_list_t     *query_type_list;
+    GPtrArray               *aux_buffer;
+    size_t                   line_number;
+    query_instance_list_t   *query_instance_list;
+    const query_type_list_t *query_type_list;
 } query_file_parser_data_t;
 
 /**
@@ -58,46 +57,54 @@ typedef struct {
  *
  * @param user_data A pointer to a ::query_file_parser_data_t.
  * @param line      Query to be parsed.
+ *
+ * @retval 0 Success (parsing failures may occur).
+ * @retval 1 Allocation failure
  */
 int __query_file_parser_parse_query_callback(void *user_data, char *line) {
     query_file_parser_data_t *parser_data = (query_file_parser_data_t *) user_data;
 
-    int retval = query_parser_parse_string(parser_data->aux_query,
+    query_instance_t *aux_query = query_instance_create();
+    if (!aux_query)
+        return 1;
+
+    int retval = query_parser_parse_string(aux_query,
                                            line,
                                            parser_data->query_type_list,
                                            parser_data->aux_buffer);
     if (retval) {
+        query_instance_free(aux_query, parser_data->query_type_list);
         parser_data->line_number++;
         return 0; /* Ignore parsing failures */
     }
 
-    query_instance_set_number_in_file(parser_data->aux_query, parser_data->line_number);
-    query_instance_list_add(parser_data->query_instance_list, parser_data->aux_query);
+    query_instance_set_number_in_file(aux_query, parser_data->line_number);
+    query_instance_list_add(parser_data->query_instance_list,
+                            aux_query,
+                            parser_data->query_type_list);
+    query_instance_free(aux_query, parser_data->query_type_list);
 
     parser_data->line_number++;
     return 0;
 }
 
-query_instance_list_t *query_file_parser_parse(FILE *input, query_type_list_t *query_type_list) {
+query_instance_list_t *query_file_parser_parse(FILE                    *input,
+                                               const query_type_list_t *query_type_list) {
     query_instance_list_t *list = query_instance_list_create();
     if (!list)
         return NULL;
 
-    query_instance_t *aux_query = query_instance_create();
-    if (!aux_query) {
-        query_instance_list_free(list, query_type_list);
-        return NULL;
-    }
-
     query_file_parser_data_t parser_data = {.aux_buffer          = g_ptr_array_new(),
-                                            .aux_query           = aux_query,
                                             .line_number         = 1,
                                             .query_instance_list = list,
                                             .query_type_list     = query_type_list};
 
-    stream_tokenize(input, '\n', __query_file_parser_parse_query_callback, &parser_data);
+    if (stream_tokenize(input, '\n', __query_file_parser_parse_query_callback, &parser_data)) {
+        g_ptr_array_unref(parser_data.aux_buffer);
+        query_instance_list_free(list, query_type_list);
+        return NULL;
+    }
 
-    g_ptr_array_free(parser_data.aux_buffer, TRUE);
-    free(aux_query); /* Don't use query_instance_free, not to free internal data */
+    g_ptr_array_unref(parser_data.aux_buffer);
     return list;
 }
