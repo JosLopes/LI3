@@ -105,6 +105,60 @@ Quanto às novas relações de dependência, reimplementámos a \texttt{string\_
 \texttt{pool}, para melhor reutilização de código. Ademais, agora as entidades passam a depender
 dos alocadores, por motivos explicados em \nameref{sec:modularity-and-encapsulation}.
 
+\subsection{\emph{Queries}}
+\label{sec:queries}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.17]{res-fase2/queries.png}
+    \caption{Diagrama de dependências dos catálogos na aplicação}
+    \label{fig:queries}
+\end{figure}
+
+Como todas as \emph{queries} apresentam a mesma formatação de \emph{output}, adicionámos a estrutura
+\texttt{query\_writer}, que formata o \emph{output} de uma \emph{query} automaticamente, e escreve-o
+para um ficheiro (modo \emph{batch}) ou para um conjunto de linhas em memória (modo interativo).
+Segue-se a descrição do funcionamento das \emph{queries} novas e das que sofreram mudanças
+significativas:
+
+\begin{itemize}
+    \item \textbf{Q05} - Listagem dos voos com origem num dado aeroporto entre duas datas. Com uma
+                         única iteração pelos voos para todas as \emph{queries} deste tipo,
+                         verifica-se se cada voo cumpre as condições para ser parte da resposta
+                         de uma \emph{query}. Em caso afirmativo, adiciona-se esse voo a um
+                         \emph{array}, associado à \emph{query} através de uma tabela de
+                         \emph{hash}. Após cada \emph{array} ser ordenado, a execução de cada
+                         \emph{query} consiste simplesmente na exibição dos seus conteúdos.
+
+    \item \textbf{Q07} - Listagem dos aeroportos com maior mediana de atrasos. Inicia-se com uma
+                         tabela de \emph{hash} que associa aeroportos a \emph{arrays} de números
+                         correspondentes a atrasos. Com uma única iteração pelos voos para todas
+                         as \emph{queries} deste tipo, preenche-se o \emph{array} de cada aeroporto
+                         com os atrasos dos seus voos. No fim, ordena-se cada \emph{array} e gera-se
+                         uma tabela de \emph{hash} entre aeroportos e atrasos. A execução de uma
+                         \emph{query} individual consiste na consulta dos maiores elementos desta
+                         tabela.
+
+    \item \textbf{Q08} - Cálculo da receita de um hotel entre duas datas. Com uma única iteração
+                         pelas reservas para todas as \emph{queries} deste tipo, gera-se uma tabela
+                         de \emph{hash} que associa pares hotéis + datas às suas receitas. A cada
+                         reserva, calcula-se o número de noites simultaneamente dormidas e no
+                         intervalo da \emph{query}, para se calcular a receita resultante dessa
+                         reserva. A execução de cada \emph{query} consiste simplesmente na consulta
+                         da tabela gerada.
+
+    \item \textbf{Q09} - Listagem de todos os utilizadores cujo nome comece com um dado prefixo. A
+                         nova implementação desta \emph{query} é muito semelhante à da \textbf{Q5},
+                         mas com uma iteração pelos utilizadores em vez dos voos. Esta solução é
+                         significativamente mais veloz que a anterior, que iterava pelos
+                         utilizadores uma vez para cada \emph{query}. Considerámos a possibilidade
+                         de geração da um índice usando \emph{tries}, mas o seu elevado uso de
+                         memória não é compensador, dado que muito pouco do tempo total do programa
+                         é passado na execução desta \emph{query}.
+
+    \item \textbf{Q10} - {\color{red}Ainda tenho de implementar isto}
+\end{itemize}
+
 \section{Modularidade e encapsulamento}
 \label{sec:modularity-and-encapsulation}
 
