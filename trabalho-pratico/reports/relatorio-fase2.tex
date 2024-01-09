@@ -71,4 +71,19 @@ gere duas estruturas de dados distintas, \texttt{dataset\_input} e \texttt{datas
 formadas por \emph{handles} de ficheiros abertos para leitura / escrita. Ademais, adicionámos o
 módulo \texttt{path\_utils}, para manipulação de caminhos para ficheiros.
 
+\subsection{Entidades}
+\label{sec:entities}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.2]{res-fase2/entities.png}
+    \caption{Diagrama de dependências das entidades da aplicação}
+    \label{fig:parsing}
+\end{figure}
+
+Nas entidades, criámos módulos para os identificadores de voos, reservas e hotéis. Estes são
+armazenados como inteiros, e consequentemente exigem \emph{parsing} e uma forma de serem
+apresentados textualmente, código que antes se encontrava em duplicado em vários locais da
+aplicação.
+
 \end{document}
