@@ -86,4 +86,26 @@ armazenados como inteiros, e consequentemente exigem \emph{parsing} e uma forma 
 apresentados textualmente, código que antes se encontrava em duplicado em vários locais da
 aplicação.
 
+\subsection{Catálogos}
+\label{sec:catalogs}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.17]{res-fase2/database.png}
+    \caption{Diagrama de dependências dos catálogos na aplicação}
+    \label{fig:catalogs}
+\end{figure}
+
+De modo diminuir o uso de memória da aplicação ainda mais, procurámos comprimir campos do
+\emph{dataset} com baixa entropia, como nomes de hotéis e de companhias aérias, que surgem várias
+vezes repetidos. Para isso, criámos um novo alocador que armazena \emph{strings} repetidas apenas
+uma vez, o \texttt{string\_pool\_no\_duplicates}.
+
+Quanto às novas relações de dependência, reimplementámos a \texttt{string\_pool} utilizando uma
+\texttt{pool}, para melhor reutilização de código. Ademais, agora as entidades passam a depender
+dos alocadores, por motivos explicados em \nameref{sec:modularity-and-encapsulation}.
+
+\section{Modularidade e encapsulamento}
+\label{sec:modularity-and-encapsulation}
+
 \end{document}
