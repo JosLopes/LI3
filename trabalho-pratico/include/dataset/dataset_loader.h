@@ -35,7 +35,7 @@
 #define DATASET_LOADER_H
 
 #include "database/database.h"
-#include "performance/performance_metrics.h"
+#include "testing/performance_metrics.h"
 
 /**
  * @brief Parses a dataset in @p path and stores the data in @p database.

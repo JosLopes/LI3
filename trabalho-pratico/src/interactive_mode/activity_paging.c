@@ -201,7 +201,8 @@ void __activity_paging_free_data(void *activity_data) {
  * @return  An ::activity_t for a paginator, that must be deleted using ::activity_free. `NULL` is
  *          also a possibility, when an allocation failure occurs.
  */
-activity_t *__activity_paging_create(const char **lines, size_t lines_length, size_t block_length) {
+activity_t *
+    __activity_paging_create(const char *const *lines, size_t lines_length, size_t block_length) {
 
     activity_paging_data_t *activity_data = malloc(sizeof(activity_paging_data_t));
     if (!activity_data)
@@ -227,7 +228,7 @@ activity_t *__activity_paging_create(const char **lines, size_t lines_length, si
                            activity_data);
 }
 
-int activity_paging_run(const char **lines, size_t lines_length, int blocking) {
+int activity_paging_run(const char *const *lines, size_t lines_length, int blocking) {
     const char *single_empty_line[] = {""};
     if (lines_length == 0) {
         lines        = single_empty_line;

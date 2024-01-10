@@ -16,7 +16,7 @@
 
 /**
  * @file  performance_metrics_output.c
- * @brief Implementation of methods in include/performance/performance_metrics_output.h
+ * @brief Implementation of methods in include/testing/performance_metrics_output.h
  *
  * #### Examples
  * See [the header file's documentation](@ref performance_metrics_output_example).
@@ -28,8 +28,8 @@
 #include <wchar.h>
 
 #include "interactive_mode/ncurses_utils.h"
-#include "performance/performance_metrics_output.h"
 #include "queries/query_type_list.h"
+#include "testing/performance_metrics_output.h"
 #include "utils/int_utils.h"
 
 /**

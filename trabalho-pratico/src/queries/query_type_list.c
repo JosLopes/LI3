@@ -32,6 +32,7 @@
 #include "queries/q05.h"
 #include "queries/q06.h"
 #include "queries/q07.h"
+#include "queries/q08.h"
 #include "queries/q09.h"
 #include "queries/qplaceholder.h"
 #include "queries/query_type_list.h"
@@ -59,7 +60,7 @@ query_type_list_t *query_type_list_create(void) {
                                                                   q05_create,
                                                                   q06_create,
                                                                   q07_create,
-                                                                  qplaceholder_create,
+                                                                  q08_create,
                                                                   q09_create,
                                                                   qplaceholder_create};
 

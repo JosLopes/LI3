@@ -26,7 +26,7 @@
 #ifndef BATCH_MODE_H
 #define BATCH_MODE_H
 
-#include "performance/performance_metrics.h"
+#include "testing/performance_metrics.h"
 
 /**
  * @brief Starts batch mode.

@@ -16,7 +16,7 @@
 
 /**
  * @file  performance_metrics.c
- * @brief Implementation of methods in include/performance/performance_metrics.h
+ * @brief Implementation of methods in include/testing/performance_metrics.h
  *
  * ### Example
  * See [the header file's documentation](@ref performance_metrics_example).
@@ -26,9 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "performance/performance_event.h"
-#include "performance/performance_metrics.h"
 #include "queries/query_type_list.h"
+#include "testing/performance_event.h"
+#include "testing/performance_metrics.h"
 
 /**
  * @struct performance_metrics
