@@ -182,7 +182,7 @@ o \emph{layout} das interfaces (alguns caracteres podem ser mais longos que outr
 com a qual o nosso programa lida corretamente).
 
 \subsection{Subsistema de testes}
-\label{sec:interactive-mode}
+\label{sec:testing-subsystem}
 
 \begin{figure}[ht]
     \centering
@@ -239,16 +239,45 @@ foram estes erros, e todos fomos capazes de resolver com facilidade.
 No modo interativo e no subsistema de testes, como pensámos nas interfaces dos módulos com
 encapsulamento em mente, não precisámos de gastar tempo na sua correção. Ademais, adicionámos
 métodos de cópia profunda (semelhantes aos \emph{copy constructors} de C++) a todas as estruturas
-de dados da aplicação\footnote{Com exceção de alocadores (\emph{pools}) e estruturas que contém
+de dados da aplicação\footnote{Com exceção de alocadores (\emph{pools}) e estruturas que contêm
 \emph{handles} de ficheiros (não é possível copiar um \texttt{FILE *}).} que, apesar de não
 utilizarmos, são cruciais para a extensibilidade da aplicação, caso algo que se pretenda fazer
 exija a criação de cópias de certas estruturas.
 
 \subsubsection{Conciliação com alocadores}
-\label{sec:the-great-refactoring}
+\label{sec:allocator-conciliation}
+
+As únicas estruturas de dados que expõem memória do seu interior são os alocadores \texttt{pool} e
+\texttt{string\_pool}. Não encaramos isto como um problema no encapsulamento, pois é algo que
+qualquer alocador tem de fazer (por exemplo, o método \texttt{malloc} expõe memória da arena com
+que é implementado).
+
+No entanto, previamente, durante uma adição à base de dados, os campos das novas entidades eram
+alocados pelos \emph{managers} nas \emph{pools}, e não pelas entidades em si, tratando-se de um
+verdadeiro problema no encapsulamento. Resolvemo-lo usando uma estratégia semelhante à utilizada na
+linguagem Zig, que aplicámos apenas às entidades: se um método precisa de alocar memória na
+\emph{heap}, então leva um alocador como argumento, que usa para as alocações necessárias:
+
+\begin{center}
+    \texttt{fn validate(allocator: Allocator, s: []const u8) Allocator.Error!bool}
+\end{center}
+
+Este método de Zig valida texto JSON, levando também como argumento um alocador e podendo devolver
+ou um booleano ou um erro de alocação. Na nossa aplicação C, é dada a possibilidade de se usar uma
+\emph{pool}, ou de se passar o valor \texttt{NULL} a esse argumento para o uso de \texttt{malloc}:
+
+\begin{center}
+    \begin{tabular}{rl}
+        \texttt{user\_t *user\_clone(}&\hspace{-3mm}\texttt{pool\_t *allocator,} \\
+        &\hspace{-3mm}\texttt{string\_pool\_t *string\_allocator,} \\
+        &\hspace{-3mm}\texttt{const user\_t *user);}
+    \end{tabular}
+\end{center}
 
 \subsubsection{Conciliação com a \texttt{glib}}
-\label{sec:the-great-refactoring}
+\label{sec:glib-conciliation}
+
+{\color{red} I still need to think how to handle this}
 
 \pagebreak
 \section{Anexos}
