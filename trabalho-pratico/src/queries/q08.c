@@ -52,7 +52,7 @@ typedef struct {
  *
  * @return `NULL` on failure, a pointer to a `q08_airport_data_t` otherwise.
  */
-void *__q08_parse_arguments(char **argv, size_t argc) {
+void *__q08_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 3)
         return NULL;
 
@@ -70,6 +70,16 @@ void *__q08_parse_arguments(char **argv, size_t argc) {
     }
 
     return parsed_arguments;
+}
+
+void *__q08_clone_arguments(const void *args_data) {
+    const q08_parsed_arguments_t *args  = args_data;
+    q08_parsed_arguments_t       *clone = malloc(sizeof(q08_parsed_arguments_t));
+    if (!clone)
+        return NULL;
+
+    memcpy(clone, args, sizeof(q08_parsed_arguments_t));
+    return clone;
 }
 
 /**
@@ -102,7 +112,7 @@ int __q08_generate_statistics_foreach_reservation(void                *user_data
     hotel_id_t hotel_id = reservation_get_hotel_id(reservation);
 
     for (size_t i = 0; i < foreach_data->filter_data->len; i++) {
-        q08_parsed_arguments_t *args = g_ptr_array_index(foreach_data->filter_data, i);
+        const q08_parsed_arguments_t *args = g_ptr_array_index(foreach_data->filter_data, i);
 
         if (hotel_id == args->hotel_id) {
             uint16_t price_per_night = reservation_get_price_per_night(reservation);
@@ -128,7 +138,7 @@ int __q08_generate_statistics_foreach_reservation(void                *user_data
             uint64_t revenue =
                 GPOINTER_TO_UINT(g_hash_table_lookup(foreach_data->hotel_revenue, args));
             g_hash_table_insert(foreach_data->hotel_revenue,
-                                args,
+                                (q08_parsed_arguments_t *) args,
                                 GUINT_TO_POINTER(revenue + reservation_revenue));
         }
     }
@@ -145,15 +155,19 @@ int __q08_generate_statistics_foreach_reservation(void                *user_data
  *
  * @return A `GHashTable` associating a ::q08_parsed_arguments_t to an integer revenue as a pointer.
  */
-void *__q08_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+void *__q08_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
     GPtrArray  *filter_data   = g_ptr_array_new();
     GHashTable *hotel_revenue = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     for (size_t i = 0; i < n; ++i) {
-        q08_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
-        g_hash_table_insert(hotel_revenue, argument_data, 0);
-        g_ptr_array_add(filter_data, argument_data);
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
+        const q08_parsed_arguments_t *argument_data =
+            query_instance_get_argument_data(instances[i]);
+
+        /* TODO - find way to keep const */
+        g_hash_table_insert(hotel_revenue, (q08_parsed_arguments_t *) argument_data, 0);
+        g_ptr_array_add(filter_data, (q08_parsed_arguments_t *) argument_data);
     }
 
     q08_foreach_reservation_data_t callback_data = {.filter_data   = filter_data,
@@ -179,10 +193,10 @@ void *__q08_generate_statistics(database_t *database, query_instance_t *instance
  * @retval 0 Always succesl
  * @retval 1 Fatal failure (will only happen if a cosmic ray flips some bit in your memory).
  */
-int __q08_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q08_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
     GHashTable                   *hotel_revenue = (GHashTable *) statistics;
@@ -202,6 +216,7 @@ int __q08_execute(database_t       *database,
 
 query_type_t *q08_create(void) {
     return query_type_create(__q08_parse_arguments,
+                             __q08_clone_arguments,
                              free,
                              __q08_generate_statistics,
                              (query_type_free_statistics_callback_t) g_hash_table_unref,
