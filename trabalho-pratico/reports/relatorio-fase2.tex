@@ -181,6 +181,28 @@ caminho de ficheiro. Ademais, temos excelente suporte para Unicode, com mediçã
 o \emph{layout} das interfaces (alguns caracteres podem ser mais longos que outros, situação
 com a qual o nosso programa lida corretamente).
 
+\subsection{Subsistema de testes}
+\label{sec:interactive-mode}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[scale=0.15]{res-fase2/testing.png}
+    \caption{Diagrama de dependências do subsistema de testes}
+    \label{fig:testing}
+\end{figure}
+
+Os testes de desempenho baseiam-se num \texttt{performance\_event}, uma medição do tempo e da
+diferença do uso de memória entre dois instantes. \texttt{performance\_metrics} são um conjunto de
+eventos de desempenho, que são produzidos ao longo do decorrer da aplicação, e mostrados ao
+utilizador no final da sua execução pelo módulo \texttt{performance\_metrics\_output}. São
+apresentadas várias tabelas (\texttt{table}), relativas ao uso de recursos computacionais na leitura
+de cada parte do \emph{dataset} e na execução de cada \emph{query} (tempo individual, estatístico e
+amortizado).
+
+Os testes funcionais são implementados por \texttt{test\_diff}, que calcula as diferenças entre
+duas diretorias (ficheiros em falta, em excesso, e diferenças entre ficheiros), que são depois
+apresentadas ao utilizador por \texttt{test\_diff\_output}.
+
 \section{Modularidade e encapsulamento}
 \label{sec:modularity-and-encapsulation}
 
