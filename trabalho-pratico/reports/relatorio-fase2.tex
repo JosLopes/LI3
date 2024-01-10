@@ -206,6 +206,50 @@ apresentadas ao utilizador por \texttt{test\_diff\_output}.
 \section{Modularidade e encapsulamento}
 \label{sec:modularity-and-encapsulation}
 
+\subsection{Modularidade}
+\label{sec:modularity}
+
+No relatório da primeira fase, afirmámos estar, de um modo geral, satisfeitos com o nível de
+modularidade conseguido. No entanto, tínhamos noção de que havia alguns detalhes a corrigir,
+nomeadamente, separar o I/O das \emph{queries} e do \emph{dataset}, e criar módulos para os
+identificadores de hotéis, voos e reservas, que continham código anteriormente replicado por toda a
+\emph{codebase}. Não só corrigimos estes problemas, como planeámos as novas partes da aplicação
+tendo em conta as anteriores falhas na estrutura do programa.
+
+\subsection{Encapsulamento}
+\label{sec:encapsulation}
+
+\subsubsection{\emph{The great refactoring}}
+\label{sec:the-great-refactoring}
+
+Apesar de, na primeira fase deste trabalho, termos definido \emph{getters} e \emph{setters} para as
+estruturas de dados, estávamos cientes da ausência de encapsulamento, pois vários \emph{getters}
+devolviam apontadores mutáveis para dados no interior das estruturas. Sabíamos que seria ao
+encapsulamento que se dedicaria a maior parte do esforço da 2.ª fase, o que se provou verdade. Como
+apenas líamos informação dos apontadores mencionados, sem nunca escrever, tornar esses apontadores
+constantes provou-se a melhor solução para o encapsulamento.
+
+No entanto, neste processo de aplicar a \emph{keyword const} aos argumentos dos métodos e aos seus
+valores devolvidos, apercebemo-nos da importância de uma interface modular bem pensada que
+dispense mudanças. A cada \emph{const} adicionado, vários módulos deixavam de compilar por erros de
+tipos, deixando-nos num processo de horas de correções sem conseguir compilar o projeto, com medo de
+que alguma mudança que fizéssemos causasse algum erro que não saberíamos depurar. Felizmente, poucos
+foram estes erros, e todos fomos capazes de resolver com facilidade.
+
+No modo interativo e no subsistema de testes, como pensámos nas interfaces dos módulos com
+encapsulamento em mente, não precisámos de gastar tempo na sua correção. Ademais, adicionámos
+métodos de cópia profunda (semelhantes aos \emph{copy constructors} de C++) a todas as estruturas
+de dados da aplicação\footnote{Com exceção de alocadores (\emph{pools}) e estruturas que contém
+\emph{handles} de ficheiros (não é possível copiar um \texttt{FILE *}).} que, apesar de não
+utilizarmos, são cruciais para a extensibilidade da aplicação, caso algo que se pretenda fazer
+exija a criação de cópias de certas estruturas.
+
+\subsubsection{Conciliação com alocadores}
+\label{sec:the-great-refactoring}
+
+\subsubsection{Conciliação com a \texttt{glib}}
+\label{sec:the-great-refactoring}
+
 \pagebreak
 \section{Anexos}
 \label{sec:annexes}
