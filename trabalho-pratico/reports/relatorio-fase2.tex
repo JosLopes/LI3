@@ -268,7 +268,7 @@ ou um booleano ou um erro de alocação. Na nossa aplicação C, é dada a possi
 
 \begin{center}
     \begin{tabular}{rl}
-        \texttt{user\_t *user\_clone(}&\hspace{-3mm}\texttt{pool\_t *allocator,} \\
+		\texttt{user\_t *user\_clone(}&\hspace{-3mm}\texttt{pool\_t *allocator,} \\
         &\hspace{-3mm}\texttt{string\_pool\_t *string\_allocator,} \\
         &\hspace{-3mm}\texttt{const user\_t *user);}
     \end{tabular}
@@ -278,6 +278,44 @@ ou um booleano ou um erro de alocação. Na nossa aplicação C, é dada a possi
 \label{sec:glib-conciliation}
 
 {\color{red} I still need to think how to handle this}
+
+\section{Desempenho}
+\label{sec:performance}
+
+\subsection{Melhorias}
+\label{sec:performance-improvements}
+
+Dado que o nosso grupo se preocupou com o desempenho da aplicação já desde a primeira fase do
+projeto, quando os \emph{datasets} de maior dimensão foram adicionados à plataforma de testes,
+o nosso programa correu em tempo e memória muito inferiores aos limites de recursos máximos. Mesmo
+assim, procurámos continuar a aumentar o desempenho da nossa aplicação.
+
+Para reduzir ainda mais o uso de memória, introduzimos a \texttt{string\_pool\_no\_duplicates}, que
+evita armazenar \emph{strings} repetidas. Ademais, reordenamos os campos nas estruturas de dados das
+entidades, de modo a reduzir o \emph{padding} e o número de \emph{bytes} ocupados por cada uma.
+
+A maioria do tempo de tempo de execução é gasto no \emph{parsing} do \emph{dataset}, pelo que
+procurámos alcançar micro-otimizações nos métodos mais chamados, determinados com recurso ao
+\texttt{callgrind}. A única melhoria significativa que obtivemos resultou da substituição do
+\texttt{strsep} por um novo método que considera apenas um delimitador.
+
+Ademais, como a execução das \emph{queries} já era muito veloz devido à localidade de memória
+(tanto o custo amortizado como o do modo interativo), o nosso foco foi o de simplificar o código, e
+não o de o otimizar com melhores estruturas de dados. Tal provou-se vantajoso, pois várias vezes as
+estruturas simples se provaram mais rápidas do que outras mais complexas, uma lembrança de que a
+complexidade algorítmica é assintótica. Foi importante garantir que os catálogos usavam as
+melhores estruturas para responder às relações pedidas pelas \emph{queries}, mas tal não se provou
+tão relevante para dados auxiliares usados durante a execução das mesmas.
+
+\subsection{\emph{Benchmarking}}
+\label{sec:benchmarking}
+
+% TODO - benchmarking
+
+\subsection{Possíveis melhorias}
+\label{sec:possible-performance-improvements}
+
+{\color{red} Falar um pouco de multithreading só para chatear}
 
 \pagebreak
 \section{Anexos}
