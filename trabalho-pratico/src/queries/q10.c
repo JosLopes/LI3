@@ -111,11 +111,85 @@ void *__q10_clone_arguments(const void *args_data) {
  *
  * @var q10_instant_statistics::users
  *     @brief Number of registered users.
+ * @var q10_instant_statistics::flights
+ *     @brief Number of flights.
+ * @var q10_instant_statistics::passengers
+ *     @brief Number of passengers.
+ * @var q10_instant_statistics::unique_passengers
+ *     @brief Number of passengers with only one flight in this day / month / year.
+ * @var q10_instant_statistics::reservation
+ *     @brief Number of hotel reservations.
  */
 typedef struct {
     uint64_t users, flights, passengers, unique_passengers, reservations;
 } q10_instant_statistics_t;
 
+/**
+ * @brief Fills @p instants with statistics that need to be modified if an event hapenned in @p
+ *        date.
+ *
+ * @param stats    Query 10 statistics (dates -> q10_instant_statistics_t).
+ * @param instants Will be filled with pointer to ::q10_instant_statistics_t and `NULL`s.
+ * @param date     Date when an event hapenned.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation error
+ */
+int __q10_fill_instants(GHashTable *stats, q10_instant_statistics_t *instants[3], date_t date) {
+    instants[0] = g_hash_table_lookup(stats, GUINT_TO_POINTER(date));
+    instants[1] = g_hash_table_lookup(stats, GUINT_TO_POINTER(date_generate_dayless(date)));
+
+    gpointer                  monthless = GUINT_TO_POINTER(date_generate_monthless(date));
+    q10_instant_statistics_t *year      = g_hash_table_lookup(stats, monthless);
+    if (!year) {
+        year = malloc(sizeof(q10_instant_statistics_t));
+        if (!year)
+            return 1;
+        memset(year, 0, sizeof(q10_instant_statistics_t));
+
+        g_hash_table_insert(stats, monthless, year);
+    }
+    instants[2] = year;
+
+    return 0;
+}
+
+/**
+ * @brief Method called for each flight, to generate statistical data.
+ * @details An auxiliary method for ::__q10_generate_statistics.
+ *
+ * @param user_data A `GHashTable` that associates dates (also dayless and monthless dates) to
+ *                  pointers to ::q10_instant_statistics_t.
+ * @param flight    The flight to consider.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation error
+ */
+int __q10_generate_statistics_foreach_flight(void *user_data, const flight_t *flight) {
+    GHashTable *stats = (GHashTable *) user_data;
+
+    q10_instant_statistics_t *instants[3];
+    date_t date = date_and_time_get_date(flight_get_schedule_departure_date(flight));
+    if (__q10_fill_instants(stats, instants, date))
+        return 1;
+
+    for (int i = 0; i < 3; ++i)
+        if (instants[i])
+            instants[i]->flights++;
+
+    return 0;
+}
+
+/**
+ * @brief Generates statistical data for queries of type 10.
+ *
+ * @param database  Database, to iterate through users.
+ * @param instances Query instances that will need to be executed.
+ * @param n         Number of query instances that will need to be executed.
+ *
+ * @return A `GHashTable` that associates dates (also dayless and monthless dates) to pointers to
+ *         ::q10_instant_statistics_t (`NULL` on failure).
+ */
 void *__q10_generate_statistics(const database_t              *database,
                                 const query_instance_t *const *instances,
                                 size_t                         n) {
@@ -161,7 +235,9 @@ void *__q10_generate_statistics(const database_t              *database,
         /* Don't add keys for years, as its not known who those are */
     }
 
-    (void) database;
+    flight_manager_iter(database_get_flights(database),
+                        __q10_generate_statistics_foreach_flight,
+                        stats);
 
     return stats;
 }
@@ -171,6 +247,14 @@ void *__q10_generate_statistics(const database_t              *database,
 /** @brief End of the range of years to look for in ::__q10_execute. */
 #define Q10_EXECUTE_YEAR_RANGE_END   2100
 
+/**
+ * @brief   Checks if a day, month or year has events happening in it.
+ * @details If it hasn't, then it shouldn't be printed.
+ *
+ * @param istats Event count in a day / month / year.
+ *
+ * @return Whether there is any event in @p istats.
+ */
 int __q10_instant_statistics_has_events(const q10_instant_statistics_t *istats) {
     if (!istats) {
         fprintf(stderr, "Bad statistical data in query 10! This should not happen!\n");
@@ -181,6 +265,14 @@ int __q10_instant_statistics_has_events(const q10_instant_statistics_t *istats) 
            istats->reservations;
 }
 
+/**
+ * @brief Writes the information of a ::q10_instant_statistics_t to a ::query_writer_t.
+ *
+ * @param istats Information to be printed
+ * @param output Where to output the data in @p istats to.
+ * @param ymd    Type of instant (`"year"`, `"month"` or `"date"`).
+ * @param value  Value of the instant that @p istats refers to (year, month or day).
+ */
 void __q10_instant_statistics_write(const q10_instant_statistics_t *istats,
                                     query_writer_t                 *output,
                                     const char                     *ymd,
