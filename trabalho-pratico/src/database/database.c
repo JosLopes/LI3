@@ -54,16 +54,48 @@ database_t *database_create(void) {
     return database;
 }
 
-user_manager_t *database_get_users(const database_t *database) {
+const user_manager_t *database_get_users(const database_t *database) {
     return database->users;
 }
 
-reservation_manager_t *database_get_reservations(const database_t *database) {
+const reservation_manager_t *database_get_reservations(const database_t *database) {
     return database->reservations;
 }
 
-flight_manager_t *database_get_flights(const database_t *database) {
+const flight_manager_t *database_get_flights(const database_t *database) {
     return database->flights;
+}
+
+int database_add_user(database_t *database, const user_t *user) {
+    return user_manager_add_user(database->users, user);
+}
+
+int database_add_reservation(database_t *database, const reservation_t *reservation) {
+    if (reservation_manager_add_reservation(database->reservations, reservation))
+        return 1;
+    return user_manager_add_user_reservation_association(database->users,
+                                                         reservation_get_const_user_id(reservation),
+                                                         reservation_get_id(reservation));
+}
+
+int database_add_flight(database_t *database, const flight_t *flight) {
+    return flight_manager_add_flight(database->flights, flight);
+}
+
+int database_invalidate_flight(database_t *database, flight_id_t id) {
+    return flight_manager_invalidate_by_id(database->flights, id);
+}
+
+int database_add_passenger(database_t *database, const char *user_id, flight_id_t flight_id) {
+    if (flight_manager_add_passagers(database->flights, flight_id, 1))
+        return 1;
+
+    if (user_manager_add_user_flight_association(database->users, user_id, flight_id)) {
+        flight_manager_add_passagers(database->flights, flight_id, -1); /* Revert +1 passenger */
+        return 1;
+    }
+
+    return 0;
 }
 
 void database_free(database_t *database) {

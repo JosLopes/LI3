@@ -32,7 +32,7 @@
  * #include "dataset/dataset_loader.h"
  *
  * // Callback called for every reservation in the database, that prints it to the screen.
- * int iter_callback(void *user_data, reservation_t *reservation) {
+ * int iter_callback(void *user_data, const reservation_t *reservation) {
  *     (void) user_data;
  *
  *     const char *user_id         = reservation_get_const_user_id(reservation);
@@ -142,10 +142,11 @@ reservation_manager_t *reservation_manager_create(void);
  * @param manager     Reservation manager to add @p reservation to.
  * @param reservation Reservation to be added to @p manager.
  *
- * @return The pointer to the reservation allocated in the manager's pool, or `NULL` on failure.
+ * @retval 0 Success
+ * @retval 1 Allocation failure.
  */
-reservation_t *reservation_manager_add_reservation(reservation_manager_t *manager,
-                                                   const reservation_t   *reservation);
+int reservation_manager_add_reservation(reservation_manager_t *manager,
+                                        const reservation_t   *reservation);
 
 /**
  * @brief Gets a reservation stored in @p manager by its identifier.
@@ -155,7 +156,7 @@ reservation_t *reservation_manager_add_reservation(reservation_manager_t *manage
  *
  * @return A ::reservation_t if it's found, `NULL` if it's not.
  */
-reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manager, size_t id);
+const reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manager, size_t id);
 
 /**
  * @brief Iterates through every **valid** reservation in a reservation manager, calling @p callback
@@ -171,7 +172,7 @@ reservation_t *reservation_manager_get_by_id(const reservation_manager_t *manage
  * #### Example
  * See [the header file's documentation](@ref reservation_manager_examples).
  */
-int reservation_manager_iter(reservation_manager_t              *manager,
+int reservation_manager_iter(const reservation_manager_t        *manager,
                              reservation_manager_iter_callback_t callback,
                              void                               *user_data);
 

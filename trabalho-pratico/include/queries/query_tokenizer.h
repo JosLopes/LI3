@@ -71,7 +71,7 @@
  * @brief Splits a **MODIFIABLE** string into query tokens.
  *
  * @param input     String to tokenize, that that will be modified for this function to work, but
- *                  later restored to its original form.
+ *                  later restored to its original form, assuming @p callback doesn't modify it.
  * @param callback  Function called for every token read.
  * @param user_data Pointer passed to every call of @p callback, so that it can edit program state.
  *

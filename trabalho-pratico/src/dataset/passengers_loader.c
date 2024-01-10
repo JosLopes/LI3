@@ -57,8 +57,10 @@ typedef struct {
  *
  * @var passengers_loader_t::output
  *     @brief Where to output dataset errors to.
+ * @var passengers_loader_t::database
+ *     @brief Database to add passenger relationships to.
  * @var passengers_loader_t::users
- *     @brief User manager to add new passenger relationships to.
+ *     @brief User manager to check for user existence.
  * @var passengers_loader_t::flights
  *     @brief Flight manager to check for flight existence.
  * @var passengers_loader_t::commit_buffer
@@ -78,8 +80,9 @@ typedef struct {
  */
 typedef struct {
     dataset_error_output_t *output;
-    user_manager_t         *users;
-    flight_manager_t       *flights;
+    database_t             *database;
+    const user_manager_t   *users;
+    const flight_manager_t *flights;
 
     GPtrArray     *commit_buffer;
     flight_id_t    commit_buffer_flight;
@@ -112,7 +115,6 @@ int __passengers_loader_parse_flight_id(void *loader_data, char *token, size_t n
 
         /* Fail if the flight isn't found (invalid flights won't be found too). */
         return flight_manager_get_by_id(loader->flights, id) == NULL;
-        return 0;
     } else if (retval == 2) {
         fprintf(stderr,
                 "Flight ID \"%s\" is not numerical. This isn't supported by our program!\n",
@@ -121,7 +123,7 @@ int __passengers_loader_parse_flight_id(void *loader_data, char *token, size_t n
     return 1;
 }
 
-/** @brief Parses a user id in a user-flight passenger relation. */
+/** @brief Parses a user's identifier in a user-flight passenger relation. */
 int __passengers_loader_parse_user_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
     passengers_loader_t *loader = (passengers_loader_t *) loader_data;
@@ -140,11 +142,11 @@ int __passengers_loader_parse_user_id(void *loader_data, char *token, size_t nto
  * @retval 1 Allocation failure
  */
 int __passengers_loader_commit_flight_list(passengers_loader_t *loader) {
-    flight_t *flight = flight_manager_get_by_id(loader->flights, loader->commit_buffer_flight);
-    flight_set_number_of_passengers(flight, loader->commit_buffer->len);
+    const flight_t *flight =
+        flight_manager_get_by_id(loader->flights, loader->commit_buffer_flight);
 
     if ((guint) flight_get_total_seats(flight) < loader->commit_buffer->len) {
-        flight_manager_invalidate_by_id(loader->flights, loader->commit_buffer_flight);
+        database_invalidate_flight(loader->database, loader->commit_buffer_flight);
         g_array_append_val(loader->invalid_flight_ids, loader->commit_buffer_flight);
 
         /* Print passenger entries as invalid */
@@ -158,11 +160,10 @@ int __passengers_loader_commit_flight_list(passengers_loader_t *loader) {
             dataset_error_output_report_passenger_error(loader->output, print_buffer);
         }
     } else {
-        flight_id_t flight_id = flight_get_id(flight);
         for (size_t i = 0; i < loader->commit_buffer->len; ++i) {
-            const char *user_id = g_ptr_array_index(loader->commit_buffer, i);
-            /* Ignore allocation errors */
-            if (user_manager_add_user_flight_association(loader->users, user_id, flight_id))
+            if (database_add_passenger(loader->database,
+                                       g_ptr_array_index(loader->commit_buffer, i),
+                                       loader->commit_buffer_flight))
                 return 1;
         }
     }
@@ -265,6 +266,7 @@ int passengers_loader_load(FILE                   *passengers_stream,
 
     dataset_error_output_report_passenger_error(output, PASSENGERS_LOADER_HEADER);
     passengers_loader_t data = {.output        = output,
+                                .database      = database,
                                 .users         = database_get_users(database),
                                 .flights       = database_get_flights(database),
                                 .commit_buffer = g_ptr_array_new()};

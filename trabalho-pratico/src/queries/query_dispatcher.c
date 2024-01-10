@@ -26,16 +26,16 @@
 
 #include "queries/query_dispatcher.h"
 
-void query_dispatcher_dispatch_single(database_t        *database,
-                                      query_instance_t  *query_instance,
-                                      query_type_list_t *query_type_list,
-                                      query_writer_t    *output) {
+void query_dispatcher_dispatch_single(const database_t        *database,
+                                      const query_instance_t  *query_instance,
+                                      const query_type_list_t *query_type_list,
+                                      query_writer_t          *output) {
 
     query_instance_list_t *list = query_instance_list_create();
-    query_instance_list_add(list, query_instance);
+    query_instance_list_add(list, query_instance, query_type_list);
 
     query_dispatcher_dispatch_list(database, list, query_type_list, &output, NULL);
-    query_instance_list_free_no_internals(list);
+    query_instance_list_free(list, query_type_list);
 }
 
 /**
@@ -54,10 +54,10 @@ void query_dispatcher_dispatch_single(database_t        *database,
  *     @brief Performance metrics where to write profiling information to.
  */
 typedef struct {
-    database_t        *database;
-    query_type_list_t *query_type_list;
-    query_writer_t   **outputs;
-    size_t             i;
+    const database_t        *database;
+    const query_type_list_t *query_type_list;
+    query_writer_t *const   *outputs;
+    size_t                   i;
 
     performance_metrics_t *metrics;
 } query_dispatcher_data_t;
@@ -71,11 +71,14 @@ typedef struct {
  *
  * @return Always `0`, even on failure. No invalid queries shall halt the program.
  */
-int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *instances, size_t n) {
+int __query_dispatcher_query_set_callback(void                          *user_data,
+                                          const query_instance_t *const *instances,
+                                          size_t                         n) {
     query_dispatcher_data_t *dispatcher_data = (query_dispatcher_data_t *) user_data;
 
-    size_t        type_num = query_instance_get_type(instances);
-    query_type_t *type = query_type_list_get_by_index(dispatcher_data->query_type_list, type_num);
+    size_t              type_num = query_instance_get_type(instances[0]);
+    const query_type_t *type =
+        query_type_list_get_by_index(dispatcher_data->query_type_list, type_num);
 
     if (!type)
         return 0;
@@ -94,7 +97,7 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
     }
 
     for (size_t j = 0; j < n; ++j) {
-        size_t line = query_instance_get_number_in_file(instances);
+        size_t line = query_instance_get_number_in_file(instances[j]);
 
         performance_metrics_start_measuring_query_execution(dispatcher_data->metrics,
                                                             type_num,
@@ -102,14 +105,12 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
 
         execute(dispatcher_data->database,
                 statistics,
-                instances,
+                instances[j],
                 dispatcher_data->outputs[dispatcher_data->i + j]); /* Ignore returned result */
 
         performance_metrics_stop_measuring_query_execution(dispatcher_data->metrics,
                                                            type_num,
                                                            line);
-
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
     }
     dispatcher_data->i += n;
 
@@ -118,11 +119,11 @@ int __query_dispatcher_query_set_callback(void *user_data, query_instance_t *ins
     return 0;
 }
 
-void query_dispatcher_dispatch_list(database_t            *database,
-                                    query_instance_list_t *query_instance_list,
-                                    query_type_list_t     *query_type_list,
-                                    query_writer_t       **outputs,
-                                    performance_metrics_t *metrics) {
+void query_dispatcher_dispatch_list(const database_t        *database,
+                                    query_instance_list_t   *query_instance_list,
+                                    const query_type_list_t *query_type_list,
+                                    query_writer_t *const   *outputs,
+                                    performance_metrics_t   *metrics) {
 
     query_dispatcher_data_t dispatcher_data = {.database        = database,
                                                .query_type_list = query_type_list,

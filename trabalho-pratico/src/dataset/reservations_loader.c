@@ -38,17 +38,17 @@
  *
  * @var reservations_loader_t::output
  *     @brief Where to output dataset errors to.
+ * @var reservations_loader_t::database
+ *     @brief Database to add new reservations to.
  * @var reservations_loader_t::users
  *     @brief Users manager to check for existence of users mentioned in reservations.
- * @var reservations_loader_t::reservations
- *     @brief Reservations manager to add new reservations to.
  * @var reservations_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
  */
 typedef struct {
     dataset_error_output_t *output;
-    user_manager_t         *users;
-    reservation_manager_t  *reservations;
+    database_t             *database;
+    const user_manager_t   *users;
 
     const char    *error_line;
     reservation_t *current_reservation;
@@ -275,14 +275,8 @@ int __reservations_loader_after_parse_line(void *loader_data, int retval) {
 
     if (retval) {
         dataset_error_output_report_reservation_error(loader->output, loader->error_line);
-    } else {
-        /* Ignore allocation errors */
-        if (!reservation_manager_add_reservation(loader->reservations, loader->current_reservation))
-            return 1;
-        return user_manager_add_user_reservation_association(
-            loader->users,
-            reservation_get_const_user_id(loader->current_reservation),
-            reservation_get_id(loader->current_reservation));
+    } else if (database_add_reservation(loader->database, loader->current_reservation)) {
+        return 1;
     }
     return 0;
 }
@@ -290,8 +284,8 @@ int __reservations_loader_after_parse_line(void *loader_data, int retval) {
 int reservations_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
     dataset_error_output_report_reservation_error(output, RESERVATIONS_LOADER_HEADER);
     reservations_loader_t data = {.output              = output,
+                                  .database            = database,
                                   .users               = database_get_users(database),
-                                  .reservations        = database_get_reservations(database),
                                   .current_reservation = reservation_create(NULL)};
 
     if (!data.current_reservation)

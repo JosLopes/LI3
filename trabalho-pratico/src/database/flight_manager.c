@@ -77,8 +77,10 @@ flight_manager_t *flight_manager_create(void) {
     return manager;
 }
 
-flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight) {
+int flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight) {
     flight_t *pool_flight = flight_clone(manager->flights, manager->strings, flight);
+    if (!pool_flight)
+        return 1;
 
     size_t flight_id = flight_get_id(flight);
     if (!g_hash_table_insert(manager->id_flights_rel, GINT_TO_POINTER(flight_id), pool_flight)) {
@@ -90,14 +92,23 @@ flight_t *flight_manager_add_flight(flight_manager_t *manager, const flight_t *f
         /* Do not fail and return NULL. Show must go on */
     }
 
-    return pool_flight;
+    return 0;
 }
 
-flight_t *flight_manager_get_by_id(const flight_manager_t *manager, uint64_t id) {
+int flight_manager_add_passagers(flight_manager_t *manager, flight_id_t id, int count) {
+    flight_t *flight = g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
+    if (!flight)
+        return 1;
+
+    flight_set_number_of_passengers(flight, flight_get_number_of_passengers(flight) + count);
+    return 0;
+}
+
+const flight_t *flight_manager_get_by_id(const flight_manager_t *manager, flight_id_t id) {
     return g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
 }
 
-int flight_manager_invalidate_by_id(flight_manager_t *manager, uint64_t id) {
+int flight_manager_invalidate_by_id(flight_manager_t *manager, flight_id_t id) {
     (void) manager;
     (void) id;
 
@@ -144,7 +155,7 @@ int __flight_manager_iter_callback(void *user_data, const void *item) {
     return 0;
 }
 
-int flight_manager_iter(flight_manager_t              *manager,
+int flight_manager_iter(const flight_manager_t        *manager,
                         flight_manager_iter_callback_t callback,
                         void                          *user_data) {
 

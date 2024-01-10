@@ -47,6 +47,7 @@
  * #### Examples
  * See [the header file's documentation](@ref query_file_parser_examples).
  */
-query_instance_list_t *query_file_parser_parse(FILE *input, query_type_list_t *query_type_list);
+query_instance_list_t *query_file_parser_parse(FILE                    *input,
+                                               const query_type_list_t *query_type_list);
 
 #endif

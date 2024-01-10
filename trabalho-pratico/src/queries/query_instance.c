@@ -62,6 +62,29 @@ query_instance_t *query_instance_create(void) {
     return ret;
 }
 
+query_instance_t *query_instance_clone(const query_instance_t  *query,
+                                       const query_type_list_t *query_type_list) {
+
+    query_instance_t *clone = malloc(sizeof(query_instance_t));
+    if (!clone)
+        return NULL;
+    memcpy(clone, query, sizeof(query_instance_t));
+
+    const query_type_t *type = query_type_list_get_by_index(query_type_list, query->type);
+    if (!type) {
+        return NULL; /* Invalid query type */
+    } else if (query->argument_data != NULL) {
+        query_type_clone_arguments_callback_t cb = query_type_get_clone_arguments_callback(type);
+        clone->argument_data                     = cb(query->argument_data);
+        if (!clone->argument_data) {
+            free(clone);
+            return NULL;
+        }
+    }
+
+    return clone;
+}
+
 void query_instance_set_type(query_instance_t *query, size_t type) {
     query->type = type;
 }
@@ -74,8 +97,29 @@ void query_instance_set_number_in_file(query_instance_t *query, size_t number_in
     query->number_in_file = number_in_file;
 }
 
-void query_instance_set_argument_data(query_instance_t *query, void *argument_data) {
-    query->argument_data = argument_data;
+int query_instance_set_argument_data(query_instance_t        *query,
+                                     const void              *argument_data,
+                                     const query_type_list_t *query_type_list) {
+
+    const query_type_t *type = query_type_list_get_by_index(query_type_list, query->type);
+    if (!type) {
+        return 1; /* Invalid query type */
+    }
+
+    if (query->argument_data) {
+        query_type_free_query_instance_argument_data_callback_t free_cb =
+            query_type_get_free_query_instance_argument_data_callback(type);
+        free_cb(query->argument_data);
+        return 1;
+    }
+
+    query_type_clone_arguments_callback_t clone_cb = query_type_get_clone_arguments_callback(type);
+    query->argument_data                           = clone_cb(argument_data);
+    if (!query->argument_data) {
+        return 1;
+    }
+
+    return 0;
 }
 
 size_t query_instance_get_type(const query_instance_t *query) {
@@ -90,16 +134,12 @@ size_t query_instance_get_number_in_file(const query_instance_t *query) {
     return query->number_in_file;
 }
 
-void *query_instance_get_argument_data(const query_instance_t *query) {
+const void *query_instance_get_argument_data(const query_instance_t *query) {
     return query->argument_data;
 }
 
-size_t query_instance_sizeof(void) {
-    return sizeof(struct query_instance);
-}
-
-void query_instance_pooled_free(query_instance_t *query, query_type_list_t *query_type_list) {
-    query_type_t *type = query_type_list_get_by_index(query_type_list, query->type);
+void query_instance_free(query_instance_t *query, const query_type_list_t *query_type_list) {
+    const query_type_t *type = query_type_list_get_by_index(query_type_list, query->type);
     if (!type) {
         return; /* Invalid query type */
     } else if (query->argument_data != NULL) {
@@ -107,9 +147,5 @@ void query_instance_pooled_free(query_instance_t *query, query_type_list_t *quer
             query_type_get_free_query_instance_argument_data_callback(type);
         cb(query->argument_data);
     }
-}
-
-void query_instance_free(query_instance_t *query, query_type_list_t *query_type_list) {
-    query_instance_pooled_free(query, query_type_list);
     free(query);
 }

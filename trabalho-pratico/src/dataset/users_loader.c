@@ -37,8 +37,8 @@
  *
  * @var users_loader_t::output
  *     @brief Where to output dataset errors to.
- * @var users_loader_t::users
- *     @brief User manager to add new users to.
+ * @var users_loader_t::database
+ *     @brief Database to add new users to.
  * @var users_loader_t::error_line
  *     @brief Current line being processed, in case it needs to be put in the error file.
  * @var users_loader_t::current_user
@@ -46,7 +46,7 @@
  */
 typedef struct {
     dataset_error_output_t *output;
-    user_manager_t         *users;
+    database_t             *database;
 
     const char *error_line;
     user_t     *current_user;
@@ -215,7 +215,7 @@ int __users_loader_after_parse_line(void *loader_data, int retval) {
     if (retval) {
         dataset_error_output_report_user_error(loader->output, loader->error_line);
     } else {
-        return user_manager_add_user(loader->users, loader->current_user) == NULL;
+        return database_add_user(loader->database, loader->current_user);
     }
     return 0;
 }
@@ -223,7 +223,7 @@ int __users_loader_after_parse_line(void *loader_data, int retval) {
 int users_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
     dataset_error_output_report_user_error(output, USER_LOADER_HEADER);
     users_loader_t data = {.output       = output,
-                           .users        = database_get_users(database),
+                           .database     = database,
                            .current_user = user_create(NULL)};
 
     if (!data.current_user)

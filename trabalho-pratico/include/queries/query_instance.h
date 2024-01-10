@@ -32,9 +32,7 @@
  *
  * To run the query you created, see ::query_dispatcher_dispatch_single.
  *
- * In the end, don't forget to call ::query_instance_free. ::query_instance_pooled_free only
- * applies if you haven't created your query instance with ::query_instance_create, but allocated
- * it in a pool / array.
+ * In the end, don't forget to call ::query_instance_free.
  */
 
 #ifndef QUERY_INSTANCE_H
@@ -43,7 +41,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "queries/query_instance_typedef.h"
+/* Weird structure to do something like C++'s `class Foo;` without adding a dependency */
+/* clang-format off */
+#ifndef query_instance_typedef
+    /** @cond FALSE */
+    #define query_instance_typedef
+    /** @endcond */
+
+    /** @brief An occurrence of a query (in a file, or inputted by the user). */
+    typedef struct query_instance query_instance_t;
+#endif
+/* clang-format on */
+
 #include "queries/query_type_list.h"
 
 /**
@@ -52,6 +61,19 @@
  *         on failure.
  */
 query_instance_t *query_instance_create(void);
+
+/**
+ * @brief Creates a deep copy of a query instance.
+ *
+ * @param query           Query to be copied.
+ * @param query_type_list List of supported queries (to know how to duplicate `argument_data` in @p
+ *                        query).
+ *
+ * @return A pointer to a copy of @p query, that must be deleted with ::query_instance_free, `NULL`
+ *         on allocation failure or invalid query type.
+ */
+query_instance_t *query_instance_clone(const query_instance_t  *query,
+                                       const query_type_list_t *query_type_list);
 
 /**
  * @brief Sets the type of a query.
@@ -78,10 +100,16 @@ void query_instance_set_number_in_file(query_instance_t *query, size_t number_in
  * @brief Adds data relating to argument parsing results to a query. Its data type will depend on
  *        the query's type.
  *
- * @param query         Query instance to have its formatting flag set.
- * @param argument_data Data resulting from parsing the query's arguments.
+ * @param query           Query instance to have its formatting flag set.
+ * @param argument_data   Data resulting from parsing the query's arguments.
+ * @param query_type_list List of supported queries (to know how to clone @p argument_data)
+ *
+ * @retval 0 Success.
+ * @retval 1 Allocation failure or query type not set.
  */
-void query_instance_set_argument_data(query_instance_t *query, void *argument_data);
+int query_instance_set_argument_data(query_instance_t        *query,
+                                     const void              *argument_data,
+                                     const query_type_list_t *query_type_list);
 
 /**
  * @brief  Gets the type of a query.
@@ -110,25 +138,7 @@ size_t query_instance_get_number_in_file(const query_instance_t *query);
  * @return Data resulting from parsing the query's arguments. Its data type will depend on the
  *         query's type.
  */
-void *query_instance_get_argument_data(const query_instance_t *query);
-
-/**
- * @brief   Gets the size of a ::query_instance_t in memory.
- * @details Useful for pool and contiguous array allocation.
- * @return  `sizeof(query_instance_t)`.
- */
-size_t query_instance_sizeof(void);
-
-/**
- * @brief   Frees memory used by a query instance, when it's stored in a pool.
- * @details Frees the contents of a `query_instance_t *`, but does not attempt to free the pointer
- *          itself.
- *
- * @param query           Query instance to be freed.
- * @param query_type_list List of supported queries (to know how to free `argument_data` in @p
- *                        query).
- */
-void query_instance_pooled_free(query_instance_t *query, query_type_list_t *query_type_list);
+const void *query_instance_get_argument_data(const query_instance_t *query);
 
 /**
  * @brief Frees memory used by a query instance, created by ::query_instance_create.
@@ -137,6 +147,6 @@ void query_instance_pooled_free(query_instance_t *query, query_type_list_t *quer
  * @param query_type_list List of supported queries (to know how to free `argument_data` in @p
  *                        query).
  */
-void query_instance_free(query_instance_t *query, query_type_list_t *query_type_list);
+void query_instance_free(query_instance_t *query, const query_type_list_t *query_type_list);
 
 #endif
