@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "queries/qplaceholder.h"
+#include "queries/q06.h"
 #include "queries/query_instance.h"
 #include "utils/int_utils.h"
 
