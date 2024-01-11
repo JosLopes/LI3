@@ -114,6 +114,22 @@ typedef struct user_manager user_manager_t;
 typedef int (*user_manager_iter_callback_t)(void *user_data, const user_t *user);
 
 /**
+ * @brief   Callback type for user manager iterations with flight information.
+ * @details Method called by ::user_manager_iter_with_flights for every item in a ::user_manager_t.
+ *
+ * @param user_data Argument passed to ::user_manager_iter_with_flights that is passed to every
+ *                  callback, so that this method can change the program's state.
+ * @param user      User in the manager.
+ * @param flights   Flights related to @p user
+ *
+ * @return `0` on success, or any other value to order iteration to stop.
+ */
+typedef int (*user_manager_iter_with_flights_callback_t)(
+    void                               *user_data,
+    const user_t                       *user,
+    const single_pool_id_linked_list_t *flights);
+
+/**
  * @brief   Instantiates a new ::user_manager_t.
  * @details The returned value is owned by the caller and should be `free`'d with
  *          ::user_manager_free.
@@ -207,6 +223,24 @@ const single_pool_id_linked_list_t *
 int user_manager_iter(const user_manager_t        *manager,
                       user_manager_iter_callback_t callback,
                       void                        *user_data);
+
+/**
+ * @brief   Iterates through every user in a user manager, calling @p callback for each one.
+ * @details Flights related to every user are also provided.
+ *
+ * @param manager   User manager to iterate thorugh.
+ * @param callback  Method to be called for every user stored in @p manager.
+ * @param user_data Pointer to be passed to every @p callback, so that it can modify the program's
+ *                  state.
+ *
+ * @return The return value of the last-called @p callback.
+ *
+ * #### Example
+ * See [the header file's documentation](@ref user_manager_examples).
+ */
+int user_manager_iter_with_flights(const user_manager_t                     *manager,
+                                   user_manager_iter_with_flights_callback_t callback,
+                                   void                                     *user_data);
 
 /**
  * @brief Frees memory used by a user manager.
