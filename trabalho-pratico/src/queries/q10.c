@@ -155,6 +155,22 @@ int __q10_fill_instants(GHashTable *stats, q10_instant_statistics_t *instants[3]
 }
 
 /**
+ * @brief Type of `user_data` parameter in ::__q10_generate_statistics_foreach_user.
+ *
+ * @var q10_foreach_user_data_t::stats
+ *     @brief Statistical data to be modified and returned by ::__q10_generate_statistics.
+ * @var q10_foreach_user_data_t::users
+ *     @brief User manager to access user-flight relations.
+ * @var q10_foreach_user_data_t::flight
+ *     @brief Flight manager to access flight information.
+ */
+typedef struct {
+    GHashTable             *stats;
+    const user_manager_t   *users;
+    const flight_manager_t *flights;
+} q10_foreach_user_data_t;
+
+/**
  * @brief Method called for each user, to generate statistical data.
  * @details An auxiliary method for ::__q10_generate_statistics.
  *
@@ -166,16 +182,35 @@ int __q10_fill_instants(GHashTable *stats, q10_instant_statistics_t *instants[3]
  * @retval 1 Allocation error
  */
 int __q10_generate_statistics_foreach_user(void *user_data, const user_t *user) {
-    GHashTable *stats = (GHashTable *) user_data;
+    q10_foreach_user_data_t *iter_data = user_data;
 
     q10_instant_statistics_t *instants[3];
     date_t                    date = user_get_account_creation_date(user);
-    if (__q10_fill_instants(stats, instants, date))
+    if (__q10_fill_instants(iter_data->stats, instants, date))
         return 1;
 
     for (int i = 0; i < 3; ++i)
         if (instants[i])
             instants[i]->users++;
+
+    const single_pool_id_linked_list_t *passengers =
+        user_manager_get_flights_by_id(iter_data->users, user_get_const_id(user));
+
+    while (passengers) {
+        const flight_t *flight =
+            flight_manager_get_by_id(iter_data->flights,
+                                     single_pool_id_linked_list_get_value(passengers));
+        date = date_and_time_get_date(flight_get_schedule_departure_date(flight));
+        if (__q10_fill_instants(iter_data->stats, instants, date))
+            return 1;
+
+        for (int i = 0; i < 3; ++i)
+            if (instants[i])
+                instants[i]->passengers++;
+
+        passengers = single_pool_id_linked_list_get_next(passengers);
+    }
+
     return 0;
 }
 
@@ -285,7 +320,12 @@ void *__q10_generate_statistics(const database_t              *database,
         /* Don't add keys for years, as its not known who those are */
     }
 
-    user_manager_iter(database_get_users(database), __q10_generate_statistics_foreach_user, stats);
+    q10_foreach_user_data_t user_iter_data = {.stats   = stats,
+                                              .users   = database_get_users(database),
+                                              .flights = database_get_flights(database)};
+    user_manager_iter(user_iter_data.users,
+                      __q10_generate_statistics_foreach_user,
+                      &user_iter_data);
 
     flight_manager_iter(database_get_flights(database),
                         __q10_generate_statistics_foreach_flight,
