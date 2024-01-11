@@ -119,9 +119,12 @@ void *__q10_clone_arguments(const void *args_data) {
  *     @brief Number of passengers with only one flight in this day / month / year.
  * @var q10_instant_statistics::reservation
  *     @brief Number of hotel reservations.
+ * @var q10_instant_statistics::date
+ *     @brief Instant (day / month / year) of this instant.
  */
 typedef struct {
     uint64_t users, flights, passengers, unique_passengers, reservations;
+    uint32_t instant;
 } q10_instant_statistics_t;
 
 /**
@@ -139,15 +142,16 @@ int __q10_fill_instants(GHashTable *stats, q10_instant_statistics_t *instants[3]
     instants[0] = g_hash_table_lookup(stats, GUINT_TO_POINTER(date));
     instants[1] = g_hash_table_lookup(stats, GUINT_TO_POINTER(date_generate_dayless(date)));
 
-    gpointer                  monthless = GUINT_TO_POINTER(date_generate_monthless(date));
-    q10_instant_statistics_t *year      = g_hash_table_lookup(stats, monthless);
+    uint32_t                  monthless = date_generate_monthless(date);
+    q10_instant_statistics_t *year      = g_hash_table_lookup(stats, GUINT_TO_POINTER(monthless));
     if (!year) {
         year = malloc(sizeof(q10_instant_statistics_t));
         if (!year)
             return 1;
         memset(year, 0, sizeof(q10_instant_statistics_t));
+        year->instant = monthless;
 
-        g_hash_table_insert(stats, monthless, year);
+        g_hash_table_insert(stats, GUINT_TO_POINTER(monthless), year);
     }
     instants[2] = year;
 
@@ -196,21 +200,35 @@ int __q10_generate_statistics_foreach_user(void *user_data, const user_t *user) 
     const single_pool_id_linked_list_t *passengers =
         user_manager_get_flights_by_id(iter_data->users, user_get_const_id(user));
 
+    GHashTable *counted_instants = g_hash_table_new(g_direct_hash, g_direct_equal);
     while (passengers) {
         const flight_t *flight =
             flight_manager_get_by_id(iter_data->flights,
                                      single_pool_id_linked_list_get_value(passengers));
         date = date_and_time_get_date(flight_get_schedule_departure_date(flight));
-        if (__q10_fill_instants(iter_data->stats, instants, date))
+        if (__q10_fill_instants(iter_data->stats, instants, date)) {
+            g_hash_table_unref(counted_instants);
             return 1;
+        }
 
-        for (int i = 0; i < 3; ++i)
-            if (instants[i])
+        for (int i = 0; i < 3; ++i) {
+            if (instants[i]) {
+                if (!g_hash_table_lookup(counted_instants,
+                                         GUINT_TO_POINTER(instants[i]->instant))) {
+                    instants[i]->unique_passengers++;
+                    g_hash_table_insert(counted_instants,
+                                        GUINT_TO_POINTER(instants[i]->instant),
+                                        GUINT_TO_POINTER(1));
+                }
+
                 instants[i]->passengers++;
+            }
+        }
 
         passengers = single_pool_id_linked_list_get_next(passengers);
     }
 
+    g_hash_table_unref(counted_instants);
     return 0;
 }
 
@@ -298,6 +316,7 @@ void *__q10_generate_statistics(const database_t              *database,
                 }
 
                 memset(istats, 0, sizeof(q10_instant_statistics_t));
+                istats->instant = key;
                 g_hash_table_insert(stats, GUINT_TO_POINTER(key), istats);
             }
         } else if (args->month != -1) {
@@ -313,6 +332,7 @@ void *__q10_generate_statistics(const database_t              *database,
                 }
 
                 memset(istats, 0, sizeof(q10_instant_statistics_t));
+                istats->instant = key;
                 g_hash_table_insert(stats, GUINT_TO_POINTER(key), istats);
             }
         }
