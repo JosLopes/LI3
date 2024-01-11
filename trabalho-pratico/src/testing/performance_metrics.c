@@ -155,7 +155,7 @@ void performance_metrics_start_measuring_query_statistics(performance_metrics_t 
                 "Failed to measure resource usage in query %zu's statistical data generation!\n",
                 query_type);
 
-    metrics->statistical_events[query_type] = perf;
+    metrics->statistical_events[query_type - 1] = perf;
 }
 
 void performance_metrics_stop_measuring_query_statistics(performance_metrics_t *metrics,
@@ -163,8 +163,8 @@ void performance_metrics_stop_measuring_query_statistics(performance_metrics_t *
     if (!metrics)
         return;
 
-    if (!metrics->statistical_events[query_type] ||
-        performance_event_stop_measuring(metrics->statistical_events[query_type])) {
+    if (!metrics->statistical_events[query_type - 1] ||
+        performance_event_stop_measuring(metrics->statistical_events[query_type - 1])) {
 
         fprintf(stderr,
                 "Failed to measure resource usage in query %zu's statistical data generation!\n",
@@ -215,7 +215,7 @@ const performance_event_t *
 const performance_event_t *
     performance_metrics_get_query_statistics_measurement(const performance_metrics_t *metrics,
                                                          size_t                       query_type) {
-    return metrics->statistical_events[query_type];
+    return metrics->statistical_events[query_type - 1];
 }
 
 /**
@@ -232,13 +232,13 @@ size_t performance_metrics_get_query_execution_measurements(const performance_me
                                                             uint64_t **out_times) {
     guint   length;
     size_t *line_numbers =
-        (size_t *) g_hash_table_get_keys_as_array(metrics->query_events[query_type], &length);
+        (size_t *) g_hash_table_get_keys_as_array(metrics->query_events[query_type - 1], &length);
     qsort(line_numbers, length, sizeof(size_t), __performance_metrics_size_compare_func);
 
     uint64_t *times = g_malloc(length * sizeof(uint64_t));
 
     for (size_t i = 0; i < length; ++i) {
-        performance_event_t *perf = g_hash_table_lookup(metrics->query_events[query_type],
+        performance_event_t *perf = g_hash_table_lookup(metrics->query_events[query_type - 1],
                                                         GUINT_TO_POINTER(line_numbers[i]));
 
         times[i] = performance_event_get_elapsed_time(perf);

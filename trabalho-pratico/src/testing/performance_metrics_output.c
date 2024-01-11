@@ -205,7 +205,7 @@ void __performance_metrics_output_print_query_statistics(FILE                   
     const performance_event_t *statistical_events[QUERY_TYPE_LIST_COUNT];
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         const performance_event_t *perf =
-            performance_metrics_get_query_statistics_measurement(metrics, i);
+            performance_metrics_get_query_statistics_measurement(metrics, i + 1);
 
         if (perf)
             statistical_events[i] = perf;
@@ -216,7 +216,7 @@ void __performance_metrics_output_print_query_statistics(FILE                   
     wchar_t *event_names[QUERY_TYPE_LIST_COUNT];
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         event_names[i] = malloc(sizeof(wchar_t) * 32);
-        swprintf(event_names[i], 32, L"Query %zu", i);
+        swprintf(event_names[i], 32, L"Query %zu", i + 1);
     }
 
     __performance_metrics_output_print_table(output,
@@ -330,12 +330,14 @@ void performance_metrics_output_print(FILE *output, const performance_metrics_t 
         fprintf(output, "\nQuery %zu\n\n", i + 1);
 
         const performance_event_t *statistics_event =
-            performance_metrics_get_query_statistics_measurement(metrics, i);
+            performance_metrics_get_query_statistics_measurement(metrics, i + 1);
         uint64_t statistics_time =
             statistics_event ? performance_event_get_elapsed_time(statistics_event) : 0;
 
-        ssize_t len =
-            performance_metrics_get_query_execution_measurements(metrics, i, &line_numbers, &times);
+        ssize_t len = performance_metrics_get_query_execution_measurements(metrics,
+                                                                           i + 1,
+                                                                           &line_numbers,
+                                                                           &times);
 
         __performance_metrics_output_query(output, len, line_numbers, times, statistics_time);
 
