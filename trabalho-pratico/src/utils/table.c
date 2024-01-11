@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-#include<stddef.h>
-#include<stdio.h>
+#include <stddef.h>
+#include <stdio.h>
 
-#include"utils/table.h"
-#include"utils/pool.h"
-#include"interactive_mode/ncurses_utils.h"
+#include "interactive_mode/ncurses_utils.h"
+#include "utils/pool.h"
+#include "utils/table.h"
 
 struct table {
-    pool_t *strings;
+    pool_t    *strings;
     wchar_t ***contents_positions;
-    size_t height, width;
+    size_t     height, width;
 
     int *column_widths;
 };
 
 table_t *table_create(size_t height, size_t width) {
-    table_t *new_table = malloc (sizeof(table_t));
+    table_t *new_table = malloc(sizeof(table_t));
 
     wchar_t ***contents_positions = malloc(height * sizeof(wchar_t **));
     for (size_t i = 0; i < height; i++) {
-        contents_positions[i] = malloc (width * sizeof(wchar_t *));
+        contents_positions[i] = malloc(width * sizeof(wchar_t *));
 
         for (size_t j = 0; j < width; j++)
             contents_positions[i][j] = NULL;
@@ -49,27 +49,35 @@ table_t *table_create(size_t height, size_t width) {
     new_table->height             = height;
     new_table->width              = width;
     new_table->column_widths      = column_widths;
-    
+
     return new_table;
 }
 
 void table_insert(table_t *table, const wchar_t *string, size_t x, size_t y) {
-    if (x != 0 || y != 0) {
+    if (x != 0 || y != 0) { /* No entries for the top left corner */
         /* Calculate table measurements */
-        int width = ncurses_measure_unicode_string((gunichar *) string);
-        if (width+2 > table->column_widths[x])
-            table->column_widths[x] = width+2;
+        int width = ncurses_measure_unicode_string((gunichar *) string) + 2;
+        if (width > table->column_widths[x])
+            table->column_widths[x] = width;
 
-        wchar_t *allocated_string = pool_put_items(wchar_t, table->strings, string, wcslen(string)+1);
+        wchar_t *allocated_string =
+            pool_put_items(wchar_t, table->strings, string, wcslen(string) + 1);
         (table->contents_positions)[y][x] = allocated_string;
     }
 }
 
-void __table_draw_putc_n_times(FILE *output,
+void table_insert_double(table_t *table, double number, size_t x, size_t y) {
+    int     buffer_size = snprintf(NULL, 0, "%12.2lf", number) + 1;
+    wchar_t string[buffer_size];
+    swprintf(string, buffer_size, L"%12.2lf", number);
+    table_insert(table, string, x, y);
+}
+
+void __table_draw_putc_n_times(FILE    *output,
                                table_t *table,
-                               char character,
-                               char border,
-                               int starting_column){
+                               char     character,
+                               char     border,
+                               int      starting_column) {
     for (size_t i = starting_column; i < table->width; i++) {
         putc(border, output);
         for (int j = 0; j < table->column_widths[i]; j++)
@@ -87,9 +95,9 @@ void table_draw(FILE *output, table_t *table) {
 
     fprintf(output, " %*s", table->column_widths[0], "");
     for (size_t i = 1; i < table->width; i++)
-        fprintf(output, "| %*ls ", table->column_widths[i]-2, table->contents_positions[0][i]);        
+        fprintf(output, "| %*ls ", table->column_widths[i] - 2, table->contents_positions[0][i]);
     fprintf(output, "|\n");
-    
+
     fprintf(output, " %*s", table->column_widths[0], "");
     __table_draw_putc_n_times(output, table, ' ', '|', 1);
 
@@ -99,14 +107,19 @@ void table_draw(FILE *output, table_t *table) {
         __table_draw_putc_n_times(output, table, ' ', '|', 0);
 
         for (size_t j = 0; j < table->width; j++) {
-            if (table->contents_positions[i][j]) 
-                fprintf(output, "| %*ls ", table->column_widths[j]-2, table->contents_positions[i][j]);
-            else {
-                int mid_of_column = table->column_widths[j]/2;
-                fprintf(output, "|%*s-%*s", mid_of_column,
-                                            "",
-                                            table->column_widths[j]-mid_of_column-1,
-                                            "");
+            if (table->contents_positions[i][j]) {
+                fprintf(output,
+                        "| %*ls ",
+                        table->column_widths[j] - 2,
+                        table->contents_positions[i][j]);
+            } else {
+                int mid_of_column = table->column_widths[j] / 2;
+                fprintf(output,
+                        "|%*s-%*s",
+                        mid_of_column,
+                        "",
+                        table->column_widths[j] - mid_of_column - 1,
+                        "");
             }
         }
         fprintf(output, "|\n");

@@ -22,7 +22,7 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#include<wchar.h>
+#include <wchar.h>
 
 typedef struct table table_t;
 
@@ -31,6 +31,8 @@ typedef struct table table_t;
 table_t *table_create(size_t height, size_t width);
 
 void table_insert(table_t *table, const wchar_t *string, size_t x, size_t y);
+
+void table_insert_double(table_t *table, double number, size_t x, size_t y);
 
 void table_draw(FILE *output, table_t *table);
 
