@@ -155,6 +155,31 @@ int __q10_fill_instants(GHashTable *stats, q10_instant_statistics_t *instants[3]
 }
 
 /**
+ * @brief Method called for each user, to generate statistical data.
+ * @details An auxiliary method for ::__q10_generate_statistics.
+ *
+ * @param user_data A `GHashTable` that associates dates (also dayless and monthless dates) to
+ *                  pointers to ::q10_instant_statistics_t.
+ * @param user      The user to consider.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation error
+ */
+int __q10_generate_statistics_foreach_user(void *user_data, const user_t *user) {
+    GHashTable *stats = (GHashTable *) user_data;
+
+    q10_instant_statistics_t *instants[3];
+    date_t                    date = user_get_account_creation_date(user);
+    if (__q10_fill_instants(stats, instants, date))
+        return 1;
+
+    for (int i = 0; i < 3; ++i)
+        if (instants[i])
+            instants[i]->users++;
+    return 0;
+}
+
+/**
  * @brief Method called for each flight, to generate statistical data.
  * @details An auxiliary method for ::__q10_generate_statistics.
  *
@@ -195,7 +220,7 @@ int __q10_generate_statistics_foreach_reservation(void                *user_data
     GHashTable *stats = (GHashTable *) user_data;
 
     q10_instant_statistics_t *instants[3];
-    date_t date = date_and_time_get_date(reservation_get_begin_date(reservation));
+    date_t                    date = reservation_get_begin_date(reservation);
     if (__q10_fill_instants(stats, instants, date))
         return 1;
 
@@ -259,6 +284,8 @@ void *__q10_generate_statistics(const database_t              *database,
 
         /* Don't add keys for years, as its not known who those are */
     }
+
+    user_manager_iter(database_get_users(database), __q10_generate_statistics_foreach_user, stats);
 
     flight_manager_iter(database_get_flights(database),
                         __q10_generate_statistics_foreach_flight,
