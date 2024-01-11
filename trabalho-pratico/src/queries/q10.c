@@ -176,7 +176,32 @@ int __q10_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
     for (int i = 0; i < 3; ++i)
         if (instants[i])
             instants[i]->flights++;
+    return 0;
+}
 
+/**
+ * @brief Method called for each reservation, to generate statistical data.
+ * @details An auxiliary method for ::__q10_generate_statistics.
+ *
+ * @param user_data   A `GHashTable` that associates dates (also dayless and monthless dates) to
+ *                    pointers to ::q10_instant_statistics_t.
+ * @param reservation The reservation to consider.
+ *
+ * @retval 0 Success
+ * @retval 1 Allocation error
+ */
+int __q10_generate_statistics_foreach_reservation(void                *user_data,
+                                                  const reservation_t *reservation) {
+    GHashTable *stats = (GHashTable *) user_data;
+
+    q10_instant_statistics_t *instants[3];
+    date_t date = date_and_time_get_date(reservation_get_begin_date(reservation));
+    if (__q10_fill_instants(stats, instants, date))
+        return 1;
+
+    for (int i = 0; i < 3; ++i)
+        if (instants[i])
+            instants[i]->reservations++;
     return 0;
 }
 
@@ -238,6 +263,10 @@ void *__q10_generate_statistics(const database_t              *database,
     flight_manager_iter(database_get_flights(database),
                         __q10_generate_statistics_foreach_flight,
                         stats);
+
+    reservation_manager_iter(database_get_reservations(database),
+                             __q10_generate_statistics_foreach_reservation,
+                             stats);
 
     return stats;
 }
