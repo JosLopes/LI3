@@ -29,9 +29,25 @@
 #include "utils/daytime.h"
 #include "utils/fixed_n_delimiter_parser.h"
 #include "utils/int_utils.h"
-#include "utils/string_utils.h"
 
-/** @brief Time with `union`, to easily extract fields from a time integer. */
+/**
+ * @union daytime_union_helper_t
+ * @brief Time with `union`, to easily extract fields from a time integer.
+ *
+ * @var daytime_union_helper_t::daytime
+ *     @brief Compact time format, exposed to the outside of this module.
+ * @var daytime_union_helper_t::fields
+ *     @brief Individual fields within ::daytime_union_helper_t::daytime.
+ * @var daytime_union_helper_t::hours
+ *     @brief Hour in @p ::daytime_union_helper_t::daytime. Must be between `0` and
+ *            ::DAYTIME_HOURS_MAX.
+ * @var daytime_union_helper_t::minutes
+ *     @brief Minute in @p ::daytime_union_helper_t::daytime. Must be between `0` and
+ *            ::DAYTIME_MINUTES_MAX.
+ * @var daytime_union_helper_t::seconds
+ *     @brief Second in @p ::daytime_union_helper_t::daytime. Must be between `0` and
+ *            ::DAYTIME_SECONDS_MAX.
+ */
 typedef union {
     daytime_t daytime;
 
@@ -65,21 +81,29 @@ int daytime_from_values(daytime_t *output, uint8_t hours, uint8_t minutes, uint8
 
 /**
  * @brief Auxiliary method for ::daytime_from_string. Parses any of the integers in a time.
+ *
+ * @param daytime_data A pointer to a ::daytime_union_helper_t, whose fields are filled in as the
+ *                     time is parsed.
+ * @param token        Number between colons to be parsed.
+ * @param ntoken       Tokens already parsed (number of the current token, `0`-indexed).
+ *
+ * @retval 0 Success.
+ * @retval 1 Integer parsing failure.
  */
 int __daytime_from_string_parse_field(void *daytime_data, char *token, size_t ntoken) {
     daytime_union_helper_t *daytime = (daytime_union_helper_t *) daytime_data;
 
-    uint64_t maxs[3]    = {DAYTIME_HOURS_MAX, DAYTIME_MINUTES_MAX, DAYTIME_SECONDS_MAX};
-    uint8_t *outputs[3] = {&daytime->fields.hours,
-                           &daytime->fields.minutes,
-                           &daytime->fields.seconds};
+    const uint64_t maxs[3]    = {DAYTIME_HOURS_MAX, DAYTIME_MINUTES_MAX, DAYTIME_SECONDS_MAX};
+    uint8_t       *outputs[3] = {&daytime->fields.hours,
+                                 &daytime->fields.minutes,
+                                 &daytime->fields.seconds};
 
-    size_t token_length = strlen(token);
+    const size_t token_length = strlen(token);
     if (token_length != 2)
         return 1;
 
-    uint64_t parsed           = 0;
-    int      int_parse_result = int_utils_parse_positive(&parsed, token);
+    uint64_t  parsed           = 0;
+    const int int_parse_result = int_utils_parse_positive(&parsed, token);
     if (int_parse_result || parsed > maxs[ntoken]) {
         return 1;
     }
@@ -90,15 +114,22 @@ int __daytime_from_string_parse_field(void *daytime_data, char *token, size_t nt
 
 /**
  * @brief   Grammar for parsing times.
- * @details Shall not be modified apart from its creation.
+ * @details Shall not be modified apart from its creation. It's not constant because it requires
+ *          run-time initialization. This global variable is justified for the following reasons:
+ *
+ *          -# It's not modified (no mutable global state);
+ *          -# It's module-local (no breaking of encapsulation);
+ *          -# Helps performance, as a new grammar doesn't need to be generated for every time to
+ *             be parsed.
  */
 fixed_n_delimiter_parser_grammar_t *__daytime_grammar = NULL;
 
 /** @brief Automatically initializes ::__daytime_grammar when the program starts. */
 void __attribute__((constructor)) __daytime_grammar_create(void) {
-    fixed_n_delimiter_parser_iter_callback_t callbacks[3] = {__daytime_from_string_parse_field,
-                                                             __daytime_from_string_parse_field,
-                                                             __daytime_from_string_parse_field};
+    const fixed_n_delimiter_parser_iter_callback_t callbacks[3] = {
+        __daytime_from_string_parse_field,
+        __daytime_from_string_parse_field,
+        __daytime_from_string_parse_field};
 
     __daytime_grammar = fixed_n_delimiter_parser_grammar_new(':', 3, callbacks);
 }
@@ -124,14 +155,14 @@ int daytime_from_string_const(daytime_t *output, const char *input) {
     if (!buffer)
         return 1;
 
-    int retval = daytime_from_string(output, buffer);
+    const int retval = daytime_from_string(output, buffer);
 
     free(buffer);
     return retval;
 }
 
 void daytime_sprintf(char *output, daytime_t daytime) {
-    daytime_union_helper_t daytime_union = {.daytime = daytime};
+    const daytime_union_helper_t daytime_union = {.daytime = daytime};
 
     sprintf(output,
             "%02d:%02d:%02d",
@@ -141,29 +172,31 @@ void daytime_sprintf(char *output, daytime_t daytime) {
 }
 
 int32_t daytime_diff(daytime_t a, daytime_t b) {
-    daytime_union_helper_t a_union = {.daytime = a};
-    daytime_union_helper_t b_union = {.daytime = b};
+    const daytime_union_helper_t a_union = {.daytime = a};
+    const daytime_union_helper_t b_union = {.daytime = b};
 
-    uint32_t a_seconds = (uint32_t) a_union.fields.hours * 3600 +
-                         (uint32_t) a_union.fields.minutes * 60 + (uint32_t) a_union.fields.seconds;
-    uint32_t b_seconds = (uint32_t) b_union.fields.hours * 3600 +
-                         (uint32_t) b_union.fields.minutes * 60 + (uint32_t) b_union.fields.seconds;
+    const uint32_t a_seconds = (uint32_t) a_union.fields.hours * 3600 +
+                               (uint32_t) a_union.fields.minutes * 60 +
+                               (uint32_t) a_union.fields.seconds;
+    const uint32_t b_seconds = (uint32_t) b_union.fields.hours * 3600 +
+                               (uint32_t) b_union.fields.minutes * 60 +
+                               (uint32_t) b_union.fields.seconds;
 
     return a_seconds - b_seconds;
 }
 
 /**
  * @brief Helper macro for defining getters.
- * @param property Property to get in ::daytime_union_helper_t.fields.
+ * @param property Property to get in ::daytime_union_helper_t::fields.
  */
 #define DAYTIME_GETTER_FUNCTION_BODY(property)                                                     \
-    daytime_union_helper_t daytime_union = {.daytime = time};                                      \
+    const daytime_union_helper_t daytime_union = {.daytime = time};                                \
     return daytime_union.fields.property;
 
 /**
  * @brief Helper macro for defining setters.
- * @param property Property to set in ::daytime_union_helper_t.fields. Name must match the name of
- *                 the argument in the setter method.
+ * @param property    Property to set in ::daytime_union_helper_t::fields. Name must match the name
+ *                    of the argument in the setter method.
  * @param upper_bound Maximum value (inclusive) that @p property can take.
  */
 #define DAYTIME_SETTER_FUNCTION_BODY(property, upper_bound)                                        \

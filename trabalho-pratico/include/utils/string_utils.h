@@ -15,7 +15,7 @@
  */
 
 /**
- * @file string_utils.h
+ * @file  string_utils.h
  * @brief Contains utility methods for dealing with strings.
  *
  * @anchor string_utils_examples
@@ -76,8 +76,8 @@
  *
  * Interruption of tokenization is also exemplified here: if one of the heights is invalid
  * (e.g.: `"-180"`), the program won't keep reading tokens and will stop immediately. Also, `main`
- * can see whether tokenization was stopped because of an error (`1` is returned) or not (`0` is
- * returned).
+ * can see whether tokenization was stopped because of an error (a value other than `0` is returned)
+ * or not (`0` is returned).
  */
 
 #ifndef STRING_UTILS_H
@@ -113,11 +113,12 @@ char *string_single_delimiter_strsep(char **str, char delimiter);
 /**
  * @brief Splits a **MODIFIABLE** string into tokens, separated by @p delimiter.
  *
- * @param input     String to tokenize, that that will be modified for this function to work, but
- *                  later restored to its original form.
+ * @param input     String to tokenize, that will be modified for this function to work, but later
+ *                  restored to its original form, assuming @p callback does not modify it.
  * @param delimiter Character to separate tokens. It won't be part of those tokens.
  * @param callback  Function called for every token read.
- * @param user_data Pointer passed to every call of @p callback, so that it can edit program state.
+ * @param user_data Pointer passed to every call of @p callback, so that it can edit the program's
+ *                  state.
  *
  * @return `0` on success, otherwise, the return value from @p callback in case it ordered the
  *         tokenization to stop.
@@ -130,17 +131,13 @@ int string_tokenize(char                    *input,
                     tokenize_iter_callback_t callback,
                     void                    *user_data);
 
-/**
- * @brief Value returned by ::string_const_tokenize when `malloc` fails.
- */
+/** @brief Value returned by ::string_const_tokenize when `malloc` fails. */
 #define STRING_CONST_TOKENIZE_FAILED_MALLOC -1
 
 /**
- * @brief See ::string_tokenize, but this method applies to `const` strings.
- *
- * @details The current implementation allocates a writeable buffer and copies over the string
- *          before calling ::string_tokenize, so **it's very inefficient** and should not be used
- *          for large strings.
+ * @brief   See ::string_tokenize, but this method applies to `const` strings.
+ * @details The current implementation copies the provided string to a temporary buffer. Keep that
+ *          in mind for performance reasons.
  *
  * @param input     String to tokenize.
  * @param delimiter Character to separate tokens. It won't be part of those tokens.

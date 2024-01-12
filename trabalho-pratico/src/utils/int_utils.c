@@ -32,8 +32,9 @@ int int_utils_parse_positive(uint64_t *output, const char *input) {
         not_empty = 1;
         acc *= 10;
 
-        if ('0' <= *input && *input <= '9')
-            acc += (uint64_t) (*input - '0');
+        unsigned int d = *input - '0';
+        if (d < 10)
+            acc += d;
         else
             return 1;
 

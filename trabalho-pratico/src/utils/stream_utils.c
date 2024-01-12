@@ -15,7 +15,7 @@
  */
 
 /**
- * @file stream_utils.c
+ * @file  stream_utils.c
  * @brief Implementation of methods in include/utils/stream_utils.h
  *
  * ### Examples
@@ -23,7 +23,6 @@
  */
 
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "utils/stream_utils.h"
@@ -38,9 +37,8 @@ int stream_tokenize(FILE                    *file,
 
     ssize_t read;
     while ((read = getdelim(&token, &len, delimiter, file)) != -1) {
-        if (read > 1) {
+        if (read > 1)
             token[read - 1] = '\0';
-        }
 
         int cb_result = callback(user_data, token);
         if (cb_result) {

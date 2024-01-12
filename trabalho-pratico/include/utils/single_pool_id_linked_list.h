@@ -43,14 +43,15 @@
  *         ll = single_pool_id_linked_list_append_beginning(ll_pool, ll, i);
  *         if (!ll) {
  *             fputs("Allocation failure!\n", stderr);
+ *             pool_free(ll_pool);
  *             return 1;
  *         }
  *     }
  *
- *     single_pool_id_linked_list_t *iter_ll = ll;
+ *     const single_pool_id_linked_list_t *iter_ll = ll;
  *     while (iter_ll != NULL) {
  *         printf("%" PRIu32 "\n", single_pool_id_linked_list_get_value(iter_ll));
- *         iter_ll = single_pool_if_linked_list_get_next(iter_ll);
+ *         iter_ll = single_pool_id_linked_list_get_next(iter_ll);
  *     }
  *
  *     pool_free(ll_pool);
@@ -76,29 +77,48 @@ typedef struct single_pool_id_linked_list single_pool_id_linked_list_t;
 
 /**
  * @brief   Creates a new ::single_pool_id_linked_list_t.
- * @details No need to `free` it, as this will be pool allocated.
+ * @details There is no need to `free` it.
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref single_pool_id_linked_list_examples).
  */
 single_pool_id_linked_list_t *single_pool_id_linked_list_create(void);
+
+/**
+ * @brief Creates a deep copy of a linked list.
+ *
+ * @param allocator Pool where to allocate the copied nodes. Must have been created using
+ *                  ::single_pool_id_linked_list_create_pool.
+ * @param list      List to be cloned.
+ */
+single_pool_id_linked_list_t *
+    single_pool_id_linked_list_clone(pool_t *allocator, const single_pool_id_linked_list_t *list);
 
 /**
  * @brief   Creates a pool for use with ::single_pool_id_linked_list_t.
  * @details Do not forget to free the result using ::pool_free.
  *
- * @param block_capacity Number of nodes in each pool block. See pool.h for more information.
+ * @param block_capacity Number of nodes in each pool block. See ::pool_create for more information.
  *
- * @return A pointer to a ::pool_t on success, or `NULL` on failure.
+ * @return A pointer to a ::pool_t on success, or `NULL` on allocation failure.
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref single_pool_id_linked_list_examples).
  */
 pool_t *single_pool_id_linked_list_create_pool(size_t block_capacity);
 
 /**
  * @brief Appends an element to the beginning of a linked list.
  *
- * @param allocator Where to allocate the new node. Must have been creating using
+ * @param allocator Where to allocate the new node. Must have been created using
  *                  ::single_pool_id_linked_list_create_pool.
  * @param list      List to add @p value to.
  * @param value     Value to be added to @p list.
  *
- * @return The new beginning of the linked list (or `NULL` on allocation failure);
+ * @return The new beginning of the linked list (or `NULL` on allocation failure).
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref single_pool_id_linked_list_examples).
  */
 single_pool_id_linked_list_t *
     single_pool_id_linked_list_append_beginning(pool_t                       *allocator,
@@ -109,19 +129,25 @@ single_pool_id_linked_list_t *
  * @brief  Gets the value of the first node in a ::single_pool_id_linked_list_t.
  * @param  list List to get the value of the first node from.
  * @return The value of the first node in @p list.
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref single_pool_id_linked_list_examples).
  */
 uint32_t single_pool_id_linked_list_get_value(const single_pool_id_linked_list_t *list);
 
 /**
- * @brief  Gets the next list from a ::single_pool_id_linked_list_t.
+ * @brief  Gets the next node from a ::single_pool_id_linked_list_t.
  * @param  list List to get the next list from.
  * @return The linked list succeding @p list. `NULL` means the end of the list has been found.
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref single_pool_id_linked_list_examples).
  */
 const single_pool_id_linked_list_t *
     single_pool_id_linked_list_get_next(const single_pool_id_linked_list_t *list);
 
 /**
- * @brief  Gets the length of a ::single_pool_id_linked_list_t.
+ * @brief  Calculates the length of a ::single_pool_id_linked_list_t.
  * @param  list List to get length from.
  * @return The length of the @p list.
  */

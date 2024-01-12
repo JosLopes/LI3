@@ -30,9 +30,20 @@
 #include "utils/date_and_time.h"
 #include "utils/daytime.h"
 #include "utils/fixed_n_delimiter_parser.h"
-#include "utils/string_utils.h"
 
-/** @brief Timed date with `union`, to easily extract fields from a timed date integer. */
+/**
+ * @union date_and_time_union_helper_t
+ * @brief Timed date with `union`, to easily extract fields from a timed date integer.
+ *
+ * @var date_and_time_union_helper_t::date_and_time
+ *     @brief Compact timed date format, exposed to the outside of this module.
+ * @var date_and_time_union_helper_t::fields
+ *     @brief Individual fields within ::date_and_time_union_helper_t::date_and_time.
+ * @var date_and_time_union_helper_t::date
+ *     @brief Date in ::date_and_time_union_helper_t::date_and_time.
+ * @var date_and_time_union_helper_t::time
+ *     @brief Time of the day in ::date_and_time_union_helper_t::date_and_time.
+ */
 typedef union {
     date_and_time_t date_and_time;
 
@@ -51,6 +62,14 @@ void date_and_time_from_values(date_and_time_t *output, date_t date, daytime_t t
 
 /**
  * @brief Auxiliary method for ::date_and_time_from_string. Parses dates.
+ *
+ * @param date_and_time_data A pointer to a ::date_and_time_union_helper_t, whose fields are filled
+ *                           in as the timed date is parsed.
+ * @param token              Date being parsed.
+ * @param ntoken             Tokens already parsed (number of the current token, `0`-indexed).
+ *
+ * @retval 0 Success.
+ * @retval 1 Date parsing failure.
  */
 int __date_and_time_from_string_parse_date(void *date_and_time_data, char *token, size_t ntoken) {
     (void) ntoken;
@@ -62,6 +81,14 @@ int __date_and_time_from_string_parse_date(void *date_and_time_data, char *token
 
 /**
  * @brief Auxiliary method for ::date_and_time_from_string. Parses times in the day.
+ *
+ * @param date_and_time_data A pointer to a ::date_and_time_union_helper_t, whose fields are filled
+ *                           in as the timed date is parsed.
+ * @param token              Time being parsed.
+ * @param ntoken             Tokens already parsed (number of the current token, `0`-indexed).
+ *
+ * @retval 0 Success.
+ * @retval 1 Time parsing failure.
  */
 int __date_and_time_from_string_parse_daytime(void  *date_and_time_data,
                                               char  *token,
@@ -75,13 +102,19 @@ int __date_and_time_from_string_parse_daytime(void  *date_and_time_data,
 
 /**
  * @brief   Grammar for parsing timed dates.
- * @details Shall not be modified apart from its creation.
+ * @details Shall not be modified apart from its creation. It's not constant because it requires
+ *          run-time initialization. This global variable is justified for the following reasons:
+ *
+ *          -# It's not modified (no mutable global state);
+ *          -# It's module-local (no breaking of encapsulation);
+ *          -# Helps performance, as a new grammar doesn't need to be generated for every date to
+ *             be parsed.
  */
 fixed_n_delimiter_parser_grammar_t *__date_and_time_grammar = NULL;
 
 /** @brief Automatically initializes ::__date_and_time_grammar when the program starts. */
 void __attribute__((constructor)) __date_and_time_grammar_create(void) {
-    fixed_n_delimiter_parser_iter_callback_t callbacks[2] = {
+    const fixed_n_delimiter_parser_iter_callback_t callbacks[2] = {
         __date_and_time_from_string_parse_date,
         __date_and_time_from_string_parse_daytime};
 
@@ -109,14 +142,14 @@ int date_and_time_from_string_const(date_and_time_t *output, const char *input) 
     if (!buffer)
         return 1;
 
-    int retval = date_and_time_from_string(output, buffer);
+    const int retval = date_and_time_from_string(output, buffer);
 
     free(buffer);
     return retval;
 }
 
 void date_and_time_sprintf(char *output, date_and_time_t date_and_time) {
-    date_and_time_union_helper_t date_and_time_union = {.date_and_time = date_and_time};
+    const date_and_time_union_helper_t date_and_time_union = {.date_and_time = date_and_time};
 
     char date_str[DATE_SPRINTF_MIN_BUFFER_SIZE];
     date_sprintf(date_str, date_and_time_union.fields.date);
@@ -128,15 +161,15 @@ void date_and_time_sprintf(char *output, date_and_time_t date_and_time) {
 }
 
 int64_t date_and_time_diff(date_and_time_t a, date_and_time_t b) {
-    date_and_time_union_helper_t a_union = {.date_and_time = a};
-    date_and_time_union_helper_t b_union = {.date_and_time = b};
+    const date_and_time_union_helper_t a_union = {.date_and_time = a};
+    const date_and_time_union_helper_t b_union = {.date_and_time = b};
 
     return date_diff(a_union.fields.date, b_union.fields.date) * (24 * 60 * 60) +
            daytime_diff(a_union.fields.time, b_union.fields.time);
 }
 
 date_t date_and_time_get_date(date_and_time_t date_and_time) {
-    date_and_time_union_helper_t date_and_time_union = {.date_and_time = date_and_time};
+    const date_and_time_union_helper_t date_and_time_union = {.date_and_time = date_and_time};
     return date_and_time_union.fields.date;
 }
 
@@ -147,7 +180,7 @@ void date_and_time_set_date(date_and_time_t *date_and_time, date_t date) {
 }
 
 daytime_t date_and_time_get_time(date_and_time_t date_and_time) {
-    date_and_time_union_helper_t date_and_time_union = {.date_and_time = date_and_time};
+    const date_and_time_union_helper_t date_and_time_union = {.date_and_time = date_and_time};
     return date_and_time_union.fields.time;
 }
 

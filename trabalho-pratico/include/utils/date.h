@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    date.h
- * @brief   A date containing a year, a month and a day.
+ * @file  date.h
+ * @brief A date containing a year, a month and a day.
  *
  * @anchor date_examples
  * ### Examples
@@ -94,7 +94,7 @@ typedef int32_t date_t;
  *
  * @param output Where the created date will be placed.
  * @param year   Year of the date (a number of four decimal digits).
- * @param mount  Month of the date (between 1 and 12).
+ * @param month  Month of the date (between 1 and 12).
  * @param day    Day of the date (between 1 and 31, independently of @p month).
  *
  * @retval 0 Success
@@ -114,13 +114,12 @@ int date_from_values(date_t *output, uint16_t year, uint8_t month, uint8_t day);
  *
  * #### Examples
  * See [the header file's documentation](@ref date_examples). The example shows
- * ::date_from_string_const, but it serves the same purpose as this method, just for
- * `const char *`.
+ * ::date_from_string_const, but it serves the same purpose as this method, just for `const char *`.
  */
 int date_from_string(date_t *output, char *input);
 
 /**
- * @brief Parses a string containing a date.
+ * @brief   Parses a string containing a date.
  * @details The current implementation copies the provided string to a temporary buffer. Keep that
  *          in mind for performance reasons.
  *
@@ -158,7 +157,7 @@ int date_from_string_const(date_t *output, const char *input);
 void date_sprintf(char *output, date_t date);
 
 /**
- * @brief Calculates the difference (in days) between two dates.
+ * @brief   Calculates the difference (in days) between two dates.
  * @details This formula assumes all months have `31` days, and all years `12 * 31` days. This
  *          shouldn't matter anyway, as project requirements specify that datasets contain only
  *          dates from the same month.
@@ -171,8 +170,8 @@ void date_sprintf(char *output, date_t date);
 int64_t date_diff(date_t a, date_t b);
 
 /**
- * @brief Gets the year from a date.
- * @param date Date to get the year from.
+ * @brief  Gets the year from a date.
+ * @param  date Date to get the year from.
  * @return Year in the date.
  */
 uint16_t date_get_year(date_t date);
@@ -183,14 +182,14 @@ uint16_t date_get_year(date_t date);
  * @param date Date to be modified.
  * @param year Value of the year.
  *
- * @retval 0 Success
- * @retval 1 Failure due to out of range valuey.
+ * @retval 0 Success.
+ * @retval 1 Failure due to out of range value.
  */
 int date_set_year(date_t *date, uint16_t year);
 
 /**
- * @brief Gets the month from a date.
- * @param date Date to get the month from.
+ * @brief  Gets the month from a date.
+ * @param  date Date to get the month from.
  * @return Month in the date.
  */
 uint8_t date_get_month(date_t date);
@@ -198,17 +197,17 @@ uint8_t date_get_month(date_t date);
 /**
  * @brief Sets the month in a date.
  *
- * @param date Date to be modified.
+ * @param date  Date to be modified.
  * @param month Value of the month.
  *
- * @retval 0 Success
- * @retval 1 Failure due to out of range valuey.
+ * @retval 0 Success.
+ * @retval 1 Failure due to out of range value.
  */
 int date_set_month(date_t *date, uint8_t month);
 
 /**
- * @brief Gets the day from a date.
- * @param date Date to get the day from.
+ * @brief  Gets the day from a date.
+ * @param  date Date to get the day from.
  * @return Day in the date.
  */
 uint8_t date_get_day(date_t date);
@@ -217,10 +216,10 @@ uint8_t date_get_day(date_t date);
  * @brief Sets the day in a date.
  *
  * @param date Date to be modified.
- * @param day Value of the day.
+ * @param day  Value of the day.
  *
- * @retval 0 Success
- * @retval 1 Failure due to out of range valuey.
+ * @retval 0 Success.
+ * @retval 1 Failure due to out of range value.
  */
 int date_set_day(date_t *date, uint8_t day);
 

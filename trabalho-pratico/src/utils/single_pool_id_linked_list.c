@@ -43,11 +43,38 @@ single_pool_id_linked_list_t *single_pool_id_linked_list_create(void) {
 }
 
 single_pool_id_linked_list_t *
+    single_pool_id_linked_list_clone(pool_t *allocator, const single_pool_id_linked_list_t *list) {
+
+    if (!list)
+        return NULL;
+
+    single_pool_id_linked_list_t *ret =
+        pool_put_item(single_pool_id_linked_list_t, allocator, list);
+    if (!ret)
+        return NULL;
+
+    single_pool_id_linked_list_t *prev = ret;
+    list                               = list->next;
+    while (list) {
+        single_pool_id_linked_list_t *node =
+            pool_put_item(single_pool_id_linked_list_t, allocator, list);
+        if (!node)
+            return NULL;
+
+        prev->next = node;
+        prev       = node;
+        list       = list->next;
+    }
+
+    return ret;
+}
+
+single_pool_id_linked_list_t *
     single_pool_id_linked_list_append_beginning(pool_t                       *allocator,
                                                 single_pool_id_linked_list_t *list,
                                                 uint32_t                      value) {
 
-    single_pool_id_linked_list_t item = {.value = value, .next = list};
+    const single_pool_id_linked_list_t item = {.value = value, .next = list};
     return pool_put_item(single_pool_id_linked_list_t, allocator, &item);
 }
 

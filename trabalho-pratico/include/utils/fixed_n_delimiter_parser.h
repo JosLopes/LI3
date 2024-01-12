@@ -19,7 +19,8 @@
  * @brief   A parser for strings with a known number of data points, separated by a
  *          single-character delimiter.
  * @details Useful for structures such as lines of CSV tables. In practice, this is used for
- *          dates (::date_from_string), hours (::daytime_from_string), and input datasets.
+ *          [dates](@ref date.h), [times](@ref daytime.h), and
+ *          [input datasets](@ref dataset_parser.h).
  *
  * @anchor fixed_n_delimiter_parser_examples
  * ### Examples
@@ -29,8 +30,7 @@
  * @p input must be modifiable.
  *
  * A complete example of ::fixed_n_delimiter_parser_parse_string_const follows. Suppose we want to
- * parse information about a person in a CSV string. Keep in mind that we don't check for allocation
- * failures in this example.
+ * parse information about a person in a CSV string.
  *
  * ```
  * #define PERSON_DATA "José Silva,60,176" // Name, age and height
@@ -44,7 +44,9 @@
  *     (void) ntoken;
  *
  *     // Copy string to another buffer
- *     char *name_copy = strdup(token); // No failure check in this example
+ *     char *name_copy = strdup(token);
+ *     if (!name_copy)
+ *         return 1;
  *     ((person_t *) user_data)->name = name_copy;
  *     return 0;
  * }
@@ -52,7 +54,7 @@
  * int parse_int(void *user_data, char *token, size_t ntoken) {
  *     int value = atoi(token);
  *
- *     if (value <= 0) {
+ *     if (value < 0) {
  *         fputs("Integer parsing failure!\n", stderr);
  *         return 1;
  *     }
@@ -66,9 +68,9 @@
  * }
  *
  * int main(void) {
- *     fixed_n_delimiter_parser_iter_callback_t grammar_callbacks[3] = {parse_name,
- *                                                                      parse_int,
- *                                                                      parse_int};
+ *     const fixed_n_delimiter_parser_iter_callback_t grammar_callbacks[3] = {parse_name,
+ *                                                                            parse_int,
+ *                                                                            parse_int};
  *
  *     fixed_n_delimiter_parser_grammar_t *grammar =
  *         fixed_n_delimiter_parser_grammar_new(',', 3, grammar_callbacks);
@@ -93,7 +95,7 @@
  * (parsed by `parse_name` and `parse_int`, respectively), forming `grammar_callbacks`, of which
  * there are `3`.
  *
- * We can then parse `PERSON_DATA`, resulting in the following 3 callbacks:
+ * Parsing `PERSON_DATA` will result in the following 3 callbacks:
  *   - `parse_name(&person, "José Silva", 0)`;
  *   - `parse_int(&person, "60", 1)`;
  *   - `parse_int(&person, "176", 2)`;
@@ -124,8 +126,8 @@
 #include <stddef.h>
 
 /**
- * @brief Method that, in a ::fixed_n_delimiter_parser_grammar_t, is associated with a `n`-th
- *        token in a string, and is called when it needs to be parsed.
+ * @brief Method that, in a ::fixed_n_delimiter_parser_grammar_t, is associated with an `n`-th
+ *        token in a string, and is called when that token needs to be parsed.
  *
  * @param user_data Pointer provided to ::fixed_n_delimiter_parser_parse_string (or
  *                  ::fixed_n_delimiter_parser_parse_string_const), so that this callback can
@@ -137,47 +139,47 @@
  *
  * @return `0` on success, other value for immediate termination of parsing. It's recommeneded that
  *         these values are positive, as negative values have special meanings (see
- *         ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS and
- *         ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS).
+ *         ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS,
+ *         ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS and
+ *         ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_CONST_RET_MALLOC_FAILURE).
  */
 typedef int (*fixed_n_delimiter_parser_iter_callback_t)(void  *user_data,
                                                         char  *token,
                                                         size_t ntoken);
 
 /**
- * @brief The grammar definition for a parser for strings with a known number of data points,
+ * @brief The grammar definition for a parser of strings with a known number of data points,
  *        separated by a single-character delimiter.
  */
 typedef struct fixed_n_delimiter_parser_grammar fixed_n_delimiter_parser_grammar_t;
 
 /**
- * @brief Creates a parser grammar definition.
+ * @brief Creates a parser's grammar definition.
  *
  * @param delimiter Separator between data points (e.g.: ``'/'`` for dates, ``','`` for CSV lines,
  *                  ...).
- * @param n         Number of expected data points (e.g.: `3` for dates, year, month and day).
- * @param callbacks A callback for each token to be parsed. These will be copied to the new
- *                  allocated grammar, so there's no need to worry about their lifetime.
+ * @param n         Number of expected data points (e.g.: `3` for dates: a year, a month and a day).
+ * @param callbacks A callback for each token to be parsed.
  *
- * @return `malloc`-allocated ::fixed_n_delimiter_parser_grammar_t (or `NULL` on allocation
+ * @return A pointer to a ::fixed_n_delimiter_parser_grammar_t (or `NULL` on allocation
  *         failure). This value is owned by the function caller, so you must free it with
- *         ::fixed_n_delimiter_parser_grammar_free after you're done using it.
+ *         ::fixed_n_delimiter_parser_grammar_free.
  *
  * #### Examples
  * See [the header file's documentation](@ref fixed_n_delimiter_parser_examples).
  */
-fixed_n_delimiter_parser_grammar_t *
-    fixed_n_delimiter_parser_grammar_new(char                                     delimiter,
-                                         size_t                                   n,
-                                         fixed_n_delimiter_parser_iter_callback_t callbacks[n]);
+fixed_n_delimiter_parser_grammar_t *fixed_n_delimiter_parser_grammar_new(
+    char                                           delimiter,
+    size_t                                         n,
+    const fixed_n_delimiter_parser_iter_callback_t callbacks[n]);
 
 /**
- * @brief  Creates a deep clone of a grammar for this type of parser.
+ * @brief Creates a deep clone of a grammar for this type of parser.
+ * @param grammar Grammar to be cloned.
  *
- * @param  grammar Grammar to be cloned.
- *
- * @return A `malloc`-allocated pointer to a new ::fixed_n_delimiter_parser_grammar_t, that must be
- *         deleted using ::fixed_n_delimiter_parser_grammar_free. `NULL` is possible on failure.
+* @return A pointer to a ::fixed_n_delimiter_parser_grammar_t (or `NULL` on allocation
+ *         failure). This value is owned by the function caller, so you must free it with
+ *         ::fixed_n_delimiter_parser_grammar_free.
  */
 fixed_n_delimiter_parser_grammar_t *
     fixed_n_delimiter_parser_grammar_clone(const fixed_n_delimiter_parser_grammar_t *grammar);
@@ -193,38 +195,39 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
 
 /**
  * @brief Value returned by ::fixed_n_delimiter_parser_parse_string (or
- *        ::fixed_n_delimiter_parser_parse_string_const) when there are more data points than the
- *        expected ::fixed_n_delimiter_parser_grammar_t.n.
+ *        ::fixed_n_delimiter_parser_parse_string_const) when there are more data points than
+ *        expected.
  */
 #define FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS -1
 
 /**
  * @brief Value returned by ::fixed_n_delimiter_parser_parse_string (or
- *        ::fixed_n_delimiter_parser_parse_string_const) when there are less data points than the
- *        expected ::fixed_n_delimiter_parser_grammar_t.n.
+ *        ::fixed_n_delimiter_parser_parse_string_const) when there are less data points than
+ *        expected.
  */
 #define FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS -2
 
-/**
- * @brief Value returned by ::fixed_n_delimiter_parser_parse_string_const when `malloc` fails.
- */
+/** @brief Value returned by ::fixed_n_delimiter_parser_parse_string_const when `malloc` fails. */
 #define FIXED_N_DELIMITER_PARSER_PARSE_STRING_CONST_RET_MALLOC_FAILURE -3
 
 /**
  * @brief Parses a **MODIFIABLE** string using a parser defined by @p grammar.
  *
- * @param input     String to parse, that that will be modified during parsing, but then restored to
- *                  its original form.
+ * @param input     String to parse, that will be modified during parsing, but then restored to its
+ *                  original form, assuming callbacks in @p grammar don't modify it.
  * @param grammar   Grammar that defines the parser to be used.
  * @param user_data Pointer passed to every callback in @p grammar, so that they can edit the
  *                  program's state.
  *
- * @returns `0` on success, ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS when there
- *          are too many data points and
- *          ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS when there are two few
- *          data points. Other values are allowed, and happen when one of the callbacks interrupts
- *          parsing with a non-`0` return value, then returned by this method.
- *
+ * @returns
+ *     - `0` on success;
+ *     - ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS when there are too many
+ *       data points;
+ *     - ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS when there are two few
+ *       data points;
+ *     - Other values, when one of the callbacks interrupts parsing with a non-`0` return
+ *       value, that is then returned by this method.
+
  * #### Examples
  * See [the header file's documentation](@ref fixed_n_delimiter_parser_examples).
  */
@@ -233,22 +236,25 @@ int fixed_n_delimiter_parser_parse_string(char                                  
                                           void                                     *user_data);
 
 /**
- * @brief Parses a string using a parser defined by @p grammar.
- *
- * @details The current implementation allocates a writeable buffer and copies over the string
- *          before calling ::fixed_n_delimiter_parser_parse_string, so **it's very inefficient**
- *          and should not be used for large strings.
+ * @brief   Parses a string using a parser defined by @p grammar.
+ * @details The current implementation copies the provided string to a temporary buffer. Keep that
+ *          in mind for performance reasons.
  *
  * @param input     String to parse.
  * @param grammar   Grammar that defines the parser to be used.
  * @param user_data Pointer passed to every callback in @p grammar, so that they can edit the
  *                  program's state.
  *
- * @returns `0` on success, ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS when there
- *          are too many data points and
- *          ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS when there are two few
- *          data points. Other values are allowed, and happen when one of the callbacks interrupts
- *          parsing with a non-`0` return value, then returned by this method.
+ * @returns
+ *     - `0` on success;
+ *     - ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS when there are too many
+ *       data points;
+ *     - ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_NOT_ENOUGH_ITEMS when there are two few
+ *       data points;
+ *     - ::FIXED_N_DELIMITER_PARSER_PARSE_STRING_CONST_RET_MALLOC_FAILURE when an allocation
+ *       failure occurs;
+ *     - Other values, when one of the callbacks interrupts parsing with a non-`0` return
+ *       value, that is then returned by this method.
  *
  * #### Examples
  * See [the header file's documentation](@ref fixed_n_delimiter_parser_examples).

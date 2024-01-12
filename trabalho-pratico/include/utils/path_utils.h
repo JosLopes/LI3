@@ -96,9 +96,10 @@
 /**
  * @brief   Normalizes a @p path.
  * @details Removes consecutive path separators (slashes) and limits the use of structures such as
- *          `.` and `..` not to when they're strictly necessary.
+ *          `.` and `..` to when they're strictly necessary.
  *
- *          This method is somewhat slow, as many allocations need to be performed.
+ *          This is a bit of an expensive operation, so avoid using it for bulk paths unless you
+ *          need to.
  *
  * @param path Pointer to path that will be normalized, and written over. It is assumed that it can
  *             fit `PATH_MAX` bytes.
@@ -110,11 +111,10 @@ void path_normalize(char *path);
 
 /**
  * @brief   Concatenates two paths (`path/add`).
- * @details This method is somewhat slow, as many allocations need to be performed when
- *          normalizing the output.
+ * @details Path concatenation is followed by normalization.
  *
  * @param path Pointer to path that will be added to, and written over. It is assumed that it can
- *             fit `PATH_MAX` bytes. The output will be normalized.
+ *             fit `PATH_MAX` bytes.
  * @param add  Path to be added to the end of @p path.
  *
  * #### Examples

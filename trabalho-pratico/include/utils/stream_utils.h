@@ -15,7 +15,7 @@
  */
 
 /**
- * @file stream_utils.h
+ * @file  stream_utils.h
  * @brief Contains utility methods for dealing with file streams.
  *
  * @anchor stream_utils_examples
@@ -50,18 +50,19 @@
 
 #include "utils/tokenize_iter_callback.h"
 
-/**
- * @brief Value returned by ::stream_tokenize when allocations from `getdelim` fail.
- */
+/** @brief Value returned by ::stream_tokenize when allocations from `getdelim` fail. */
 #define STREAM_TOKENIZE_RET_ALLOCATION_FAILURE -1
+
+#include <stdio.h>
 
 /**
  * @brief Splits a file into tokens, separated by @p delimiter.
  *
- * @param file      File to tokenize. The file is not changed while being tokenized.
+ * @param file      File to tokenize.
  * @param delimiter Character to separate tokens. It won't be part of those tokens.
  * @param callback  Function called for every token read.
- * @param user_data Pointer passed to every call of @p callback, so that it can edit program state.
+ * @param user_data Pointer passed to every call of @p callback, so that it can modify the program's
+ *                  state.
  *
  * @return `0` on success, otherwise, the return value from @p callback in case it ordered the
  *         tokenization to stop. ::STREAM_TOKENIZE_RET_ALLOCATION_FAILURE may also be returned on
