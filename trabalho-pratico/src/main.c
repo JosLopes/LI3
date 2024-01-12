@@ -15,7 +15,7 @@
  */
 
 /**
- * @file main.c
+ * @file  main.c
  * @brief Contains the entry point to main the program.
  */
 #include <stdio.h>
@@ -25,8 +25,8 @@
 
 /**
  * @brief  The entry point to the main program.
- * @retval 0 Success
- * @retval 1 Insuccess
+ * @retval 0 Success.
+ * @retval 1 Insuccess.
  */
 int main(int argc, char **argv) {
     if (argc == 1) {

@@ -28,15 +28,14 @@
 #include "dataset/dataset_loader.h"
 #include "queries/query_dispatcher.h"
 #include "queries/query_file_parser.h"
-#include "queries/query_type_list.h"
 
 /**
  * @struct batch_mode_iter_data_t
  * @brief  Data structure used for query iteration in ::__batch_mode_init_file_callback.
  *
- * @var batch_mode_iter_data::outputs
+ * @var batch_mode_iter_data_t::outputs
  *     @brief Where to write opened query output writers to.
- * @var batch_mode_iter_data::i
+ * @var batch_mode_iter_data_t::i
  *     @brief Index of the query being currently dealt with.
  */
 typedef struct {
@@ -45,7 +44,7 @@ typedef struct {
 } batch_mode_iter_data_t;
 
 /**
- * @brief Called for each query, to open the file to write the query output.
+ * @brief Called for each query, to create the writer to which the query output will be written to.
  *
  * @param user_data A pointer to a ::batch_mode_iter_data.
  * @param instance  Query query instance, whose output should be outputted.
@@ -75,69 +74,58 @@ int batch_mode_run(const char            *dataset_dir,
                    const char            *query_file_path,
                    performance_metrics_t *metrics) {
 
+    int retval = 0;
+
     query_type_list_t *query_type_list = query_type_list_create();
     if (!query_type_list) {
+        retval = 1;
         fputs("Failed to allocate query definitions!\n", stderr);
-        return 1;
+        goto DEFER_0;
     }
 
     FILE *query_file = fopen(query_file_path, "r");
     if (!query_file) {
-        query_type_list_free(query_type_list);
+        retval = 1;
         fputs("Failed to read query file!\n", stderr);
-        return 1;
+        goto DEFER_1;
     }
 
     query_instance_list_t *query_instance_list =
         query_file_parser_parse(query_file, query_type_list);
     if (!query_instance_list) {
-        query_type_list_free(query_type_list);
-        fclose(query_file);
+        retval = 1;
         fputs("Failed to allocate list of queries!\n", stderr);
-        return 1;
+        goto DEFER_2;
     }
 
     database_t *database = database_create();
     if (!database) {
-        query_instance_list_free(query_instance_list, query_type_list);
-        query_type_list_free(query_type_list);
-        fclose(query_file);
+        retval = 1;
         fputs("Failed to allocate database!\n", stderr);
-        return 1;
+        goto DEFER_3;
     }
 
     if (dataset_loader_load(database, dataset_dir, "Resultados", metrics)) {
-        query_instance_list_free(query_instance_list, query_type_list);
-        query_type_list_free(query_type_list);
-        database_free(database);
-        fclose(query_file);
+        retval = 1;
         fputs("Failed to load dataset files!\n", stderr);
-        return 1;
+        goto DEFER_4;
     }
 
     query_writer_t **query_outputs =
         malloc(sizeof(query_writer_t *) * query_instance_list_get_length(query_instance_list));
     if (!query_outputs) {
-        query_instance_list_free(query_instance_list, query_type_list);
-        query_type_list_free(query_type_list);
-        database_free(database);
-        fclose(query_file);
+        retval = 1;
         fputs("Failed to allocate list of query outputs!\n", stderr);
-        return 1;
+        goto DEFER_4;
     }
 
     batch_mode_iter_data_t iter_data = {.outputs = query_outputs, .i = 0};
     if (query_instance_list_iter(query_instance_list,
                                  __batch_mode_init_file_callback,
                                  &iter_data)) {
-
-        query_instance_list_free(query_instance_list, query_type_list);
-        query_type_list_free(query_type_list);
-        database_free(database);
-        fclose(query_file);
-        free(query_outputs);
+        retval = 1;
         fputs("Failed to open one of the query outputs!\n", stderr);
-        return 1;
+        goto DEFER_5;
     }
 
     query_dispatcher_dispatch_list(database,
@@ -148,11 +136,17 @@ int batch_mode_run(const char            *dataset_dir,
 
     for (size_t i = 0; i < query_instance_list_get_length(query_instance_list); ++i)
         query_writer_free(query_outputs[i]);
-    free(query_outputs);
 
-    query_instance_list_free(query_instance_list, query_type_list);
-    query_type_list_free(query_type_list);
+DEFER_5:
+    free(query_outputs);
+DEFER_4:
     database_free(database);
+DEFER_3:
+    query_instance_list_free(query_instance_list, query_type_list);
+DEFER_2:
     fclose(query_file);
-    return 0;
+DEFER_1:
+    query_type_list_free(query_type_list);
+DEFER_0:
+    return retval;
 }

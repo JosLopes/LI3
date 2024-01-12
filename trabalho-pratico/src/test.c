@@ -15,14 +15,11 @@
  */
 
 /**
- * @file test.c
+ * @file  test.c
  * @brief Contains the entry point to the test program.
  */
 
-#include <inttypes.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "batch_mode.h"
 #include "testing/performance_metrics_output.h"
@@ -41,7 +38,7 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        int retval = batch_mode_run(argv[1], argv[2], metrics);
+        const int retval = batch_mode_run(argv[1], argv[2], metrics);
         if (retval) {
             performance_metrics_free(metrics);
             return retval;
@@ -62,7 +59,7 @@ int main(int argc, char **argv) {
         return 0;
     } else {
         fputs("Invalid command-line arguments! Usage:\n", stderr);
-        fputs("./programa-testes [dataset] [query file] [expected output]\n", stderr);
+        fputs("./programa-testes [dataset] [query file] [expected output directory]\n", stderr);
         return 1;
     }
 }
