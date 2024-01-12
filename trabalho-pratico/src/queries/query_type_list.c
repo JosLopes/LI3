@@ -34,7 +34,7 @@
 #include "queries/q07.h"
 #include "queries/q08.h"
 #include "queries/q09.h"
-#include "queries/qplaceholder.h"
+#include "queries/q10.h"
 #include "queries/query_type_list.h"
 
 /**
@@ -62,7 +62,7 @@ query_type_list_t *query_type_list_create(void) {
                                                                   q07_create,
                                                                   q08_create,
                                                                   q09_create,
-                                                                  qplaceholder_create};
+                                                                  q10_create};
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         list->list[i] = constructors[i]();
