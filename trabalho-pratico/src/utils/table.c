@@ -34,7 +34,7 @@
  * @brief  Information about the table to be built.
  *
  * @var table::strings
- *     @brief Allocator for the strings to be displayed in the table. 
+ *     @brief Allocator for the strings to be displayed in the table.
  * @var table::contents_positions
  *     @brief A matrix that stores the strings to be displayed, their position in the matrix is
  *            the same as their position in the table.
@@ -104,7 +104,7 @@ void table_insert_double(table_t *table, double number, size_t x, size_t y) {
  * @brief   Draws a table line.
  * @details The line is drawn by repeating a single character times the width of the respective
  *          column. The programmer needs to pick from which column to start and which column to end,
- *          if the end column is also the last column of the table, a '\n' is placed at the end. 
+ *          if the end column is also the last column of the table, a '\n' is placed at the end.
  *
  * @param output          Path to the file in which to draw the table in.
  * @param table           Table to be drawn.
