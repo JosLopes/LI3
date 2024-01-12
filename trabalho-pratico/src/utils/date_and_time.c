@@ -107,8 +107,8 @@ int __date_and_time_from_string_parse_daytime(void  *date_and_time_data,
  *
  *          -# It's not modified (no mutable global state);
  *          -# It's module-local (no breaking of encapsulation);
- *          -# Helps performance, as a new grammar doesn't need to be generated for every date to
- *             be parsed.
+ *          -# Helps performance, as a new grammar doesn't need to be generated for every timed date
+ *             to be parsed.
  */
 fixed_n_delimiter_parser_grammar_t *__date_and_time_grammar = NULL;
 
