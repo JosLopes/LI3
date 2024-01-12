@@ -24,9 +24,9 @@
 struct table {
     pool_t    *strings;
     wchar_t ***contents_positions;
-    size_t     height, width;
 
-    int *column_widths;
+    size_t  height, width;
+    size_t *column_widths;
 };
 
 table_t *table_create(size_t height, size_t width) {
@@ -40,7 +40,7 @@ table_t *table_create(size_t height, size_t width) {
             contents_positions[i][j] = NULL;
     }
 
-    int *column_widths = malloc(width * sizeof(int));
+    size_t *column_widths = malloc(width * sizeof(size_t));
     for (size_t i = 0; i < width; i++)
         column_widths[i] = 0;
 
@@ -53,10 +53,10 @@ table_t *table_create(size_t height, size_t width) {
     return new_table;
 }
 
-void table_insert(table_t *table, const wchar_t *string, size_t x, size_t y) {
+void table_insert_wide_string(table_t *table, const wchar_t *string, size_t x, size_t y) {
     if (x != 0 || y != 0) { /* No entries for the top left corner */
         /* Calculate table measurements */
-        int width = ncurses_measure_unicode_string((gunichar *) string) + 2;
+        size_t width = (size_t) ncurses_measure_unicode_string((gunichar *) string) + 2;
         if (width > table->column_widths[x])
             table->column_widths[x] = width;
 
@@ -70,62 +70,70 @@ void table_insert_double(table_t *table, double number, size_t x, size_t y) {
     int     buffer_size = snprintf(NULL, 0, "%12.2lf", number) + 1;
     wchar_t string[buffer_size];
     swprintf(string, buffer_size, L"%12.2lf", number);
-    table_insert(table, string, x, y);
+    table_insert_wide_string(table, string, x, y);
 }
 
-void __table_draw_putc_n_times(FILE    *output,
-                               table_t *table,
-                               char     character,
-                               char     border,
-                               int      starting_column) {
-    for (size_t i = starting_column; i < table->width; i++) {
-        putc(border, output);
-        for (int j = 0; j < table->column_widths[i]; j++)
-            putc(character, output);
+void __table_draw_line(FILE    *output,
+                       table_t *table,
+                       char     vertex,
+                       char     side,
+                       size_t   starting_column,
+                       size_t   ending_column) {
+    for (size_t i = starting_column; i < ending_column; i++) {
+        putc(vertex, output);
+        for (size_t j = 0; j < table->column_widths[i]; j++)
+            putc(side, output);
     }
-    fprintf(output, "%c\n", border);
+
+    if (ending_column == table->width)
+        fprintf(output, "%c\n", vertex);
 }
 
 void table_draw(FILE *output, table_t *table) {
-    fprintf(output, " %*s", table->column_widths[0], "");
-    __table_draw_putc_n_times(output, table, '-', '+', 1);
+    /* Draw the table's header */
+    __table_draw_line(output, table, ' ', ' ', 0, 1);
+    __table_draw_line(output, table, '+', '-', 1, table->width);
 
-    fprintf(output, " %*s", table->column_widths[0], "");
-    __table_draw_putc_n_times(output, table, ' ', '|', 1);
+    __table_draw_line(output, table, ' ', ' ', 0, 1);
+    __table_draw_line(output, table, '|', ' ', 1, table->width);
 
-    fprintf(output, " %*s", table->column_widths[0], "");
+    __table_draw_line(output, table, ' ', ' ', 0, 1);
     for (size_t i = 1; i < table->width; i++)
-        fprintf(output, "| %*ls ", table->column_widths[i] - 2, table->contents_positions[0][i]);
+        fprintf(output,
+                "| %*ls ",
+                (int) table->column_widths[i] - 2,
+                table->contents_positions[0][i]);
     fprintf(output, "|\n");
 
-    fprintf(output, " %*s", table->column_widths[0], "");
-    __table_draw_putc_n_times(output, table, ' ', '|', 1);
+    __table_draw_line(output, table, ' ', ' ', 0, 1);
+    __table_draw_line(output, table, '|', ' ', 1, table->width);
 
-    __table_draw_putc_n_times(output, table, '-', '+', 0);
+    __table_draw_line(output, table, '+', '-', 0, table->width);
 
+    /* Draw the table's body */
     for (size_t i = 1; i < table->height; i++) {
-        __table_draw_putc_n_times(output, table, ' ', '|', 0);
+        __table_draw_line(output, table, '|', ' ', 0, table->width);
 
         for (size_t j = 0; j < table->width; j++) {
             if (table->contents_positions[i][j]) {
                 fprintf(output,
                         "| %*ls ",
-                        table->column_widths[j] - 2,
+                        (int) table->column_widths[j] - 2,
                         table->contents_positions[i][j]);
             } else {
-                int mid_of_column = table->column_widths[j] / 2;
+                int mid_of_column = (int) table->column_widths[j] / 2;
                 fprintf(output,
                         "|%*s-%*s",
                         mid_of_column,
                         "",
-                        table->column_widths[j] - mid_of_column - 1,
+                        (int) table->column_widths[j] - mid_of_column - 1,
                         "");
             }
         }
         fprintf(output, "|\n");
 
-        __table_draw_putc_n_times(output, table, ' ', '|', 0);
-        __table_draw_putc_n_times(output, table, '-', '+', 0);
+        __table_draw_line(output, table, '|', ' ', 0, table->width);
+        __table_draw_line(output, table, '+', '-', 0, table->width);
     }
 }
 

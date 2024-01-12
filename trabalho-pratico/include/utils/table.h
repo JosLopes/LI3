@@ -26,11 +26,11 @@
 
 typedef struct table table_t;
 
-#define TABLE_STRING_POOL_BLOCK_SIZE 8
+#define TABLE_STRING_POOL_BLOCK_SIZE 256
 
 table_t *table_create(size_t height, size_t width);
 
-void table_insert(table_t *table, const wchar_t *string, size_t x, size_t y);
+void table_insert_wide_string(table_t *table, const wchar_t *string, size_t x, size_t y);
 
 void table_insert_double(table_t *table, double number, size_t x, size_t y);
 
