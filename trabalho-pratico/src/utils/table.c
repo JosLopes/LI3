@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+/**
+ * @file  table.c
+ * @brief Implementation of methods in utils/table.h
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref table_examples).
+ */
+
 #include <stddef.h>
 #include <stdio.h>
 
@@ -21,6 +29,25 @@
 #include "utils/pool.h"
 #include "utils/table.h"
 
+/**
+ * @struct table
+ * @brief  Information about the table to be built.
+ *
+ * @var table::strings
+ *     @brief Allocator for the strings to be displayed in the table. 
+ * @var table::contents_positions
+ *     @brief A matrix that stores the strings to be displayed, their position in the matrix is
+ *            the same as their position in the table.
+ * @var table::height
+ *     @brief Height of the table (also the height of the matrix ::table::strings).
+ * @var table::width
+ *     @brief Width of the table (also the height of the matrix ::table::strings).
+ * @var table::column_widths
+ *     @brief Stores the width of each column in the table.
+ *
+ * ### Examples
+ * See [the header file's documentation](@ref table_examples).
+ */
 struct table {
     pool_t    *strings;
     wchar_t ***contents_positions;
@@ -73,20 +100,35 @@ void table_insert_double(table_t *table, double number, size_t x, size_t y) {
     table_insert_wide_string(table, string, x, y);
 }
 
+/**
+ * @brief   Draws a table line.
+ * @details The line is drawn by repeating a single character times the width of the respective
+ *          column. The programmer needs to pick from which column to start and which column to end,
+ *          if the end column is also the last column of the table, a '\n' is placed at the end. 
+ *
+ * @param output          Path to the file in which to draw the table in.
+ * @param table           Table to be drawn.
+ * @param ends            The character to be drawn at the extremities of each column.
+ * @param filler          The character to be drawn multiple times (the same as the width of the
+ *                        column) in between @p ends characters.
+ * @param starting_column Column to start drawing the line.
+ * @param ending_column   Column to stop drawing (this column will not be drawn), if it corresponds
+ *                        with the last column of the table, a '\n' is placed at the end.
+ */
 void __table_draw_line(FILE    *output,
                        table_t *table,
-                       char     vertex,
-                       char     side,
+                       char     ends,
+                       char     filler,
                        size_t   starting_column,
                        size_t   ending_column) {
     for (size_t i = starting_column; i < ending_column; i++) {
-        putc(vertex, output);
+        putc(ends, output);
         for (size_t j = 0; j < table->column_widths[i]; j++)
-            putc(side, output);
+            putc(filler, output);
     }
 
     if (ending_column == table->width)
-        fprintf(output, "%c\n", vertex);
+        fprintf(output, "%c\n", ends);
 }
 
 void table_draw(FILE *output, table_t *table) {
