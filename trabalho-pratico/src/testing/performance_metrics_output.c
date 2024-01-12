@@ -31,6 +31,7 @@
 #include "queries/query_type_list.h"
 #include "testing/performance_metrics_output.h"
 #include "utils/int_utils.h"
+#include "utils/table.h"
 
 /**
  * @brief Calulates which unit should be used to display data.
@@ -127,47 +128,37 @@ void __performance_metrics_output_print_table(FILE                       *output
                                                                       &time_unit_name,
                                                                       &mem_unit_name);
 
-    /* Calculate table measurements */
-    int left_width = 0;
-    for (size_t i = 0; i < n; ++i) {
-        int width = ncurses_measure_unicode_string((gunichar *) event_names[i]);
-        if (width > left_width)
-            left_width = width;
-    }
+    table_t *table = table_create(n + 1, 3);
 
-    char *left_hyphens = malloc(left_width + 1);
-    memset(left_hyphens, '-', left_width);
-    left_hyphens[left_width] = '\0';
+    wchar_t time[11];
+    swprintf(time, 11, L"Time (%3s)", time_unit_name);
 
-    /* Actually print table */
-    fprintf(output, "  %*s +------------+--------------+\n", left_width, "");
-    fprintf(output, "  %*s |            |              |\n", left_width, "");
-    fprintf(output,
-            "  %*s | Time (%3s) | Memory (%3s) |\n",
-            left_width,
-            "",
-            time_unit_name,
-            mem_unit_name);
-    fprintf(output, "  %*s |            |              |\n", left_width, "");
-    fprintf(output, "+-%s-+------------+--------------+\n", left_hyphens);
+    wchar_t memory[13];
+    swprintf(memory, 13, L"Memory (%3s)", mem_unit_name);
 
-    for (size_t i = 0; i < n; ++i) {
+    table_insert(table, time, 1, 0);
+    table_insert(table, memory, 2, 0);
+
+    for (size_t i = 0; i < n; i++) {
+        table_insert(table, event_names[i], 0, i + 1);
+
         const performance_event_t *perf = events[i];
         if (!perf)
             continue;
 
-        fprintf(output, "| %*s |            |              |\n", left_width, "");
-        fprintf(output,
-                "| %*ls | %10.2lf | %12.2lf |\n",
-                left_width,
-                event_names[i],
-                (double) performance_event_get_elapsed_time(perf) / time_unit_multiplier,
-                (double) performance_event_get_used_memory(perf) / mem_unit_multiplier);
-        fprintf(output, "| %*s |            |              |\n", left_width, "");
-        fprintf(output, "+-%s-+------------+--------------+\n", left_hyphens);
+        table_insert_double(table,
+                            (double) performance_event_get_elapsed_time(perf) /
+                                time_unit_multiplier,
+                            1,
+                            i + 1);
+        table_insert_double(table,
+                            (double) performance_event_get_used_memory(perf) / mem_unit_multiplier,
+                            2,
+                            i + 1);
     }
 
-    free(left_hyphens);
+    table_draw(output, table);
+    table_free(table);
 }
 
 /**
@@ -264,45 +255,37 @@ void __performance_metrics_output_query(FILE           *output,
     amortized_unit_multiplier =
         __performance_metrics_choose_unit(n, amortized, units, &amortized_unit_name);
 
-    /* Prepare width of the left-most column */
-    const int left_width   = 10;
-    char     *left_hyphens = malloc(left_width + 1);
-    memset(left_hyphens, '-', left_width);
-    left_hyphens[left_width] = '\0';
+    table_t *table = table_create(n + 1, 3);
 
-    /* Actually print table */
-    fprintf(output, "  %*s +------------+-----------------+\n", left_width, "");
-    fprintf(output, "  %*s |            |                 |\n", left_width, "");
-    fprintf(output,
-            "  %*s | Time (%3s) | Amortized (%3s) |\n",
-            left_width,
-            "",
-            time_unit_name,
-            amortized_unit_name);
-    fprintf(output, "  %*s |            |                 |\n", left_width, "");
-    fprintf(output, "+-%s-+------------+-----------------+\n", left_hyphens);
+    wchar_t time[11];
+    swprintf(time, 11, L"Time (%3s)", time_unit_name);
 
-    for (size_t i = 0; i < n; ++i) {
-        fprintf(output, "| %*s |            |                 |\n", left_width, "");
+    wchar_t amortized_time[16];
+    swprintf(amortized_time, 16, L"Amortized (%3s)", amortized_unit_name);
+
+    table_insert(table, time, 1, 0);
+    table_insert(table, amortized_time, 2, 0);
+
+    for (size_t i = 0; i < n; i++) {
+        wchar_t current_line[11];
+        swprintf(current_line, 11, L"Line %5zu", line_numbers[i]);
+        table_insert(table, current_line, 0, i + 1);
+
+        table_insert_double(table,
+                            (double) times[i] / time_unit_multiplier,
+                            1,
+                            i + 1);
 
         if (statistics_time)
-            fprintf(output,
-                    "| Line %5zu | %10.2lf | %15.2lf |\n",
-                    line_numbers[i],
-                    (double) times[i] / time_unit_multiplier,
-                    (double) amortized[i] / amortized_unit_multiplier);
-        else
-            fprintf(output,
-                    "| Line %5zu | %10.2lf |        -        |\n",
-                    line_numbers[i],
-                    (double) times[i] / time_unit_multiplier);
-
-        fprintf(output, "| %*s |            |                 |\n", left_width, "");
-        fprintf(output, "+-%s-+------------+-----------------+\n", left_hyphens);
+            table_insert_double(table,
+                                (double) amortized[i] / amortized_unit_multiplier,
+                                2,
+                                i + 1);
     }
 
+    table_draw(output, table);
+    table_free(table);
     free(amortized);
-    free(left_hyphens);
 }
 
 void performance_metrics_output_print(FILE *output, const performance_metrics_t *metrics) {
