@@ -29,7 +29,7 @@ typedef enum {
 } sex_t;
 
 /**
- * @brief Parses a user sex.
+ * @brief Parses a user's sex.
  *
  * @param output Where the parsed sex will be placed (only on success).
  * @param input  Input (`"M"` or `"F"`).
@@ -53,7 +53,8 @@ int sex_from_string(sex_t *output, const char *input);
 /**
  * @brief Prints a sex tag to a buffer.
  *
- * @param output Where to print the sex tag to. Must be at least ::SEX_SPRINTF_MIN_BUFFER_SIZE long.
+ * @param output Where to print the sex tag to. Must be at least ::SEX_SPRINTF_MIN_BUFFER_SIZE
+ *               characters long.
  * @param sex    Sex to be printed.
  */
 void sex_sprintf(char *output, sex_t sex);

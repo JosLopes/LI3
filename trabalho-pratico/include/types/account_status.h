@@ -34,8 +34,8 @@ typedef enum {
  * @param output Where the parsed status will be placed (only on success).
  * @param input  Input (`"active"` or `"inactive"`, case-insensitive), only modified on success.
  *
- * @retval 0 Parsing success
- * @retval 1 Parsing failure
+ * @retval 0 Parsing success.
+ * @retval 1 Parsing failure.
  */
 int account_status_from_string(account_status_t *output, const char *input);
 

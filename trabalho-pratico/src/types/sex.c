@@ -19,7 +19,7 @@
  * @brief Implementation of methods in include/types/sex.h
  */
 
-#include <stdint.h>
+#include <inttypes.h>
 #include <string.h>
 
 #include "types/sex.h"
