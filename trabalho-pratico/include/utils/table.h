@@ -16,36 +16,30 @@
 
 /**
  * @file  table.h
- * @brief A table of contents.
+ * @brief A table of information to be displayed to the user.
  *
  * @anchor table_examples
  * ### Example
  *
- * The following example creates a table of contents that can be drawn to a file, or directly to the
- * terminal.
+ * The following example creates a table that can be drawn to any `FILE *` (mainly oriented at
+ * `stdout`).
  *
  * ```c
  * table_t *table = table_create(2, 3);
  * if (!table)
  *     return 1;
  *
- * wchar_t column_1 [9] = L"Column 1";
- * wchar_t column_2 [9] = L"Column 2";
- * wchar_t row_1 [6]    = L"Row 1";
- *
- * table_insert_wide_string(table, column_1, 1, 0);
- * table_insert_wide_string(table, column_2, 2, 0);
- * table_insert_wide_string(table, row_1, 0, 1);
- *
- * table_insert_double(table, 1.0, 1, 1);
- * table_insert_double(table, 134.223, 2, 1);
+ * table_insert_format(table, 1, 0, "Column 1");
+ * table_insert_format(table, 2, 0, "Column 2");
+ * table_insert_format(table, 0, 1, "Row 1");
+ * table_insert_format(table, 1, 1, "%lf", 1.00);
  *
  * table_draw(stdout, table);
- *
  * table_free(table);
  * ```
  *
- * The following should represent the desired output:
+ * The following should represent the desired output. As you can see, cells that aren't initialized
+ * are filled with hyphens.
  *
  * ```text
  *         +----------+----------+
@@ -54,7 +48,7 @@
  *         |          |          |
  * +-------+----------+----------+
  * |       |          |          |
- * | Row 1 |     1.00 |  134.223 |
+ * | Row 1 |     1.00 |    -     |
  * |       |          |          |
  * +-------+----------+----------+
  * ```
@@ -63,68 +57,89 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#include <wchar.h>
+#include <stddef.h>
 
-/** @brief Information about the table to be built. */
+/** @brief A table to be presented to the user. */
 typedef struct table table_t;
 
-/** @brief Size of each pool block. To store strings that will be displayed on the table. */
-#define TABLE_STRING_POOL_BLOCK_SIZE 256
-
 /**
- * @brief Creates a new table of contents.
+ * @brief Creates a new table.
  *
- * @param height Height of the table.
- * @param width  Width of the table.
+ * @param height Height of the table. This includes its header. Must be at least `2`.
+ * @param width  Width of the table.  This includes its header. Must be at least `2`.
  *
- * @return A table.
+ * @return A pointer to a new table that must later be deleted with ::table_free, or `NULL` on
+ *         allocation failure / invalid values.
  *
  * #### Examples
  * See [the header file's documentation](@ref table_examples).
  */
-table_t *table_create(size_t height, size_t width);
+table_t *table_create(size_t width, size_t height);
 
 /**
- * @brief Inserts a wide string into an existing table.
+ * @brief  Creates a deep copy of a table.
+ * @param  table Table to be copied.
+ * @return A copy of @p table, or `NULL` on allocation failure.
+ */
+table_t *table_clone(const table_t *table);
+
+/**
+ * @brief Modifies the text of a cell in a table.
  *
- * @param table  Table to add @p string to.
- * @param string String to be added to the @p table.
- * @param x      Column of the @p table in which to insert the @p string.
- * @param y      Row of the @p table in which to insert the @p string.
+ * @param table  Table to have the text in a give cell set.
+ * @param x      Horizontal position of the cell. @p x and @p y can't simultaneously be `0`.
+ * @param y      Vertical position of the cell. @p x and @p y can't simultaneously be `0`.
+ * @param format How to format the cell's text (`printf` format string).
+ * @param ...    Objects to be formatted accoring to @p format.
+ *
+ * @return 0 Success.
+ * @return 1 Allocation failure or out-of-bounds position.
  *
  * #### Examples
  * See [the header file's documentation](@ref table_examples).
  */
-void table_insert_wide_string(table_t *table, const wchar_t *string, size_t x, size_t y);
+int table_insert_format(table_t *table, size_t x, size_t y, const char *format, ...)
+    __attribute__((format(printf, 4, 5)));
 
 /**
- * @brief   Inserts a decimal number with double precision into an existing table.
- * @details The number is displayed with a precision of 2.
+ * @brief Gets the value of the string of a cell in table.
  *
- * @param table  Table to add @p number to.
- * @param number Number to be added to the @p table.
- * @param x      Column of the @p table in which to insert the @p number.
- * @param y      Row of the @p table in which to insert the @p number.
+ * @param table Table to get cell text from.
+ * @param x     Horizontal position of the cell.
+ * @param y     Vertical position of the cell.
  *
- * #### Examples
- * See [the header file's documentation](@ref table_examples).
+ * @return A pointer to the cell. `NULL` can represent an out-of-bounds error or that the desired
+ *         cell wasn't yet initialized.
  */
-void table_insert_double(table_t *table, double number, size_t x, size_t y);
+const char *table_get_cell(const table_t *table, size_t x, size_t y);
 
 /**
- * @brief Draws the previously built table.
+ * @brief  Gets the width of a table.
+ * @param  table Table to get the width from.
+ * @return Width of @p table.
+ */
+size_t table_get_width(const table_t *table);
+
+/**
+ * @brief  Gets the height of a table.
+ * @param  table Table to get the height from.
+ * @return Height of @p table.
+ */
+size_t table_get_height(const table_t *table);
+
+/**
+ * @brief Draws the contents of a table to a file.
  *
- * @param output Path to the file in which to draw the @p table in.
+ * @param output File stream in which to draw the @p table in.
  * @param table  Table to be drawn.
  *
  * #### Examples
  * See [the header file's documentation](@ref table_examples).
  */
-void table_draw(FILE *output, table_t *table);
+void table_draw(FILE *output, const table_t *table);
 
 /**
- * @brief Free's a table.
- *
+ * @brief Frees memory used by a table.
  * @param table Table to be free'd.
  *
  * #### Examples
