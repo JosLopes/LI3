@@ -115,7 +115,7 @@ void __performance_metrics_output_choose_units_from_performance_events(
  */
 void __performance_metrics_output_print_table(FILE                       *output,
                                               const performance_event_t **events,
-                                              const wchar_t             **event_names,
+                                              const char *const          *event_names,
                                               size_t                      n) {
 
     /* Choose best units to fit data */
@@ -128,33 +128,30 @@ void __performance_metrics_output_print_table(FILE                       *output
                                                                       &time_unit_name,
                                                                       &mem_unit_name);
 
-    table_t *table = table_create(n + 1, 3);
-
-    wchar_t time[11];
-    swprintf(time, 11, L"Time (%3s)", time_unit_name);
-
-    wchar_t memory[13];
-    swprintf(memory, 13, L"Memory (%3s)", mem_unit_name);
-
-    table_insert_wide_string(table, time, 1, 0);
-    table_insert_wide_string(table, memory, 2, 0);
+    table_t *table = table_create(3, n + 1);
+    table_insert_format(table, 1, 0, "Time (%s)", time_unit_name);
+    table_insert_format(table, 2, 0, "Memory (%s)", mem_unit_name);
 
     for (size_t i = 0; i < n; i++) {
-        table_insert_wide_string(table, event_names[i], 0, i + 1);
+        table_insert_format(table, 0, i + 1, "%s", event_names[i]);
 
         const performance_event_t *perf = events[i];
         if (!perf)
             continue;
 
-        table_insert_double(table,
-                            (double) performance_event_get_elapsed_time(perf) /
-                                time_unit_multiplier,
+        table_insert_format(table,
                             1,
-                            i + 1);
-        table_insert_double(table,
-                            (double) performance_event_get_used_memory(perf) / mem_unit_multiplier,
+                            i + 1,
+                            "%.2lf",
+                            (double) performance_event_get_elapsed_time(perf) /
+                                time_unit_multiplier);
+
+        table_insert_format(table,
                             2,
-                            i + 1);
+                            i + 1,
+                            "%.2lf",
+                            (double) performance_event_get_used_memory(perf) /
+                                time_unit_multiplier);
     }
 
     table_draw(output, table);
@@ -179,7 +176,7 @@ void __performance_metrics_output_print_dataset(FILE                        *out
             dataset_events[i] = NULL;
     }
 
-    const wchar_t *event_names[] = {L"Users", L"Flights", L"Passengers", L"Reservations"};
+    const char *event_names[] = {"Users", "Flights", "Passengers", "Reservations"};
     __performance_metrics_output_print_table(output, dataset_events, event_names, 4);
 }
 
@@ -204,15 +201,15 @@ void __performance_metrics_output_print_query_statistics(FILE                   
             statistical_events[i] = NULL;
     }
 
-    wchar_t *event_names[QUERY_TYPE_LIST_COUNT];
+    char *event_names[QUERY_TYPE_LIST_COUNT];
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         event_names[i] = malloc(sizeof(wchar_t) * 32);
-        swprintf(event_names[i], 32, L"Query %zu", i + 1);
+        snprintf(event_names[i], 32, "Query %zu", i + 1);
     }
 
     __performance_metrics_output_print_table(output,
                                              statistical_events,
-                                             (const wchar_t **) event_names,
+                                             (const char *const *)event_names,
                                              QUERY_TYPE_LIST_COUNT);
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
@@ -255,26 +252,20 @@ void __performance_metrics_output_query(FILE           *output,
     amortized_unit_multiplier =
         __performance_metrics_choose_unit(n, amortized, units, &amortized_unit_name);
 
-    table_t *table = table_create(n + 1, 3);
-
-    wchar_t time[11];
-    swprintf(time, 11, L"Time (%3s)", time_unit_name);
-
-    wchar_t amortized_time[16];
-    swprintf(amortized_time, 16, L"Amortized (%3s)", amortized_unit_name);
-
-    table_insert_wide_string(table, time, 1, 0);
-    table_insert_wide_string(table, amortized_time, 2, 0);
+    table_t *table = table_create(3, n + 1);
+    table_insert_format(table, 1, 0, "Time (%s)", time_unit_name);
+    table_insert_format(table, 2, 0, "Amortized (%s)", amortized_unit_name);
 
     for (size_t i = 0; i < n; i++) {
-        wchar_t current_line[11];
-        swprintf(current_line, 11, L"Line %5zu", line_numbers[i]);
-        table_insert_wide_string(table, current_line, 0, i + 1);
-
-        table_insert_double(table, (double) times[i] / time_unit_multiplier, 1, i + 1);
+        table_insert_format(table, 0, i + 1, "Line %5zu", line_numbers[i]);
+        table_insert_format(table, 1, i + 1, "%.2lf", (double) times[i] / time_unit_multiplier);
 
         if (statistics_time)
-            table_insert_double(table, (double) amortized[i] / amortized_unit_multiplier, 2, i + 1);
+            table_insert_format(table,
+                                2,
+                                i + 1,
+                                "%.2lf",
+                                (double) amortized[i] / amortized_unit_multiplier);
     }
 
     table_draw(output, table);
