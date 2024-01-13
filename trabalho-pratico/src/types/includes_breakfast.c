@@ -25,16 +25,16 @@
 #include <string.h>
 
 #include "types/includes_breakfast.h"
-#include "utils/string_utils.h"
 
 int includes_breakfast_from_string(includes_breakfast_t *output, const char *input) {
-    size_t len = strlen(input);
+    /* Inline hardcoded structure for better performance */
+    const size_t len = strlen(input);
     switch (len) {
         case 0:
             *output = INCLUDES_BREAKFAST_FALSE;
             return 0;
         case 1: {
-            int l = tolower(input[0]);
+            const int l = tolower(input[0]);
             if (l == '0' || l == 'f') {
                 *output = INCLUDES_BREAKFAST_FALSE;
             } else if (l == '1' || l == 't') {
@@ -46,17 +46,17 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
         }
         case 4: {
             /* Inline lowercase comparison with "true" */
-            int ret = tolower(input[0]) == 't' && tolower(input[1]) == 'r' &&
-                      tolower(input[2]) == 'u' && tolower(input[3]) == 'e';
+            const int ret = tolower(input[0]) == 't' && tolower(input[1]) == 'r' &&
+                            tolower(input[2]) == 'u' && tolower(input[3]) == 'e';
             if (ret)
                 *output = INCLUDES_BREAKFAST_TRUE;
             return !ret;
         }
         case 5: {
             /* Inline lowercase comparison with "false" */
-            int ret = tolower(input[0]) == 'f' && tolower(input[1]) == 'a' &&
-                      tolower(input[2]) == 'l' && tolower(input[3]) == 's' &&
-                      tolower(input[4]) == 'e';
+            const int ret = tolower(input[0]) == 'f' && tolower(input[1]) == 'a' &&
+                            tolower(input[2]) == 'l' && tolower(input[3]) == 's' &&
+                            tolower(input[4]) == 'e';
             if (ret)
                 *output = INCLUDES_BREAKFAST_FALSE;
             return !ret;

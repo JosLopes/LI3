@@ -55,7 +55,7 @@ int hotel_id_from_string(hotel_id_t *output, const char *input);
  * @brief Prints the identifier of a hotel in a reservation using `sprintf`.
  *
  * @param output Where to print the hotel identifier to. Must be at least
- *               ::HOTEL_ID_SPRINTF_MIN_BUFFER_SIZE long.
+ *               ::HOTEL_ID_SPRINTF_MIN_BUFFER_SIZE characters long.
  * @param id     Hotel identifier.
  */
 void hotel_id_sprintf(char *output, hotel_id_t id);

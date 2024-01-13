@@ -55,7 +55,7 @@ int reservation_id_from_string(reservation_id_t *output, const char *input);
  * @brief Prints the identifier of a reservation using `sprintf`.
  *
  * @param output Where to print the reservation identifier to. Must be at least
- *               ::RESERVATION_ID_SPRINTF_MIN_BUFFER_SIZE long.
+ *               ::RESERVATION_ID_SPRINTF_MIN_BUFFER_SIZE characters long.
  * @param id     Reservation identifier.
  */
 void reservation_id_sprintf(char *output, reservation_id_t id);

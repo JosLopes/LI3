@@ -60,7 +60,7 @@
 #ifndef INCLUDES_BREAKFAST_H
 #define INCLUDES_BREAKFAST_H
 
-/** @brief Indicates if breakfast is included for a ::reservation_t. */
+/** @brief Indicates if breakfast is included in a ::reservation_t. */
 typedef enum {
     INCLUDES_BREAKFAST_FALSE, /**< @brief Breakfast not included. */
     INCLUDES_BREAKFAST_TRUE   /**< @brief Breakfast included. */
@@ -70,10 +70,10 @@ typedef enum {
  * @brief Parses a reservation's inclusion of breakfast.
  *
  * @param output Where the parsed value will be placed (only on success).
- * @param input  Input (`""`, `"0"`, `"f"`, `"false"`, `"1"`, `"t"` or `"true"`).
+ * @param input  Input (`""`, `"0"`, `"f"`, `"false"`, `"1"`, `"t"` or `"true"`), case-insensitive.
  *
- * @retval 0 Parsing success
- * @retval 1 Parsing failure
+ * @retval 0 Parsing success.
+ * @retval 1 Parsing failure (not one of the strings mentioned above).
  *
  * #### Examples
  * See [the header file's documentation](@ref includes_breakfast_example).
@@ -95,7 +95,7 @@ int includes_breakfast_from_string(includes_breakfast_t *output, const char *inp
  * @brief Prints an "includes breakfast" field using `sprintf`.
  *
  * @param output    Where to print the "includes breakfast" field to. Must be at least
- *                  ::INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE long.
+ *                  ::INCLUDES_BREAKFAST_SPRINTF_MIN_BUFFER_SIZE characters long.
  * @param breakfast "Includes breakfast" field.
  *
  * #### Examples
