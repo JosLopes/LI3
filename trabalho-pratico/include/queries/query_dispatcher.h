@@ -46,25 +46,26 @@
  * @param query_type_list List of known queries.
  * @param output          Where the query's result should be written to.
  */
-void query_dispatcher_dispatch_single(database_t        *database,
-                                      query_instance_t  *query_instance,
-                                      query_type_list_t *query_type_list,
-                                      query_writer_t    *output);
+void query_dispatcher_dispatch_single(const database_t        *database,
+                                      const query_instance_t  *query_instance,
+                                      const query_type_list_t *query_type_list,
+                                      query_writer_t          *output);
 
 /**
  * @brief Runs a list of queries.
  *
  * @param database            Database, so that the queries can get information.
- * @param query_instance_list List of queries to be run.
+ * @param query_instance_list List of queries to be run. Cannot be `const`, as this list may get
+ *                            sorted.
  * @param query_type_list     List of known queries.
  * @param outputs             Where the queries' results will be written to. These should be in
  *                            the same as the @p query_instance_list after being sorted.
  * @param metrics             Where to write profiling data to. Can be `NULL`.
  */
-void query_dispatcher_dispatch_list(database_t            *database,
-                                    query_instance_list_t *query_instance_list,
-                                    query_type_list_t     *query_type_list,
-                                    query_writer_t       **outputs,
-                                    performance_metrics_t *metrics);
+void query_dispatcher_dispatch_list(const database_t        *database,
+                                    query_instance_list_t   *query_instance_list,
+                                    const query_type_list_t *query_type_list,
+                                    query_writer_t *const   *outputs,
+                                    performance_metrics_t   *metrics);
 
 #endif

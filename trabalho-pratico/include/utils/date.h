@@ -224,4 +224,18 @@ uint8_t date_get_day(date_t date);
  */
 int date_set_day(date_t *date, uint8_t day);
 
+/**
+ * @brief   Generates an integer made of a date without its day.
+ * @details Useful for referring to months in hash table keys.
+ * @return  An integer for a date without a day (only month and year).
+ */
+uint32_t date_generate_dayless(date_t date);
+
+/**
+ * @brief   Generates an integer made of a date without its month and day.
+ * @details Useful for referring to years in hash table keys.
+ * @return  An integer for a date without months and days (only years).
+ */
+uint32_t date_generate_monthless(date_t date);
+
 #endif

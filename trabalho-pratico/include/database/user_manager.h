@@ -32,7 +32,7 @@
  * #include "dataset/dataset_loader.h"
  *
  * // Called for every user in the manager. Prints a user to stdout.
- * int iter_callback(void *user_data, user_t *user) {
+ * int iter_callback(void *user_data, const user_t *user) {
  *     (void) user_data;
  *
  *     const char *id       = user_get_const_id(user);
@@ -98,9 +98,7 @@
 #include "types/user.h"
 #include "utils/single_pool_id_linked_list.h"
 
-/**
- * @brief A data type that contains and manages all users in a database.
- */
+/** @brief A data type that contains and manages all users in a database. */
 typedef struct user_manager user_manager_t;
 
 /**
@@ -116,8 +114,24 @@ typedef struct user_manager user_manager_t;
 typedef int (*user_manager_iter_callback_t)(void *user_data, const user_t *user);
 
 /**
+ * @brief   Callback type for user manager iterations with flight information.
+ * @details Method called by ::user_manager_iter_with_flights for every item in a ::user_manager_t.
+ *
+ * @param user_data Argument passed to ::user_manager_iter_with_flights that is passed to every
+ *                  callback, so that this method can change the program's state.
+ * @param user      User in the manager.
+ * @param flights   Flights related to @p user
+ *
+ * @return `0` on success, or any other value to order iteration to stop.
+ */
+typedef int (*user_manager_iter_with_flights_callback_t)(
+    void                               *user_data,
+    const user_t                       *user,
+    const single_pool_id_linked_list_t *flights);
+
+/**
  * @brief   Instantiates a new ::user_manager_t.
- * @details The returned value is owned by the called and should be `free`'d with
+ * @details The returned value is owned by the caller and should be `free`'d with
  *          ::user_manager_free.
  * @return  The new user manager, or `NULL` on failure.
  */
@@ -129,14 +143,15 @@ user_manager_t *user_manager_create(void);
  * @param manager User manager to add @p user to.
  * @param user    User to be added to @p manager.
  *
- * @return The pointer to the user allocated in the manager's pool, or `NULL` on failure.
+ * @retval 0 Success
+ * @retval 1 Allocation failure.
  */
-user_t *user_manager_add_user(user_manager_t *manager, const user_t *user);
+int user_manager_add_user(user_manager_t *manager, const user_t *user);
 
 /**
  * @brief Adds a user-flight relation to the user manager.
  *
- * @param manager   User manager to add @p flight_id to.
+ * @param manager   User manager to add the relation to.
  * @param user_id   Identifier of the user to add @p flight_id to.
  * @param flight_id Identifier of the flight to be associated with @p user_id.
  *
@@ -168,7 +183,7 @@ int user_manager_add_user_reservation_association(user_manager_t *manager,
  *
  * @return A ::user_t if it's found, `NULL` if it's not.
  */
-user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id);
+const user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id);
 
 /**
  * @brief Gets the flights a user travelled in, given a user's identifier.
@@ -176,10 +191,10 @@ user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id);
  * @param manager User manager where to perform the lookup.
  * @param id      Identifier of the user to find.
  *
- * @return A linked list of flight IDs if it's found, `NULL` if it's not.
+ * @return A linked list of flight IDs if the user is found, `NULL` if it's not.
  */
-single_pool_id_linked_list_t *user_manager_get_flights_by_id(const user_manager_t *manager,
-                                                             const char           *id);
+const single_pool_id_linked_list_t *user_manager_get_flights_by_id(const user_manager_t *manager,
+                                                                   const char           *id);
 
 /**
  * @brief Gets the bookings a user was involved in, given a user's identifier.
@@ -187,13 +202,13 @@ single_pool_id_linked_list_t *user_manager_get_flights_by_id(const user_manager_
  * @param manager User manager where to perform the lookup.
  * @param id      Identifier of the user to find.
  *
- * @return A linked list of reservation IDs if it's found, `NULL` if it's not.
+ * @return A linked list of reservation IDs if the user is found, `NULL` if it's not.
  */
-single_pool_id_linked_list_t *user_manager_get_reservations_by_id(const user_manager_t *manager,
-                                                                  const char           *id);
+const single_pool_id_linked_list_t *
+    user_manager_get_reservations_by_id(const user_manager_t *manager, const char *id);
 
 /**
- * @brief Iterates through every **valid** user in a user manager, calling @p callback for each one.
+ * @brief Iterates through every user in a user manager, calling @p callback for each one.
  *
  * @param manager   User manager to iterate thorugh.
  * @param callback  Method to be called for every user stored in @p manager.
@@ -205,9 +220,27 @@ single_pool_id_linked_list_t *user_manager_get_reservations_by_id(const user_man
  * #### Example
  * See [the header file's documentation](@ref user_manager_examples).
  */
-int user_manager_iter(user_manager_t              *manager,
+int user_manager_iter(const user_manager_t        *manager,
                       user_manager_iter_callback_t callback,
                       void                        *user_data);
+
+/**
+ * @brief   Iterates through every user in a user manager, calling @p callback for each one.
+ * @details Flights related to every user are also provided.
+ *
+ * @param manager   User manager to iterate thorugh.
+ * @param callback  Method to be called for every user stored in @p manager.
+ * @param user_data Pointer to be passed to every @p callback, so that it can modify the program's
+ *                  state.
+ *
+ * @return The return value of the last-called @p callback.
+ *
+ * #### Example
+ * See [the header file's documentation](@ref user_manager_examples).
+ */
+int user_manager_iter_with_flights(const user_manager_t                     *manager,
+                                   user_manager_iter_with_flights_callback_t callback,
+                                   void                                     *user_data);
 
 /**
  * @brief Frees memory used by a user manager.

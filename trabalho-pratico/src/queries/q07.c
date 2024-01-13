@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "queries/qplaceholder.h"
+#include "queries/q07.h"
 #include "queries/query_instance.h"
 #include "utils/int_utils.h"
 
@@ -37,7 +37,7 @@
  *
  * @return `NULL` for invalid arguments, a `malloc`-allocated `uint64_t` otherwise.
  */
-void *__q07_parse_arguments(char **argv, size_t argc) {
+void *__q07_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 1)
         return NULL;
 
@@ -57,12 +57,20 @@ void *__q07_parse_arguments(char **argv, size_t argc) {
     }
 }
 
+void *__q07_clone_arguments(const void *args_data) {
+    uint64_t *clone = malloc(sizeof(uint64_t));
+    if (!clone)
+        return NULL;
+    *clone = *(const uint64_t *) args_data;
+    return clone;
+}
+
 /**
  * @brief   A comparison function for sorting an `GArray` of `int64_t`s.
  * @details Auxiliary method for ::__q07_generate_statistics.
  */
 gint __q07_generate_statistics_int64_compare_func(gconstpointer a, gconstpointer b) {
-    return *(int64_t *) a - *(int64_t *) b;
+    return *(const int64_t *) a - *(const int64_t *) b;
 }
 
 /**
@@ -145,8 +153,8 @@ void __q07_generate_statistics_foreach_airport(gpointer key, gpointer value, gpo
  * @return Comparison value between @p a and @p b.
  */
 gint __q07_generate_statistics_airport_median_compare_func(gconstpointer a, gconstpointer b) {
-    const __q07_airport_median *airport_median_a = (const __q07_airport_median *) a;
-    const __q07_airport_median *airport_median_b = (const __q07_airport_median *) b;
+    const __q07_airport_median *airport_median_a = a;
+    const __q07_airport_median *airport_median_b = b;
 
     uint64_t crit1 = airport_median_b->median - airport_median_a->median;
     if (crit1)
@@ -169,7 +177,9 @@ gint __q07_generate_statistics_airport_median_compare_func(gconstpointer a, gcon
  *
  * @return A sorted `GArray` of ::__q07_airport_median.
  */
-void *__q07_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+void *__q07_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
     (void) instances;
     (void) n;
 
@@ -202,13 +212,13 @@ void *__q07_generate_statistics(database_t *database, query_instance_t *instance
  * @retval 0 On success.
  * @retval 1 On failure.
  */
-int __q07_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q07_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
-    uint64_t n               = *(uint64_t *) query_instance_get_argument_data(instance);
+    uint64_t n               = *(const uint64_t *) query_instance_get_argument_data(instance);
     GArray  *airport_medians = (GArray *) statistics;
 
     size_t i_max = min(n, airport_medians->len);
@@ -228,6 +238,7 @@ int __q07_execute(database_t       *database,
 
 query_type_t *q07_create(void) {
     return query_type_create(__q07_parse_arguments,
+                             __q07_clone_arguments,
                              free,
                              __q07_generate_statistics,
                              (query_type_free_statistics_callback_t) g_array_unref,

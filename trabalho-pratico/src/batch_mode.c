@@ -50,7 +50,7 @@ typedef struct {
  * @param user_data A pointer to a ::batch_mode_iter_data.
  * @param instance  Query query instance, whose output should be outputted.
  */
-int __batch_mode_init_file_callback(void *user_data, query_instance_t *instance) {
+int __batch_mode_init_file_callback(void *user_data, const query_instance_t *instance) {
     batch_mode_iter_data_t *iter_data = (batch_mode_iter_data_t *) user_data;
 
     /* Parent directory creation is assured by error file output while loading the dataset */

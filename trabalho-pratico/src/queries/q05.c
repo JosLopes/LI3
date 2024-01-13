@@ -52,7 +52,7 @@ typedef struct {
  *
  * @return `NULL` on failure, a pointer to a `q05_airport_data_t` otherwise.
  */
-void *__q05_parse_arguments(char **argv, size_t argc) {
+void *__q05_parse_arguments(char *const *argv, size_t argc) {
     if (argc != 3)
         return NULL;
 
@@ -70,6 +70,16 @@ void *__q05_parse_arguments(char **argv, size_t argc) {
     }
 
     return parsed_arguments;
+}
+
+void *__q05_clone_arguments(const void *args_data) {
+    const q05_parsed_arguments_t *args  = args_data;
+    q05_parsed_arguments_t       *clone = malloc(sizeof(q05_parsed_arguments_t));
+    if (!clone)
+        return NULL;
+
+    memcpy(clone, args, sizeof(q05_parsed_arguments_t));
+    return clone;
 }
 
 /**
@@ -133,7 +143,9 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
  * @return A `GHashTable` associating a ::q05_foreach_airport_data_t for each query to a
  *         `GPtrArray` of ::flight_t `*`s.
  */
-void *__q05_generate_statistics(database_t *database, query_instance_t *instances, size_t n) {
+void *__q05_generate_statistics(const database_t              *database,
+                                const query_instance_t *const *instances,
+                                size_t                         n) {
     GPtrArray  *filter_data    = g_ptr_array_new();
     GHashTable *origin_flights = g_hash_table_new_full(g_direct_hash,
                                                        g_direct_equal,
@@ -141,11 +153,14 @@ void *__q05_generate_statistics(database_t *database, query_instance_t *instance
                                                        (GDestroyNotify) g_ptr_array_unref);
 
     for (size_t i = 0; i < n; ++i) {
-        q05_parsed_arguments_t *argument_data = query_instance_get_argument_data(instances);
+        const q05_parsed_arguments_t *argument_data =
+            query_instance_get_argument_data(instances[i]);
 
-        g_hash_table_insert(origin_flights, argument_data, g_ptr_array_new());
-        g_ptr_array_add(filter_data, argument_data);
-        instances = (query_instance_t *) ((uint8_t *) instances + query_instance_sizeof());
+        /* TODO - find way of keeping const */
+        g_hash_table_insert(origin_flights,
+                            (q05_parsed_arguments_t *) argument_data,
+                            g_ptr_array_new());
+        g_ptr_array_add(filter_data, (q05_parsed_arguments_t *) argument_data);
     }
 
     q05_foreach_airport_data_t callback_data = {.filter_data    = filter_data,
@@ -165,8 +180,8 @@ void *__q05_generate_statistics(database_t *database, query_instance_t *instance
   *          auxiliary method for ::__q05_generate_statistics.
   */
 gint __q05_flights_date_compare_func(gconstpointer a, gconstpointer b) {
-    const flight_t *flight_a = *((const flight_t **) a);
-    const flight_t *flight_b = *((const flight_t **) b);
+    const flight_t *flight_a = *((const flight_t *const *) a);
+    const flight_t *flight_b = *((const flight_t *const *) b);
 
     int64_t crit1 = date_and_time_diff(flight_get_schedule_departure_date(flight_b),
                                        flight_get_schedule_departure_date(flight_a));
@@ -189,15 +204,14 @@ gint __q05_flights_date_compare_func(gconstpointer a, gconstpointer b) {
  *
  * @retval 0 Always successful
  */
-int __q05_execute(database_t       *database,
-                  void             *statistics,
-                  query_instance_t *instance,
-                  query_writer_t   *output) {
+int __q05_execute(const database_t       *database,
+                  const void             *statistics,
+                  const query_instance_t *instance,
+                  query_writer_t         *output) {
     (void) database;
 
-    GHashTable             *origin_flights = (GHashTable *) statistics;
-    q05_parsed_arguments_t *arguments =
-        (q05_parsed_arguments_t *) query_instance_get_argument_data(instance);
+    GHashTable                   *origin_flights = (GHashTable *) statistics;
+    const q05_parsed_arguments_t *arguments      = query_instance_get_argument_data(instance);
 
     GPtrArray *flights = g_hash_table_lookup(origin_flights, arguments);
     if (!flights)
@@ -236,6 +250,7 @@ int __q05_execute(database_t       *database,
 
 query_type_t *q05_create(void) {
     return query_type_create(__q05_parse_arguments,
+                             __q05_clone_arguments,
                              free,
                              __q05_generate_statistics,
                              (query_type_free_statistics_callback_t) g_hash_table_unref,

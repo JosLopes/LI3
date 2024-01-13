@@ -119,10 +119,10 @@ user_manager_t *user_manager_create(void) {
     return manager;
 }
 
-user_t *user_manager_add_user(user_manager_t *manager, const user_t *user) {
+int user_manager_add_user(user_manager_t *manager, const user_t *user) {
     user_t *pool_user = user_clone(manager->users, manager->strings, user);
     if (!pool_user)
-        return NULL;
+        return 1;
 
     user_and_data_t user_and_data = {
         .user         = pool_user,
@@ -143,7 +143,7 @@ user_t *user_manager_add_user(user_manager_t *manager, const user_t *user) {
         /* Do not fail and return NULL. Show must go on */
     }
 
-    return pool_user;
+    return 0;
 }
 
 int user_manager_add_user_flight_association(user_manager_t *manager,
@@ -180,69 +180,74 @@ int user_manager_add_user_reservation_association(user_manager_t *manager,
     return 0;
 }
 
-user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id) {
+const user_t *user_manager_get_by_id(const user_manager_t *manager, const char *id) {
     user_and_data_t *data = g_hash_table_lookup(manager->id_users_rel, id);
     if (!data)
         return NULL;
     return data->user;
 }
 
-single_pool_id_linked_list_t *user_manager_get_flights_by_id(const user_manager_t *manager,
-                                                             const char           *id) {
+const single_pool_id_linked_list_t *user_manager_get_flights_by_id(const user_manager_t *manager,
+                                                                   const char           *id) {
     user_and_data_t *data = g_hash_table_lookup(manager->id_users_rel, id);
     if (!data)
         return NULL;
     return data->flights;
 }
 
-single_pool_id_linked_list_t *user_manager_get_reservations_by_id(const user_manager_t *manager,
-                                                                  const char           *id) {
+const single_pool_id_linked_list_t *
+    user_manager_get_reservations_by_id(const user_manager_t *manager, const char *id) {
     user_and_data_t *data = g_hash_table_lookup(manager->id_users_rel, id);
     if (!data)
         return NULL;
     return data->reservations;
 }
 
-/**
- * @struct user_manager_iter_user_data_t
- * @brief Internal data type for the `user_data` parameter in ::__user_manager_iter_callback.
- *
- * @var user_manager_iter_user_data_t::callback
- *     @brief Callback to be called for every valid user.
- * @var user_manager_iter_user_data_t::original_user_data.
- *     @brief `user_data` parameter for every ::user_manager_iter_user_data_t::callback.
- */
-typedef struct {
-    user_manager_iter_callback_t callback;
-    void                        *original_user_data;
-} user_manager_iter_user_data_t;
-
-/**
- * @brief   Callback for every item in the user manager's pool.
- * @details Auxiliary function for ::user_manager_iter. Makes sure the target callback is only
- *          called for valid users.
- *
- * @param user_data A ::user_manager_iter_user_data_t.
- * @param item      A ::user_t in a user manager's pool.
- *
- * @return The return value of the target callback, or `0` for filtered-out items.
- */
-int __user_manager_iter_callback(void *user_data, const void *item) {
-    if (user_is_valid((const user_t *) item) == 0) {
-        user_manager_iter_user_data_t *helper_data = (user_manager_iter_user_data_t *) user_data;
-        return helper_data->callback(helper_data->original_user_data, (const user_t *) item);
-    }
-
-    return 0;
-}
-
-int user_manager_iter(user_manager_t              *manager,
+int user_manager_iter(const user_manager_t        *manager,
                       user_manager_iter_callback_t callback,
                       void                        *user_data) {
 
-    user_manager_iter_user_data_t helper_data = {.callback           = callback,
-                                                 .original_user_data = user_data};
-    return pool_iter(manager->users, __user_manager_iter_callback, &helper_data);
+    return pool_iter(manager->users, (pool_iter_callback_t) callback, user_data);
+}
+
+/**
+ * @struct user_manager_iter_with_flights_data_t
+ * @brief Auxiliary data for ::__user_manager_iter_with_flights_callback.
+ *
+ * @var user_manager_iter_with_flights_data_t::user_data
+ *     @brief Original user data provided to ::user_manager_iter_with_flights.
+ * @var user_manager_iter_with_flights_data_t::original_callback
+ *     @brief Original callback provided to ::user_manager_iter_with_flights.
+ */
+typedef struct {
+    void                                     *user_data;
+    user_manager_iter_with_flights_callback_t original_callback;
+} user_manager_iter_with_flights_data_t;
+
+/**
+ * @brief Intermediate callback for ::user_manager_iter_with_flights.
+ *
+ * @param iter_data Real callback and original user data (::user_manager_iter_with_flights_data_t).
+ * @param user_data A pointer to a ::user_and_data_t.
+ *
+ * @return The value of the original callback called.
+ */
+int __user_manager_iter_with_flights_callback(void *iter_data, const void *user_data) {
+    const user_manager_iter_with_flights_data_t *iter_data_struct = iter_data;
+    const user_and_data_t                       *user_data_struct = user_data;
+
+    return iter_data_struct->original_callback(iter_data_struct->user_data,
+                                               user_data_struct->user,
+                                               user_data_struct->flights);
+}
+
+int user_manager_iter_with_flights(const user_manager_t                     *manager,
+                                   user_manager_iter_with_flights_callback_t callback,
+                                   void                                     *user_data) {
+
+    user_manager_iter_with_flights_data_t iter_data = {.user_data         = user_data,
+                                                       .original_callback = callback};
+    return pool_iter(manager->user_data, __user_manager_iter_with_flights_callback, &iter_data);
 }
 
 void user_manager_free(user_manager_t *manager) {

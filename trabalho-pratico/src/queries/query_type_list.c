@@ -32,8 +32,9 @@
 #include "queries/q05.h"
 #include "queries/q06.h"
 #include "queries/q07.h"
+#include "queries/q08.h"
 #include "queries/q09.h"
-#include "queries/qplaceholder.h"
+#include "queries/q10.h"
 #include "queries/query_type_list.h"
 
 /**
@@ -59,9 +60,9 @@ query_type_list_t *query_type_list_create(void) {
                                                                   q05_create,
                                                                   q06_create,
                                                                   q07_create,
-                                                                  qplaceholder_create,
+                                                                  q08_create,
                                                                   q09_create,
-                                                                  qplaceholder_create};
+                                                                  q10_create};
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         list->list[i] = constructors[i]();
@@ -69,7 +70,6 @@ query_type_list_t *query_type_list_create(void) {
         if (!list->list[i]) { /* Allocation failure */
             for (size_t j = 0; j < i; ++j)
                 query_type_free(list->list[j]);
-
             free(list);
             return NULL;
         }
@@ -78,7 +78,27 @@ query_type_list_t *query_type_list_create(void) {
     return list;
 }
 
-query_type_t *query_type_list_get_by_index(query_type_list_t *query_type_list, size_t index) {
+query_type_list_t *query_type_list_clone(const query_type_list_t *query_type_list) {
+    query_type_list_t *clone = malloc(sizeof(query_type_list_t));
+    if (!clone)
+        return NULL;
+
+    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
+        clone->list[i] = query_type_clone(query_type_list->list[i]);
+
+        if (!clone->list[i]) { /* Allocation failure */
+            for (size_t j = 0; j < i; ++j)
+                query_type_free(clone->list[j]);
+            free(clone);
+            return NULL;
+        }
+    }
+
+    return clone;
+}
+
+const query_type_t *query_type_list_get_by_index(const query_type_list_t *query_type_list,
+                                                 size_t                   index) {
     if (1 <= index && index <= QUERY_TYPE_LIST_COUNT)
         return query_type_list->list[index - 1];
     return NULL;
