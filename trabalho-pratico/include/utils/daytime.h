@@ -68,7 +68,7 @@
 #include <stdint.h>
 
 /** @brief A time containing hours, minutes and seconds. */
-typedef int32_t daytime_t;
+typedef uint32_t daytime_t;
 
 /**
  * @brief Creates a time from @p hours, @p minutes and @p seconds.
@@ -131,7 +131,7 @@ int daytime_from_string_const(daytime_t *output, const char *input);
  * @brief Prints a time using `sprintf` in the format `HH:MM:SS`.
  *
  * @param output Where to print the time to. Must be at least ::DAYTIME_SPRINTF_MIN_BUFFER_SIZE
- *               long.
+ *               characters long.
  * @param time   Time to be printed.
  *
  * #### Examples

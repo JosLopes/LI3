@@ -79,7 +79,7 @@
 #include <stdint.h>
 
 /** @brief A date containing a year, a month a day. */
-typedef int32_t date_t;
+typedef uint32_t date_t;
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     /** @brief Current system date (`2023/10/01`). */
@@ -148,7 +148,8 @@ int date_from_string_const(date_t *output, const char *input);
 /**
  * @brief Prints a date using `sprintf` in the format `YYYY/MM/DD`.
  *
- * @param output Where to print the date to. Must be at least ::DATE_SPRINTF_MIN_BUFFER_SIZE long.
+ * @param output Where to print the date to. Must be at least ::DATE_SPRINTF_MIN_BUFFER_SIZE
+ *               characters long.
  * @param date   Date to be printed.
  *
  * #### Examples

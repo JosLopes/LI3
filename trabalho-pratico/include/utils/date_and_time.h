@@ -56,7 +56,7 @@
 #include "utils/daytime.h"
 
 /** @brief A type containing a ::date_t and a ::daytime_t. */
-typedef int64_t date_and_time_t;
+typedef uint64_t date_and_time_t;
 
 /**
  * @brief Creates a ::date_and_time_t from its @p date and @p time values.
@@ -116,7 +116,7 @@ int date_and_time_from_string_const(date_and_time_t *output, const char *input);
  * @brief Prints a timed date using `sprintf` in the format `YYYY/MM/DD HH:MM:SS`.
  *
  * @param output        Where to print the timed date to. Must be at least
- *                      ::DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE long.
+ *                      ::DATE_AND_TIME_SPRINTF_MIN_BUFFER_SIZE characters long.
  * @param date_and_time Timed date to be printed.
  *
  * #### Examples
