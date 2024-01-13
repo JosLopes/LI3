@@ -115,7 +115,6 @@ table_t *table_clone(const table_t *table) {
                     table_free(clone);
                     return NULL;
                 }
-
             }
         }
         line_start += clone->width;

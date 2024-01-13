@@ -209,7 +209,7 @@ void __performance_metrics_output_print_query_statistics(FILE                   
 
     __performance_metrics_output_print_table(output,
                                              statistical_events,
-                                             (const char *const *)event_names,
+                                             (const char *const *) event_names,
                                              QUERY_TYPE_LIST_COUNT);
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
