@@ -54,7 +54,7 @@ int flight_id_from_string(flight_id_t *output, const char *input);
  * @brief Prints the identifier of a flight using `sprintf`.
  *
  * @param output Where to print the flight identifier to. Must be at least
- *               ::FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE long.
+ *               ::FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE characters long.
  * @param id     Flight identifier.
  */
 void flight_id_sprintf(char *output, flight_id_t id);

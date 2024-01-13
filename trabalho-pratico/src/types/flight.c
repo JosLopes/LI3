@@ -18,7 +18,7 @@
  * @file  flight.c
  * @brief Implementation of methods in include/types/flight.h
  *
- * #### Example
+ * ### Example
  * See [the header file's documentation](@ref flight_examples).
  */
 #include <stdlib.h>
@@ -27,20 +27,19 @@
 #include "types/flight.h"
 
 /**
- * @struct flight
- * @brief Represents a flight in the datasets.
- * @details NOTE: some fields in the project's requirements (such as real arrival date, pilot,
- *          copilot and notes) aren't put here, as they won't be required by any
- *          database query.
+ * @struct  flight
+ * @brief   A flight.
+ * @details Some fields in the project's requirements (such as real arrival date, pilot, copilot
+ *          and notes) aren't put here, as they aren't required by any of the queries.
  *
  * @var flight::airline
  *     @brief Airline of a given flight.
  * @var flight::plane_model
  *     @brief Plane model of a given flight.
  * @var flight::origin
- *     @brief Airport of origin of the flight.
+ *     @brief Origin airport of a given flight.
  * @var flight::destination
- *     @brief Airport of origin of the flight.
+ *     @brief Destination airport of a given flight.
  * @var flight::id
  *     @brief Identifier of a given flight.
  * @var flight::schedule_departure_date
@@ -52,14 +51,16 @@
  * @var flight::number_of_passengers
  *     @brief Number of passengers of a given flight.
  * @var flight::total_seats
- *     @brief Number of total seats of a given flight.
+ *     @brief Total number of seats of a given flight.
  * @var flight::owns_itself
  *     @brief   Whether, when `free`ing this flight, the flight pointer should be `free`'d.
  *     @details A false value means that the flight is allocated in a pool.
  * @var flight::owns_airline
- *     @brief Whether ::flight::airline should be `free`d.
+ *     @brief   Whether ::flight::airline should be `free`d.
+ *     @details A false value means that this string is allocated in a pool.
  * @var flight::owns_plane_model
- *     @brief Whether ::flight::plane_model should be `free`d.
+ *     @brief   Whether ::flight::plane_model should be `free`d.
+ *     @details A false value means that this string is allocated in a pool.
  */
 struct flight {
     const char     *airline;
@@ -83,6 +84,10 @@ flight_t *flight_create(pool_t *allocator) {
 
     ret->owns_itself  = allocator == NULL;
     ret->owns_airline = ret->owns_plane_model = 0; /* Don't free in first setter call */
+
+    /* For first comparisons to work */
+    flight_reset_schedule_dates(ret);
+    flight_reset_seats(ret);
     return ret;
 }
 
@@ -98,38 +103,55 @@ flight_t *flight_clone(pool_t                      *allocator,
     ret->owns_itself  = allocator == NULL;
     ret->owns_airline = ret->owns_plane_model = 0; /* Don't free in first setter call */
 
-    flight_set_airline(string_allocator, ret, flight->airline);
-    flight_set_plane_model(string_allocator, ret, flight->plane_model);
+    if (flight_set_airline(string_allocator, ret, flight->airline) ||
+        flight_set_plane_model(string_allocator, ret, flight->plane_model)) {
+
+        if (ret->owns_itself)
+            free(ret);
+        return NULL;
+    }
 
     return ret;
 }
 
-void flight_set_airline(string_pool_no_duplicates_t *allocator,
-                        flight_t                    *flight,
-                        const char                  *airline) {
+int flight_set_airline(string_pool_no_duplicates_t *allocator,
+                       flight_t                    *flight,
+                       const char                  *airline) {
+    if (!*airline)
+        return 1;
 
     const char *new_airline =
         allocator ? string_pool_no_duplicates_put(allocator, airline) : strdup(airline);
+    if (!new_airline)
+        return 1;
+
     if (flight->owns_airline)
         /* Purposely remove const. We know it was allocated by this module */
         free((char *) flight->airline);
     flight->owns_airline = allocator == NULL;
 
     flight->airline = new_airline;
+    return 0;
 }
 
-void flight_set_plane_model(string_pool_no_duplicates_t *allocator,
-                            flight_t                    *flight,
-                            const char                  *plane_model) {
+int flight_set_plane_model(string_pool_no_duplicates_t *allocator,
+                           flight_t                    *flight,
+                           const char                  *plane_model) {
+    if (!*plane_model)
+        return 1;
 
     const char *new_plane_model =
         allocator ? string_pool_no_duplicates_put(allocator, plane_model) : strdup(plane_model);
+    if (!new_plane_model)
+        return 1;
+
     if (flight->owns_plane_model)
         /* Purposely remove const. We know it was allocated by this module */
         free((char *) flight->plane_model);
     flight->owns_plane_model = allocator == NULL;
 
     flight->plane_model = new_plane_model;
+    return 0;
 }
 
 void flight_set_origin(flight_t *flight, airport_code_t origin) {
@@ -144,25 +166,50 @@ void flight_set_id(flight_t *flight, flight_id_t id) {
     flight->id = id;
 }
 
-void flight_set_schedule_departure_date(flight_t       *flight,
-                                        date_and_time_t scheduled_departure_date) {
+int flight_set_schedule_departure_date(flight_t *flight, date_and_time_t scheduled_departure_date) {
+    if (date_and_time_diff(scheduled_departure_date, flight->schedule_arrival_date) > 0)
+        return 1;
+
     flight->schedule_departure_date = scheduled_departure_date;
+    return 0;
 }
 
-void flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date) {
+int flight_set_schedule_arrival_date(flight_t *flight, date_and_time_t schedule_arrival_date) {
+    if (date_and_time_diff(flight->schedule_departure_date, schedule_arrival_date) > 0)
+        return 1;
+
     flight->schedule_arrival_date = schedule_arrival_date;
+    return 0;
 }
 
-void flight_set_number_of_passengers(flight_t *flight, uint16_t number_of_passengers) {
+void flight_reset_schedule_dates(flight_t *flight) {
+    flight->schedule_departure_date = 0;
+    flight->schedule_arrival_date   = 0xFFFFFFFFFFFFFFFF;
+}
+
+int flight_set_number_of_passengers(flight_t *flight, uint16_t number_of_passengers) {
+    if (number_of_passengers >= flight->total_seats)
+        return 1;
+
     flight->number_of_passengers = number_of_passengers;
+    return 0;
 }
 
 void flight_set_real_departure_date(flight_t *flight, date_and_time_t real_departure_date) {
     flight->real_departure_date = real_departure_date;
 }
 
-void flight_set_total_seats(flight_t *flight, uint16_t total_seats) {
+int flight_set_total_seats(flight_t *flight, uint16_t total_seats) {
+    if (total_seats < flight->number_of_passengers)
+        return 1;
+
     flight->total_seats = total_seats;
+    return 0;
+}
+
+void flight_reset_seats(flight_t *flight) {
+    flight->number_of_passengers = 0;
+    flight->total_seats          = 0xFFFF;
 }
 
 const char *flight_get_const_airline(const flight_t *flight) {
@@ -206,7 +253,7 @@ uint16_t flight_get_total_seats(const flight_t *flight) {
 }
 
 size_t flight_sizeof(void) {
-    return sizeof(struct flight);
+    return sizeof(flight_t);
 }
 
 int flight_is_valid(const flight_t *flight) {
