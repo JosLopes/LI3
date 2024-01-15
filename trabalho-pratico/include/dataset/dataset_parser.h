@@ -16,17 +16,17 @@
 
 /**
  * @file    dataset_parser.h
- * @brief   A parser for files with many tokens separated by a given delimiter, each of which will
- *          be further parsed by ::fixed_n_delimiter_parser_parse_string.
- * @details Useful for parsing CSV files and the input datasets. The first token in each file will
- *          be ignored, as it's considerd to be a table header.
+ * @brief   A parser of dataset files.
+ * @details A dataset file is made up of many lines (called first-order tokens), each passed onto a
+ *          [fixed_n_delimiter_parser](@ref fixed_n_delimiter_parser.h), and parsed as an individual
+ *          entity.
  *
  * @anchor dataset_parser_examples
  * ### Examples
  *
  * Note that this section expands upon the example used in
  * [the fixed_n_delimiter_parser examples](@ref fixed_n_delimiter_parser_examples). We recommend
- * reading it first, to get more familiarized with this code.
+ * reading that first, to get more familiarized with this code.
  *
  * Suppose we want to parse from a CSV file with the following contents:
  *
@@ -79,7 +79,7 @@
  * int parse_int(void *user_data, char *token, size_t ntoken) {
  *     person_dataset_t *dataset = (person_dataset_t *) user_data;
  *
- *     int value = atoi(token);
+ *     const int value = atoi(token);
  *     if (value <= 0) {
  *         fputs("Integer parsing failure!\n", stderr);
  *         return 1;
@@ -93,20 +93,22 @@
  *     return 0;
  * }
  *
- * // Print line before parsing (debug purposes)
+ * // Print line before parsing. Here, it's used for tracing purposes, but, in practice, this
+ * // callback usually serves to store the current line being parsed, in case there's a need to
+ * // report an error.
  * int before_parse_token(void *user_data, char *token) {
  *     (void) user_data;
  *     printf("Parsing line: %s\n", token);
  *     return 0;
  * }
  *
- * // Gets called once for line, when each line is done parsing
+ * // Gets called once per line, when each line is done parsing
  * int add_to_reject_from_database(void *user_data, int retcode) {
  *     person_dataset_t *dataset = (person_dataset_t *) user_data;
  *
  *     if (retcode) {
- *         free(dataset->current_person.name); // Don't leak the allocated name
  *         fprintf(stderr, "Failed to parse person of name \"%s\"\n", dataset->current_person.name);
+ *         free(dataset->current_person.name); // Don't leak the allocated name
  *         return 0; // Recover and continue parsing
  *     } else {
  *         if (dataset->n >= TEST_MAX_PEOPLE) {
@@ -129,9 +131,9 @@
  *         return 1;
  *     }
  *
- *     fixed_n_delimiter_parser_iter_callback_t token_grammar_callbacks[3] = {parse_name,
- *                                                                            parse_int,
- *                                                                            parse_int};
+ *     const fixed_n_delimiter_parser_iter_callback_t token_grammar_callbacks[3] = {parse_name,
+ *                                                                                  parse_int,
+ *                                                                                  parse_int};
  *     fixed_n_delimiter_parser_grammar_t      *token_grammar =
  *         fixed_n_delimiter_parser_grammar_new(';', 3, token_grammar_callbacks);
  *     dataset_parser_grammar_t *grammar =
@@ -150,7 +152,7 @@
  *
  *     for (size_t i = 0; i < dataset.n; ++i) {
  *         person_t *person = dataset.person_array + i;
- *         printf("Person %" PRIuPTR ": %s is %d years old and %dcm tall\n",
+ *         printf("Person %zu: %s is %d years old and %dcm tall\n",
  *                i,
  *                person->name,
  *                person->age,
@@ -173,13 +175,14 @@
  * `token_grammar_callbacks`, of which there are `3`.
  *
  * Then, we can create a grammar for the parser of each line (`token_grammar`), and then a grammar
- * for the parser of the whole file (we want to separate lines by ``'\n'`` and
- * `add_to_reject_from_database` to be called when we're done parsing a line).
+ * for the parser of the whole file: we want to separate it by lines (``'\n'``), and
+ * `add_to_reject_from_database` to be called when we're done parsing a line. `before_parse_token`
+ * is called before every line is parsed, even if it isn't of great use in this example.
  *
- * Then, parsing the file will result in 3 `add_to_reject_from_database` calls, one for
- * the `"José Silva"`, another for `"José Matos"`, and yet another for `"Humberto Gomes"`. The
- * value of `retcode` will be `0` for all of these, because none of the line's parser callbacks
- * (`parse_name` and `parse_int`) return a non-`0` value for the given input.
+ * Then, parsing the file will result in 4 `add_to_reject_from_database` calls, one for `"name",`
+ * another for `"José Silva"`, another for `"José Matos"`, and yet another for `"Humberto Gomes"`.
+ * The value of `retcode` will be `1` for the first callback (parsing failure), and `0` for the
+ * remaining three.
  *
  * For information about single-line parsing, refer to
  * [fixed_n_delimiter_parser's examples](@ref fixed_n_delimiter_parser_examples).
@@ -192,7 +195,7 @@
 
 #include "utils/fixed_n_delimiter_parser.h"
 
-/** @brief   The grammar definition for a dataset parser. */
+/** @brief The grammar definition for a dataset parser. */
 typedef struct dataset_parser_grammar dataset_parser_grammar_t;
 
 /**
@@ -205,8 +208,8 @@ typedef struct dataset_parser_grammar dataset_parser_grammar_t;
  * @param unparsed  Token to be parsed. Do not store in @p user_data without copying it first, as
  *                  the lifetime of @p unparsed is limited to this method.
  *
- * @return `0` on success, other value for immediate termination of parsing. It's recommeneded that
- *         these values are positive, as negative values have special meanings (see
+ * @return `0` on success, another value for immediate termination of parsing. It's recommeneded
+ *         that these values are positive, as negative values have special meanings (see
  *         ::DATASET_PARSER_PARSE_RET_ALLOCATION_FAILURE).
  */
 typedef int (*dataset_parser_token_before_parse_callback)(void *user_data, char *unparsed);
@@ -222,14 +225,14 @@ typedef int (*dataset_parser_token_before_parse_callback)(void *user_data, char 
  *                  the program's state.
  * @param retcode   Value returned by ::fixed_n_delimiter_parser_parse_string.
  *
- * @return `0` on success, other value for immediate termination of parsing. It's recommeneded that
- *         these values are positive, as negative values have special meanings (see
+ * @return `0` on success, another value for immediate termination of parsing. It's recommeneded
+ *         that these values are positive, as negative values have special meanings (see
  *         ::DATASET_PARSER_PARSE_RET_ALLOCATION_FAILURE ).
  */
 typedef int (*dataset_parser_token_callback)(void *user_data, int retcode);
 
 /**
- * @brief Creates a parser grammar definition.
+ * @brief Creates a grammar that defines a dataset parser.
  *
  * @param first_order_delimiter Main separator between tokens (e.g.: ``'\n'`` for a CSV table).
  * @param token_grammar         Grammar for ::fixed_n_delimiter_parser_parse_string, used to parse
@@ -237,9 +240,9 @@ typedef int (*dataset_parser_token_callback)(void *user_data, int retcode);
  * @param before_parse_callback Callback called before parsing each token.
  * @param token_callback        Callback called after processing each token with @p token_grammar.
  *
- * @return `malloc`-allocated ::dataset_parser_grammar_t (or `NULL` on allocation failure). This
- *         value is owned by the function caller, so you must free it with
- *         ::dataset_parser_grammar_free after you're done using it.
+ * @return A pointer to a  ::dataset_parser_grammar_t (or `NULL` on allocation failure). This value
+ *         is owned by the function caller, so you must free it with ::dataset_parser_grammar_free
+ *         after you're done using it.
  *
  * #### Examples
  * See [the header file's documentation](@ref dataset_parser_examples).
@@ -251,27 +254,24 @@ dataset_parser_grammar_t *
                                dataset_parser_token_callback              token_callback);
 
 /**
- * @brief  Creates a deep clone of a grammar for this type of parser.
+ * @brief Creates a deep clone of a grammar that defines a dataset parser.
+ * @param grammar Grammar to be cloned.
  *
- * @param  grammar Grammar to be cloned.
- *
- * @return A `malloc`-allocated pointer to a new ::dataset_parser_grammar_t, that must be deleted
- *         using ::dataset_parser_grammar_free. `NULL` is possible on failure.
+ * @return A pointer to a new ::dataset_parser_grammar_t, that must be deleted
+ *         using ::dataset_parser_grammar_free. `NULL` also is possible on allocation failure.
  */
 dataset_parser_grammar_t *dataset_parser_grammar_clone(const dataset_parser_grammar_t *grammar);
 
 /**
- * @brief Frees memory allocated by ::dataset_parser_grammar_new.
- * @param grammar Grammar allocated by ::dataset_parser_grammar_new.
+ * @brief Frees memory allocated by ::dataset_parser_grammar_new or ::dataset_parser_grammar_clone.
+ * @param grammar Grammar to be deleted.
  *
  * #### Examples
  * See [the header file's documentation](@ref dataset_parser_examples).
  */
 void dataset_parser_grammar_free(dataset_parser_grammar_t *grammar);
 
-/**
- * @brief Value returned by ::dataset_parser_parse when allocations fail.
- */
+/** @brief Value returned by ::dataset_parser_parse when allocations fail. */
 #define DATASET_PARSER_PARSE_RET_ALLOCATION_FAILURE -1
 
 /**
@@ -282,9 +282,9 @@ void dataset_parser_grammar_free(dataset_parser_grammar_t *grammar);
  * @param user_data Pointer passed to every callback in @p grammar, so that they can edit the
  *                  program's state.
  *
- * @returns `0` on success. Other values are allowed, and happen when @p grammar's `token_callback`
- *          returns a non-`0` value, or any allocation fails
- *          (::DATASET_PARSER_PARSE_RET_ALLOCATION_FAILURE).
+ * @returns `0` on success. Other values are allowed, and happen when any of the callbacks in
+ *          @p grammar return a non-`0` value, which is then returned by ::dataset_parser_parse.
+ *          Also, ::DATASET_PARSER_PARSE_RET_ALLOCATION_FAILURE is returned when allocations fail.
  *
  * #### Examples
  * See [the header file's documentation](@ref dataset_parser_examples).

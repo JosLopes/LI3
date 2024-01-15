@@ -18,7 +18,7 @@
  * @file  dataset_loader.c
  * @brief Implementation of methods in include/dataset/dataset_loader.h
  *
- * #### Example
+ * ### Example
  * See [the header file's documentation](@ref dataset_loader_examples).
  */
 
@@ -32,11 +32,11 @@ int dataset_loader_load(database_t            *database,
                         const char            *errors_path,
                         performance_metrics_t *metrics) {
 
-    dataset_input_t *input_files = dataset_input_create(dataset_path);
+    dataset_input_t *const input_files = dataset_input_create(dataset_path);
     if (!input_files)
         return 1;
 
-    dataset_error_output_t *error_files = dataset_error_output_create(errors_path);
+    dataset_error_output_t *const error_files = dataset_error_output_create(errors_path);
     if (!error_files) {
         dataset_input_free(input_files);
         return 1;
