@@ -78,7 +78,8 @@ struct flight {
 };
 
 flight_t *flight_create(pool_t *allocator) {
-    flight_t *const ret = allocator ? pool_alloc_item(flight_t, allocator) : malloc(sizeof(flight_t));
+    flight_t *const ret =
+        allocator ? pool_alloc_item(flight_t, allocator) : malloc(sizeof(flight_t));
     if (!ret)
         return NULL;
 
