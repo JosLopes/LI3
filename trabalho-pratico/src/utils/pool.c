@@ -61,7 +61,7 @@ struct pool {
  * @retval 1 Allocation failure
  */
 int __pool_allocate_block(pool_t *pool) {
-    uint8_t *block = malloc(pool->item_size * pool->block_capacity);
+    uint8_t *const block = malloc(pool->item_size * pool->block_capacity);
     if (!block)
         return 1;
 
@@ -82,7 +82,7 @@ int __pool_allocate_block(pool_t *pool) {
  * @retval 1 Allocation failure
  */
 int __pool_allocate_single_use_block(pool_t *pool, size_t n) {
-    uint8_t *block = malloc(pool->item_size * n);
+    uint8_t *const block = malloc(pool->item_size * n);
     if (!block)
         return 1;
 
@@ -91,7 +91,7 @@ int __pool_allocate_single_use_block(pool_t *pool, size_t n) {
 }
 
 pool_t *pool_create_from_size(size_t item_size, size_t block_capacity) {
-    pool_t *pool = malloc(sizeof(pool_t));
+    pool_t *const pool = malloc(sizeof(pool_t));
     if (!pool)
         return NULL;
 
@@ -116,8 +116,8 @@ void *__pool_alloc_item(pool_t *pool) {
             return NULL;
     }
 
-    uint8_t *retval = (uint8_t *) g_ptr_array_index(pool->blocks, pool->blocks->len - 1) +
-                      pool->item_size * pool->top_block_used;
+    uint8_t *const retval = (uint8_t *) g_ptr_array_index(pool->blocks, pool->blocks->len - 1) +
+                            pool->item_size * pool->top_block_used;
     pool->top_block_used++;
     return retval;
 }
@@ -144,7 +144,7 @@ void *__pool_alloc_items(pool_t *pool, size_t n) {
 }
 
 void *__pool_put_item(pool_t *pool, const void *item_location) {
-    void *dest = __pool_alloc_item(pool);
+    void *const dest = __pool_alloc_item(pool);
     if (!dest)
         return NULL;
 
@@ -153,7 +153,7 @@ void *__pool_put_item(pool_t *pool, const void *item_location) {
 }
 
 void *__pool_put_items(pool_t *pool, const void *items_location, size_t n) {
-    void *dest = __pool_alloc_items(pool, n);
+    void *const dest = __pool_alloc_items(pool, n);
     if (!dest)
         return NULL;
 
@@ -166,13 +166,13 @@ int pool_iter(const pool_t *pool, pool_iter_callback_t callback, void *user_data
         return POOL_ITER_RET_ADDED_ARRAY;
 
     for (size_t i = 0; i < pool->blocks->len; ++i) {
-        const uint8_t *block = g_ptr_array_index(pool->blocks, i);
-        const size_t   item_count =
+        const uint8_t *const block = g_ptr_array_index(pool->blocks, i);
+        const size_t         item_count =
             i == pool->blocks->len - 1 ? pool->top_block_used : pool->block_capacity;
 
         for (size_t j = 0; j < item_count; ++j) {
-            const void *item   = block + pool->item_size * j;
-            const int   retval = callback(user_data, item);
+            const void *const item   = block + pool->item_size * j;
+            const int         retval = callback(user_data, item);
 
             if (retval)
                 return retval;

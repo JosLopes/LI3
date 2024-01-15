@@ -49,7 +49,7 @@
  *            ::DATE_DAY_MAX.
  */
 typedef union {
-    date_t date;
+    const date_t date;
 
     struct {
         uint16_t year;
@@ -99,7 +99,7 @@ int date_from_values(date_t *output, uint16_t year, uint8_t month, uint8_t day) 
  * @retval 1 Integer parsing failure.
  */
 int __date_from_string_parse_field(void *date_data, char *token, size_t ntoken) {
-    date_union_helper_t *date = (date_union_helper_t *) date_data;
+    date_union_helper_t *const date = date_data;
 
     const uint64_t mins[3]    = {DATE_YEAR_MIN, DATE_MONTH_MIN, DATE_DAY_MIN};
     const uint64_t maxs[3]    = {DATE_YEAR_MAX, DATE_MONTH_MAX, DATE_DAY_MAX};
@@ -171,7 +171,7 @@ int date_from_string(date_t *output, char *input) {
 }
 
 int date_from_string_const(date_t *output, const char *input) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return 1;
 

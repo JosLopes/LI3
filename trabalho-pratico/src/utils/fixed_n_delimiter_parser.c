@@ -63,7 +63,7 @@ struct fixed_n_delimiter_parser_grammar {
 typedef struct {
     const fixed_n_delimiter_parser_grammar_t *grammar;
     size_t                                    token_count;
-    void                                     *user_data;
+    void *const                               user_data;
 } fixed_n_delimiter_parser_t;
 
 fixed_n_delimiter_parser_grammar_t *fixed_n_delimiter_parser_grammar_new(
@@ -71,7 +71,7 @@ fixed_n_delimiter_parser_grammar_t *fixed_n_delimiter_parser_grammar_new(
     size_t                                         n,
     const fixed_n_delimiter_parser_iter_callback_t callbacks[n]) {
 
-    fixed_n_delimiter_parser_grammar_t *grammar =
+    fixed_n_delimiter_parser_grammar_t *const grammar =
         malloc(sizeof(fixed_n_delimiter_parser_grammar_t));
     if (!grammar)
         return NULL;
@@ -91,7 +91,7 @@ fixed_n_delimiter_parser_grammar_t *fixed_n_delimiter_parser_grammar_new(
 fixed_n_delimiter_parser_grammar_t *
     fixed_n_delimiter_parser_grammar_clone(const fixed_n_delimiter_parser_grammar_t *grammar) {
 
-    fixed_n_delimiter_parser_grammar_t *new_grammar =
+    fixed_n_delimiter_parser_grammar_t *const new_grammar =
         malloc(sizeof(fixed_n_delimiter_parser_grammar_t));
     if (!new_grammar)
         return NULL;
@@ -127,7 +127,7 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
  * @return `0` when successful, to continue with iteration, or another number to stop it.
  */
 int __parse_string_iter(void *parser_data, char *token) {
-    fixed_n_delimiter_parser_t *parser = (fixed_n_delimiter_parser_t *) parser_data;
+    fixed_n_delimiter_parser_t *const parser = parser_data;
 
     if (parser->token_count >= parser->grammar->n)
         return FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS;
@@ -162,7 +162,7 @@ int fixed_n_delimiter_parser_parse_string(char                                  
 int fixed_n_delimiter_parser_parse_string_const(const char                               *input,
                                                 const fixed_n_delimiter_parser_grammar_t *grammar,
                                                 void *user_data) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return FIXED_N_DELIMITER_PARSER_PARSE_STRING_CONST_RET_MALLOC_FAILURE;
 

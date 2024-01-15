@@ -45,7 +45,7 @@
  *     @brief Time of the day in ::date_and_time_union_helper_t::date_and_time.
  */
 typedef union {
-    date_and_time_t date_and_time;
+    const date_and_time_t date_and_time;
 
     struct {
         date_t    date;
@@ -73,9 +73,7 @@ void date_and_time_from_values(date_and_time_t *output, date_t date, daytime_t t
  */
 int __date_and_time_from_string_parse_date(void *date_and_time_data, char *token, size_t ntoken) {
     (void) ntoken;
-    date_and_time_union_helper_t *date_and_time =
-        (date_and_time_union_helper_t *) date_and_time_data;
-
+    date_and_time_union_helper_t *const date_and_time = date_and_time_data;
     return date_from_string(&date_and_time->fields.date, token);
 }
 
@@ -94,9 +92,7 @@ int __date_and_time_from_string_parse_daytime(void  *date_and_time_data,
                                               char  *token,
                                               size_t ntoken) {
     (void) ntoken;
-    date_and_time_union_helper_t *date_and_time =
-        (date_and_time_union_helper_t *) date_and_time_data;
-
+    date_and_time_union_helper_t *const date_and_time = date_and_time_data;
     return daytime_from_string(&date_and_time->fields.time, token);
 }
 
@@ -128,7 +124,8 @@ void __attribute__((destructor)) __date_and_time_grammar_free(void) {
 
 int date_and_time_from_string(date_and_time_t *output, char *input) {
     date_and_time_union_helper_t tmp_date;
-    int retval = fixed_n_delimiter_parser_parse_string(input, __date_and_time_grammar, &tmp_date);
+    const int                    retval =
+        fixed_n_delimiter_parser_parse_string(input, __date_and_time_grammar, &tmp_date);
     if (retval) {
         return retval;
     } else {
@@ -138,7 +135,7 @@ int date_and_time_from_string(date_and_time_t *output, char *input) {
 }
 
 int date_and_time_from_string_const(date_and_time_t *output, const char *input) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return 1;
 

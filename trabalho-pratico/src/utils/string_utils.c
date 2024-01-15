@@ -33,7 +33,7 @@ char *string_single_delimiter_strsep(char **str, char delimiter) {
      * https://git.musl-libc.org/cgit/musl/tree/src/string/strsep.c
      */
 
-    char *iter = *str, *previous_input = *str;
+    char *iter = *str, *const previous_input = *str;
     if (!iter)
         return NULL;
 
@@ -73,7 +73,7 @@ int string_const_tokenize(const char              *input,
                           tokenize_iter_callback_t callback,
                           void                    *user_data) {
 
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return STRING_CONST_TOKENIZE_FAILED_MALLOC;
 

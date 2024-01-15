@@ -42,7 +42,8 @@ struct string_pool_no_duplicates {
 };
 
 string_pool_no_duplicates_t *string_pool_no_duplicates_create(size_t block_capacity) {
-    string_pool_no_duplicates_t *no_dups_pool = malloc(sizeof(struct string_pool_no_duplicates));
+    string_pool_no_duplicates_t *const no_dups_pool =
+        malloc(sizeof(struct string_pool_no_duplicates));
     if (!no_dups_pool)
         return NULL;
 
@@ -57,9 +58,9 @@ string_pool_no_duplicates_t *string_pool_no_duplicates_create(size_t block_capac
 }
 
 const char *string_pool_no_duplicates_put(string_pool_no_duplicates_t *pool, const char *str) {
-    const char *data = g_hash_table_lookup(pool->already_stored, str);
+    const char *const data = g_hash_table_lookup(pool->already_stored, str);
     if (!data) {
-        char *pool_string = string_pool_put(pool->strings, str);
+        char *const pool_string = string_pool_put(pool->strings, str);
         if (!pool_string)
             return NULL;
 

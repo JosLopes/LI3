@@ -40,7 +40,7 @@ struct string_pool {
 };
 
 string_pool_t *string_pool_create(size_t block_capacity) {
-    string_pool_t *pool = malloc(sizeof(string_pool_t));
+    string_pool_t *const pool = malloc(sizeof(string_pool_t));
     if (!pool)
         return NULL;
 

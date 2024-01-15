@@ -40,8 +40,8 @@
  *     @brief If the first token was empty (path is absolute because it starts with `/`).
  */
 typedef struct {
-    GPtrArray *stack;
-    int        first_token, first_token_empty;
+    GPtrArray *const stack;
+    int              first_token, first_token_empty;
 } path_normalize_iter_data_t;
 
 /**
@@ -54,7 +54,7 @@ typedef struct {
  * @retval 0 Always, not to stop tokenization.
  */
 int __path_normalize_callback(void *user_data, char *token) {
-    path_normalize_iter_data_t *iter_data = user_data;
+    path_normalize_iter_data_t *const iter_data = user_data;
 
     if (*token) { /* Skip empty tokens, this is, remove consecutive separators */
         if (strcmp(token, ".") == 0) {
@@ -108,7 +108,6 @@ void path_normalize(char *path) {
     path_normalize_iter_data_t iter_data = {.stack       = g_ptr_array_new_with_free_func(free),
                                             .first_token = 1,
                                             .first_token_empty = 0};
-
     string_tokenize(path, '/', __path_normalize_callback, &iter_data);
 
     /* Regenerate path from stack */

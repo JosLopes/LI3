@@ -40,7 +40,7 @@ int stream_tokenize(FILE                    *file,
         if (read > 1)
             token[read - 1] = '\0';
 
-        int cb_result = callback(user_data, token);
+        const int cb_result = callback(user_data, token);
         if (cb_result) {
             free(token);
             return cb_result;

@@ -49,7 +49,7 @@
  *            ::DAYTIME_SECONDS_MAX.
  */
 typedef union {
-    daytime_t daytime;
+    const daytime_t daytime;
 
     struct {
         uint8_t hours, minutes, seconds;
@@ -91,7 +91,7 @@ int daytime_from_values(daytime_t *output, uint8_t hours, uint8_t minutes, uint8
  * @retval 1 Integer parsing failure.
  */
 int __daytime_from_string_parse_field(void *daytime_data, char *token, size_t ntoken) {
-    daytime_union_helper_t *daytime = (daytime_union_helper_t *) daytime_data;
+    daytime_union_helper_t *const daytime = daytime_data;
 
     const uint64_t maxs[3]    = {DAYTIME_HOURS_MAX, DAYTIME_MINUTES_MAX, DAYTIME_SECONDS_MAX};
     uint8_t       *outputs[3] = {&daytime->fields.hours,
@@ -141,7 +141,8 @@ void __attribute__((destructor)) __daytime_grammar_free(void) {
 
 int daytime_from_string(daytime_t *output, char *input) {
     daytime_union_helper_t tmp_daytime;
-    int retval = fixed_n_delimiter_parser_parse_string(input, __daytime_grammar, &tmp_daytime);
+    const int              retval =
+        fixed_n_delimiter_parser_parse_string(input, __daytime_grammar, &tmp_daytime);
     if (retval) {
         return retval;
     } else {
@@ -151,7 +152,7 @@ int daytime_from_string(daytime_t *output, char *input) {
 }
 
 int daytime_from_string_const(daytime_t *output, const char *input) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return 1;
 
