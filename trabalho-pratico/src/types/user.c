@@ -76,18 +76,18 @@ struct user {
 };
 
 user_t *user_create(pool_t *allocator) {
-    user_t *ret = allocator ? pool_alloc_item(user_t, allocator) : malloc(sizeof(user_t));
+    user_t *const ret = allocator ? pool_alloc_item(user_t, allocator) : malloc(sizeof(user_t));
     if (!ret)
         return NULL;
 
     ret->owns_itself = allocator == NULL;
     ret->owns_id = ret->owns_name = ret->owns_passport = 0; /* Don't free in first setter call */
-    user_reset_dates(ret); /* For first comparisons to work */
+    user_reset_dates(ret);                                  /* For first comparisons to work */
     return ret;
 }
 
 user_t *user_clone(pool_t *allocator, string_pool_t *string_allocator, const user_t *user) {
-    user_t *ret = user_create(allocator);
+    user_t *const ret = user_create(allocator);
     if (!ret)
         return NULL;
 
@@ -111,7 +111,7 @@ int user_set_id(string_pool_t *allocator, user_t *user, const char *id) {
     if (!*id)
         return 1;
 
-    char *new_id = allocator ? string_pool_put(allocator, id) : strdup(id);
+    char *const new_id = allocator ? string_pool_put(allocator, id) : strdup(id);
     if (!new_id)
         return 1;
 
@@ -127,7 +127,7 @@ int user_set_name(string_pool_t *allocator, user_t *user, const char *name) {
     if (!*name)
         return 1;
 
-    char *new_name = allocator ? string_pool_put(allocator, name) : strdup(name);
+    char *const new_name = allocator ? string_pool_put(allocator, name) : strdup(name);
     if (!new_name)
         return 1;
 
@@ -151,7 +151,7 @@ int user_set_passport(string_pool_t *allocator, user_t *user, const char *passpo
     if (!*passport)
         return 1;
 
-    char *new_passport = allocator ? string_pool_put(allocator, passport) : strdup(passport);
+    char *const new_passport = allocator ? string_pool_put(allocator, passport) : strdup(passport);
     if (!new_passport)
         return 1;
 

@@ -83,14 +83,14 @@ struct reservation {
 };
 
 reservation_t *reservation_create(pool_t *allocator) {
-    reservation_t *ret =
+    reservation_t *const ret =
         allocator ? pool_alloc_item(reservation_t, allocator) : malloc(sizeof(reservation_t));
     if (!ret)
         return NULL;
 
     ret->owns_itself  = allocator == NULL;
     ret->owns_user_id = ret->owns_hotel_name = 0; /* Don't free in first setter call */
-    reservation_reset_dates(ret); /* For first comparisons to work */
+    reservation_reset_dates(ret);                 /* For first comparisons to work */
 
     return ret;
 }
@@ -100,7 +100,7 @@ reservation_t *reservation_clone(pool_t                      *allocator,
                                  string_pool_no_duplicates_t *hotel_name_allocator,
                                  const reservation_t         *reservation) {
 
-    reservation_t *ret = reservation_create(allocator);
+    reservation_t *const ret = reservation_create(allocator);
     if (!ret)
         return NULL;
 
@@ -125,7 +125,7 @@ int reservation_set_user_id(string_pool_t *allocator,
     if (!*user_id)
         return 1;
 
-    char *new_user_id = allocator ? string_pool_put(allocator, user_id) : strdup(user_id);
+    char *const new_user_id = allocator ? string_pool_put(allocator, user_id) : strdup(user_id);
     if (!new_user_id)
         return 1;
 
@@ -143,7 +143,7 @@ int reservation_set_hotel_name(string_pool_no_duplicates_t *allocator,
     if (!*hotel_name)
         return 1;
 
-    const char *new_hotel_name =
+    const char *const new_hotel_name =
         allocator ? string_pool_no_duplicates_put(allocator, hotel_name) : strdup(hotel_name);
     if (!new_hotel_name)
         return 1;

@@ -109,7 +109,7 @@ int email_validate_string(char *input) {
 }
 
 int email_validate_string_const(const char *input) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return 1;
 

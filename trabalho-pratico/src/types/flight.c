@@ -78,7 +78,7 @@ struct flight {
 };
 
 flight_t *flight_create(pool_t *allocator) {
-    flight_t *ret = allocator ? pool_alloc_item(flight_t, allocator) : malloc(sizeof(flight_t));
+    flight_t *const ret = allocator ? pool_alloc_item(flight_t, allocator) : malloc(sizeof(flight_t));
     if (!ret)
         return NULL;
 
@@ -95,7 +95,7 @@ flight_t *flight_clone(pool_t                      *allocator,
                        string_pool_no_duplicates_t *string_allocator,
                        const flight_t              *flight) {
 
-    flight_t *ret = flight_create(allocator);
+    flight_t *const ret = flight_create(allocator);
     if (!ret)
         return NULL;
 
@@ -120,7 +120,7 @@ int flight_set_airline(string_pool_no_duplicates_t *allocator,
     if (!*airline)
         return 1;
 
-    const char *new_airline =
+    const char *const new_airline =
         allocator ? string_pool_no_duplicates_put(allocator, airline) : strdup(airline);
     if (!new_airline)
         return 1;
@@ -140,7 +140,7 @@ int flight_set_plane_model(string_pool_no_duplicates_t *allocator,
     if (!*plane_model)
         return 1;
 
-    const char *new_plane_model =
+    const char *const new_plane_model =
         allocator ? string_pool_no_duplicates_put(allocator, plane_model) : strdup(plane_model);
     if (!new_plane_model)
         return 1;
