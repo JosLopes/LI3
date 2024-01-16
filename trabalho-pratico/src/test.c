@@ -32,7 +32,7 @@
  */
 int main(int argc, char **argv) {
     if (argc == 4) {
-        performance_metrics_t *metrics = performance_metrics_create();
+        performance_metrics_t *const metrics = performance_metrics_create();
         if (!metrics) {
             fputs("Failed to allocate performance metrics!\n", stderr);
             return 1;
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
         performance_metrics_output_print(stdout, metrics);
 
-        test_diff_t *diff = test_diff_create("Resultados", argv[3]);
+        test_diff_t *const diff = test_diff_create("Resultados", argv[3]);
         if (!diff) {
             fputs("Failed to compare generated and expected results!\n", stderr);
             performance_metrics_free(metrics);

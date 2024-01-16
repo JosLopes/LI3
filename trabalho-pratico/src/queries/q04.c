@@ -26,7 +26,6 @@
 #include "queries/qplaceholder.h"
 #include "queries/query_instance.h"
 #include "utils/int_utils.h"
-#include "utils/set.h"
 
 /**
   * @brief   Parses arguments for the fourth query.

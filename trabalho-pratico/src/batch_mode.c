@@ -39,8 +39,8 @@
  *     @brief Index of the query being currently dealt with.
  */
 typedef struct {
-    query_writer_t **outputs;
-    size_t           i;
+    query_writer_t **const outputs;
+    size_t                 i;
 } batch_mode_iter_data_t;
 
 /**
@@ -50,7 +50,7 @@ typedef struct {
  * @param instance  Query query instance, whose output should be outputted.
  */
 int __batch_mode_init_file_callback(void *user_data, const query_instance_t *instance) {
-    batch_mode_iter_data_t *iter_data = (batch_mode_iter_data_t *) user_data;
+    batch_mode_iter_data_t *const iter_data = user_data;
 
     /* Parent directory creation is assured by error file output while loading the dataset */
     char path[PATH_MAX];
@@ -76,21 +76,21 @@ int batch_mode_run(const char            *dataset_dir,
 
     int retval = 0;
 
-    query_type_list_t *query_type_list = query_type_list_create();
+    query_type_list_t *const query_type_list = query_type_list_create();
     if (!query_type_list) {
         retval = 1;
         fputs("Failed to allocate query definitions!\n", stderr);
         goto DEFER_0;
     }
 
-    FILE *query_file = fopen(query_file_path, "r");
+    FILE *const query_file = fopen(query_file_path, "r");
     if (!query_file) {
         retval = 1;
         fputs("Failed to read query file!\n", stderr);
         goto DEFER_1;
     }
 
-    query_instance_list_t *query_instance_list =
+    query_instance_list_t *const query_instance_list =
         query_file_parser_parse(query_file, query_type_list);
     if (!query_instance_list) {
         retval = 1;
@@ -98,7 +98,7 @@ int batch_mode_run(const char            *dataset_dir,
         goto DEFER_2;
     }
 
-    database_t *database = database_create();
+    database_t *const database = database_create();
     if (!database) {
         retval = 1;
         fputs("Failed to allocate database!\n", stderr);
@@ -111,7 +111,7 @@ int batch_mode_run(const char            *dataset_dir,
         goto DEFER_4;
     }
 
-    query_writer_t **query_outputs =
+    query_writer_t **const query_outputs =
         malloc(sizeof(query_writer_t *) * query_instance_list_get_length(query_instance_list));
     if (!query_outputs) {
         retval = 1;
