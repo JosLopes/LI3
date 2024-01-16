@@ -7,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{amsfonts}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{float}
 
 \chardef\_=`_
 
@@ -198,7 +199,8 @@ tabelas (\texttt{table}), relativas ao uso de recursos computacionais na leitura
 
 Os testes funcionais são implementados por \texttt{test\_diff}, que calcula as diferenças entre
 duas diretorias (ficheiros em falta, em excesso, e diferenças entre ficheiros), que são depois
-apresentadas ao utilizador por \texttt{test\_diff\_output}.
+apresentadas ao utilizador por \texttt{test\_diff\_output}. Imagens dos resultados de ambos os tipos
+de teste encontram-se em \nameref{sec:testing-screenshots}.
 
 \section{Modularidade e encapsulamento}
 \label{sec:modularity-and-encapsulation}
@@ -326,7 +328,7 @@ auxiliares usados durante a execução das mesmas.
 \subsection{\emph{Screenshots} do modo interativo}
 \label{sec:interactive-screenshots}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/main_menu.png}
     \caption{Menu (\texttt{activity\_menu}), em particular, o menu principal
@@ -334,7 +336,7 @@ auxiliares usados durante a execução das mesmas.
     \label{fig:main_menu}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/dataset_picker.png}
     \caption{Navegador de ficheiros para a escolha de um \emph{dataset}
@@ -342,28 +344,28 @@ auxiliares usados durante a execução das mesmas.
     \label{fig:dataset_picker}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/loading_dataset.png}
     \caption{Ecrã durante a leitura de um \emph{dataset} (\texttt{screen\_loading\_dataset})}
     \label{fig:loading_dataset}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/textbox.png}
     \caption{Caixa de texto para a entrada de uma \emph{query} (\texttt{activity\_textbox})}
     \label{fig:textbox}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/paging.png}
     \caption{Output paginado de uma \emph{query} (\texttt{activity\_paging})}
     \label{fig:paging}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/japanese.png}
     \caption{Suporte para caracteres de largura dupla numa \texttt{activity\_textbox}.
@@ -371,11 +373,43 @@ auxiliares usados durante a execução das mesmas.
     \label{fig:japanese}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/messagebox.png}
     \caption{Aviso de erro numa \texttt{activity\_messagebox}}
     \label{fig:messagebox}
+\end{figure}
+
+\subsection{\emph{Screenshots} do \emph{output} dos testes}
+\label{sec:testing-screenshots}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{res-fase2/testing_screenshots/dataset.png}
+    \caption{Tabela de tempos de leitura de cada parte de um \emph{dataset}}
+    \label{fig:dataset-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{res-fase2/testing_screenshots/statistics.png}
+    \caption{Tabela de tempos de geração de dados estatísticos para cada \emph{query}}
+    \label{fig:query-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{res-fase2/testing_screenshots/query.png}
+    \caption{Tabela de tempos de execução de cada \emph{query}. É visível como são automaticamente
+             escolhidas duas unidades diferentes para as duas colunas.}
+    \label{fig:q10-screenshot}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{res-fase2/testing_screenshots/diff.png}
+    \caption{Exemplo de resultado de testes funcionais com um erro}
+    \label{fig:diff-screenshot}
 \end{figure}
 
 \end{document}
