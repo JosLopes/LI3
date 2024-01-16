@@ -15,9 +15,25 @@
  */
 
 /**
- * @file  dataset_input.h
- * @brief Module to read all files from a dataset. See [dataset_loader](@ref dataset_loader.h) for
- *        more information.
+ * @file    dataset_input.h
+ * @brief   Module that reads all files from a dataset.
+ * @details See [dataset_loader](@ref dataset_loader.h) for more information.
+ *
+ * There is a mandatory order in which `dataset_input_load_*` methods must be called, as some parts
+ * of the dataset depend on others already being loaded. The correct order must be a valid
+ * topological order of the following graph:
+ *
+ * @dot
+ *     digraph {
+ *         node [fontname = "monospace"];
+ *         users   -> reservations
+ *         users   -> passengers
+ *         flights -> passengers
+ *     }
+ * @enddot
+ *
+ * Of course, some operations may happen in parallel if there are no data dependencies (e.g.:
+ * loading `users` and `flights` simultaneously).
  *
  * @anchor dataset_input_examples
  * ### Example
@@ -33,14 +49,14 @@
 #include "database/database.h"
 #include "dataset/dataset_error_output.h"
 
-/** @brief Collection of file handles for all input dataset files. */
+/** @brief Collection of file handles for all dataset input files. */
 typedef struct dataset_input dataset_input_t;
 
 /**
  * @brief  Attempts to open all file handles for dataset input files.
  * @param  path Path to the directory containing the files.
  * @return A collection of file handles that must be `free`'d with ::dataset_input_free, or `NULL`
- *         on IO error.
+ *         on IO / allocation error.
  *
  * #### Example
  * See [the header file's documentation](@ref dataset_input_examples).
@@ -54,8 +70,8 @@ dataset_input_t *dataset_input_create(const char *path);
  * @param output   Collection of file handles for dataset error output.
  * @param database Database to load the new users into.
  *
- * @retval 0 Success
- * @retval 1 Failure
+ * @retval 0 Success.
+ * @retval 1 Failure.
  *
  * #### Example
  * See [the header file's documentation](@ref dataset_input_examples).
@@ -71,8 +87,8 @@ int dataset_input_load_users(dataset_input_t        *input,
  * @param output   Collection of file handles for dataset error output.
  * @param database Database to load the new flights into.
  *
- * @retval 0 Success
- * @retval 1 Failure
+ * @retval 0 Success.
+ * @retval 1 Failure.
  *
  * #### Example
  * See [the header file's documentation](@ref dataset_input_examples).
@@ -82,14 +98,14 @@ int dataset_input_load_flights(dataset_input_t        *input,
                                database_t             *database);
 
 /**
- * @brief Loads all the user-flight relationships in a dataset into a @p database.
+ * @brief Loads all the user-flight relationships (passengers) in a dataset into a @p database.
  *
  * @param input    Collection of file handles for dataset input.
  * @param output   Collection of file handles for dataset error output.
  * @param database Database to load the new passengers into.
  *
- * @retval 0 Success
- * @retval 1 Failure
+ * @retval 0 Success.
+ * @retval 1 Failure.
  *
  * #### Example
  * See [the header file's documentation](@ref dataset_input_examples).
@@ -105,8 +121,8 @@ int dataset_input_load_passengers(dataset_input_t        *input,
  * @param output   Collection of file handles for dataset error output.
  * @param database Database to load the new reservations into.
  *
- * @retval 0 Success
- * @retval 1 Failure
+ * @retval 0 Success.
+ * @retval 1 Failure.
  *
  * #### Example
  * See [the header file's documentation](@ref dataset_input_examples).

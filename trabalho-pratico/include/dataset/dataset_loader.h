@@ -17,7 +17,7 @@
 /**
  * @file    dataset_loader.h
  * @brief   Module to load all the files in a dataset into the database.
- * @details A dataset, as specified in the project's requirements, is constituted by the following
+ * @details A dataset, as specified in the project's requirements, is composed of the following
  *          files:
  *
  *          - `users.csv`;
@@ -38,7 +38,7 @@
 #include "testing/performance_metrics.h"
 
 /**
- * @brief Parses a dataset in @p path and stores the data in @p database.
+ * @brief Parses a dataset in @p dataset_path and stores the data in @p database.
  *
  * @param database     Database where to store the dataset data in.
  * @param dataset_path Path to the directory containing the dataset.
@@ -46,8 +46,9 @@
  * @param metrics      Where to register program performance data to. Can be `NULL` for no
  *                     profiling.
  *
- * @retval 0 Success
- * @retval 1 Fatal failure (this loader only fatally fails on IO errors).
+ * @retval 0 Success.
+ * @retval 1 Fatal failure (IO or allocation). Errors in the dataset won't cause this method to
+ *           fail, and will just be reported to files in @p errors_path.
  *
  * #### Example
  * See [the header file's documentation](@ref dataset_loader_examples).

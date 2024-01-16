@@ -24,7 +24,6 @@
 
 #include <glib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "utils/path_utils.h"
 #include "utils/string_utils.h"
@@ -41,8 +40,8 @@
  *     @brief If the first token was empty (path is absolute because it starts with `/`).
  */
 typedef struct {
-    GPtrArray *stack;
-    int        first_token, first_token_empty;
+    GPtrArray *const stack;
+    int              first_token, first_token_empty;
 } path_normalize_iter_data_t;
 
 /**
@@ -55,7 +54,7 @@ typedef struct {
  * @retval 0 Always, not to stop tokenization.
  */
 int __path_normalize_callback(void *user_data, char *token) {
-    path_normalize_iter_data_t *iter_data = (path_normalize_iter_data_t *) user_data;
+    path_normalize_iter_data_t *const iter_data = user_data;
 
     if (*token) { /* Skip empty tokens, this is, remove consecutive separators */
         if (strcmp(token, ".") == 0) {
@@ -66,7 +65,7 @@ int __path_normalize_callback(void *user_data, char *token) {
         } else if (strcmp(token, "..") == 0) {
 
             if (iter_data->stack->len == 0) {
-                /* Only add .. to the beginning if the path is relative (dont' output /..) */
+                /* Only add .. to the beginning if the path is relative (don't output /..) */
                 if (!iter_data->first_token_empty)
                     g_ptr_array_add(iter_data->stack, strdup(".."));
 
@@ -86,14 +85,11 @@ int __path_normalize_callback(void *user_data, char *token) {
                  * When the path is is relative and starts with dot (./..), replace the
                  * first directory with ..
                  */
-
-                free(g_ptr_array_index(iter_data->stack, 0));
                 g_ptr_array_index(iter_data->stack, 0) = strdup("..");
 
             } else {
 
                 /* Normal case: remove last directory */
-                free(g_ptr_array_index(iter_data->stack, iter_data->stack->len - 1));
                 g_ptr_array_set_size(iter_data->stack, iter_data->stack->len - 1);
             }
         } else {
@@ -109,10 +105,9 @@ int __path_normalize_callback(void *user_data, char *token) {
 }
 
 void path_normalize(char *path) {
-    path_normalize_iter_data_t iter_data = {.stack             = g_ptr_array_new(),
-                                            .first_token       = 1,
+    path_normalize_iter_data_t iter_data = {.stack       = g_ptr_array_new_with_free_func(free),
+                                            .first_token = 1,
                                             .first_token_empty = 0};
-
     string_tokenize(path, '/', __path_normalize_callback, &iter_data);
 
     /* Regenerate path from stack */
@@ -125,23 +120,18 @@ void path_normalize(char *path) {
         char  new_path[PATH_MAX];
         char *write = new_path;
 
-        if (iter_data.first_token_empty) {
-            *write = '/';
-            write++;
-        }
+        if (iter_data.first_token_empty)
+            *(write++) = '/';
 
         for (size_t i = 0; i < iter_data.stack->len; ++i) {
-            write  = stpcpy(write, g_ptr_array_index(iter_data.stack, i));
-            *write = '/';
-            write++;
+            write      = stpcpy(write, g_ptr_array_index(iter_data.stack, i));
+            *(write++) = '/';
         }
         *(write - 1) = '\0'; /* Remove last backslash and terminate the string */
 
         strcpy(path, new_path);
     }
 
-    for (size_t i = 0; i < iter_data.stack->len; ++i)
-        free(g_ptr_array_index(iter_data.stack, i));
     g_ptr_array_unref(iter_data.stack);
 }
 

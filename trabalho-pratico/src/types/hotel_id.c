@@ -26,10 +26,10 @@
 #include "utils/int_utils.h"
 
 int hotel_id_from_string(hotel_id_t *output, const char *input) {
-    size_t length = strnlen(input, 4);
+    const size_t length = strnlen(input, 4);
     if (length > 3) { /* Skip "HTL" before any reservation ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, input + 3);
+        uint64_t  id;
+        const int retval = int_utils_parse_positive(&id, input + 3);
 
         if (retval)
             return 2;

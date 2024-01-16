@@ -25,8 +25,8 @@
 #include "utils/int_utils.h"
 
 int flight_id_from_string(flight_id_t *output, const char *input) {
-    uint64_t id;
-    int      retval = int_utils_parse_positive(&id, input);
+    uint64_t  id;
+    const int retval = int_utils_parse_positive(&id, input);
     if (retval)
         return *input ? 2 : 1;
 

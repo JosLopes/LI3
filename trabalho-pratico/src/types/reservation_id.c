@@ -26,10 +26,10 @@
 #include "utils/int_utils.h"
 
 int reservation_id_from_string(reservation_id_t *output, const char *input) {
-    size_t length = strnlen(input, 5);
+    const size_t length = strnlen(input, 5);
     if (length > 4) { /* Skip "Book" before any reservation ID */
-        uint64_t id;
-        int      retval = int_utils_parse_positive(&id, input + 4);
+        uint64_t  id;
+        const int retval = int_utils_parse_positive(&id, input + 4);
 
         if (retval)
             return 2;

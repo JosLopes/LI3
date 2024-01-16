@@ -121,6 +121,19 @@ define Doxyfile
 	EXPAND_ONLY_PREDEF     = YES
 	PREDEFINED             = __attribute__(x)=
 
+	HAVE_DOT               = YES
+	DOT_IMAGE_FORMAT       = svg
+	CLASS_GRAPH            = NO
+	COLLABORATION_GRAPH    = NO
+	GROUP_GRAPHS           = NO
+	TEMPLATE_RELATIONS     = NO
+	INCLUDE_GRAPH          = NO
+	INCLUDED_BY_GRAPH      = NO
+	CALL_GRAPH             = NO
+	CALLER_GRAPH           = NO
+	GRAPHICAL_HIERARCHY    = NO
+	DIRECTORY_GRAPH        = NO
+
 	OUTPUT_DIRECTORY       = $(DOCSDIR)
 	GENERATE_HTML          = YES
 	GENERATE_LATEX         = NO

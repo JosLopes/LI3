@@ -51,9 +51,7 @@
 
 #include <stdint.h>
 
-/**
- * @brief A country code of a ::user_t.
- */
+/** @brief A country code of a ::user_t. */
 typedef uint16_t country_code_t;
 
 /**
@@ -62,9 +60,8 @@ typedef uint16_t country_code_t;
  * @param output Where to place the parsed country code (not modified on failure).
  * @param input  String to parse.
  *
- * @retval 0 Valid country code
- * @retval 1 Invalid country code
- *
+ * @retval 0 Valid country code.
+ * @retval 1 Invalid country code.
  *
  * #### Examples
  * See [the header file's documentation](@ref country_code_examples).
@@ -86,7 +83,7 @@ int country_code_from_string(country_code_t *output, const char *input);
  * @brief Prints a country code using `sprintf`.
  *
  * @param output  Where to print the country code to. Must be at least
- *                ::COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE long.
+ *                ::COUNTRY_CODE_SPRINTF_MIN_BUFFER_SIZE characters long.
  * @param country Country code to be printed.
  *
  * #### Examples

@@ -31,11 +31,14 @@
  * @brief Parses a `passengers.csv` dataset file.
  *
  * @param passengers_stream File stream with passenger data to be loaded. It is assumed this stream
- *                          is ordered by flight IDs.
+ *                          is ordered by flight identifier.
  * @param flights_stream    File stream with flight data to be printed in case of errors. It is
- *                          assumed this stream is ordered by flight IDs.
- * @param database          Database to add users to.
+ *                          assumed this stream is also ordered by flight identifier.
+ * @param database          Database to add users-flight relations (passengers) to.
  * @param output            Where to output dataset errors to.
+ *
+ * @retval 0 Success.
+ * @retval 1 Allocation failure.
  */
 int passengers_loader_load(FILE                   *passengers_stream,
                            FILE                   *flights_stream,

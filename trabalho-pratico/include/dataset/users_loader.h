@@ -34,8 +34,8 @@
  * @param database Database to add users to.
  * @param output   Where to output dataset errors to.
  *
- * @retval 0 Success
- * @retval 1 Allocation failure
+ * @retval 0 Success.
+ * @retval 1 Allocation failure.
  */
 int users_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output);
 

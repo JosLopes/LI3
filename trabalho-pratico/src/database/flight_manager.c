@@ -18,7 +18,7 @@
  * @file  flight_manager.c
  * @brief Implementation of methods in include/database/flight_manager.h
  *
- * #### Example
+ * ### Example
  * See [the header file's documentation](@ref flight_manager_examples).
  */
 
@@ -27,19 +27,17 @@
 #include <stdlib.h>
 
 #include "database/flight_manager.h"
-#include "utils/pool.h"
-#include "utils/string_pool_no_duplicates.h"
 
 /**
  * @struct flight_manager
  * @brief  A data type that contains and manages all flights in a database.
  *
  * @var flight_manager::flights
- *     @brief Set of flights in the manager.
+ *     @brief Allocator for flights in the manager.
  * @var flight_manager::strings
- *     @brief Pool for any string that may need to be stored in a flight, no duplicates are stored.
+ *     @brief Allocator for strings in the manager.
  * @var flight_manager::id_flights_rel
- *     @brief Hash table for identifier -> flights mapping.
+ *     @brief Hash table for ::flight_id_t -> ::flight_t mapping.
  */
 struct flight_manager {
     pool_t                      *flights;
@@ -54,7 +52,7 @@ struct flight_manager {
 #define FLIGHT_MANAGER_STRINGS_POOL_BLOCK_CAPACITY 100000
 
 flight_manager_t *flight_manager_create(void) {
-    flight_manager_t *manager = malloc(sizeof(struct flight_manager));
+    flight_manager_t *const manager = malloc(sizeof(flight_manager_t));
     if (!manager)
         return NULL;
 
@@ -73,57 +71,67 @@ flight_manager_t *flight_manager_create(void) {
     }
 
     manager->id_flights_rel = g_hash_table_new(g_direct_hash, g_direct_equal);
-
     return manager;
 }
 
+flight_manager_t *flight_manager_clone(const flight_manager_t *manager) {
+    flight_manager_t *const clone = flight_manager_create();
+    if (!clone)
+        return NULL;
+
+    if (flight_manager_iter(manager,
+                            (flight_manager_iter_callback_t) flight_manager_add_flight,
+                            clone)) {
+
+        flight_manager_free(clone);
+        return NULL;
+    }
+
+    return clone;
+}
+
 int flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight) {
-    flight_t *pool_flight = flight_clone(manager->flights, manager->strings, flight);
+    flight_t *const pool_flight = flight_clone(manager->flights, manager->strings, flight);
     if (!pool_flight)
         return 1;
 
-    size_t flight_id = flight_get_id(flight);
-    if (!g_hash_table_insert(manager->id_flights_rel, GINT_TO_POINTER(flight_id), pool_flight)) {
+    flight_id_t flight_id = flight_get_id(flight);
+    if (!g_hash_table_insert(manager->id_flights_rel, GUINT_TO_POINTER(flight_id), pool_flight)) {
 
+        /* Do not fatally fail (just print a warning). Show must go on. */
         char id_str[FLIGHT_ID_SPRINTF_MIN_BUFFER_SIZE];
         flight_id_sprintf(id_str, flight_id);
         fprintf(stderr, "REPEATED FLIGHT ID %s. This shouldn't happen! Replacing it.\n", id_str);
-
-        /* Do not fail and return NULL. Show must go on */
     }
 
     return 0;
 }
 
 int flight_manager_add_passagers(flight_manager_t *manager, flight_id_t id, int count) {
-    flight_t *flight = g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
+    flight_t *const flight = g_hash_table_lookup(manager->id_flights_rel, GUINT_TO_POINTER(id));
     if (!flight)
         return 1;
 
-    flight_set_number_of_passengers(flight, flight_get_number_of_passengers(flight) + count);
-    return 0;
+    return flight_set_number_of_passengers(flight, flight_get_number_of_passengers(flight) + count);
 }
 
 const flight_t *flight_manager_get_by_id(const flight_manager_t *manager, flight_id_t id) {
-    return g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
+    return g_hash_table_lookup(manager->id_flights_rel, GUINT_TO_POINTER(id));
 }
 
 int flight_manager_invalidate_by_id(flight_manager_t *manager, flight_id_t id) {
-    (void) manager;
-    (void) id;
-
-    flight_t *flight = g_hash_table_lookup(manager->id_flights_rel, GINT_TO_POINTER(id));
+    flight_t *const flight = g_hash_table_lookup(manager->id_flights_rel, GUINT_TO_POINTER(id));
     if (!flight)
         return 1;
 
     flight_invalidate(flight);
-    g_hash_table_remove(manager->id_flights_rel, GINT_TO_POINTER(id));
+    g_hash_table_remove(manager->id_flights_rel, GUINT_TO_POINTER(id));
     return 0;
 }
 
 /**
  * @struct flight_manager_iter_flight_data_t
- * @brief Internal data type for the `user_data` parameter in ::__flight_manager_iter_callback.
+ * @brief  Internal data type for the `user_data` parameter in ::__flight_manager_iter_callback.
  *
  * @var flight_manager_iter_flight_data_t::callback
  *     @brief Callback to be called for every valid flight.
@@ -131,8 +139,8 @@ int flight_manager_invalidate_by_id(flight_manager_t *manager, flight_id_t id) {
  *     @brief `user_data` parameter for every ::flight_manager_iter_flight_data_t::callback.
  */
 typedef struct {
-    flight_manager_iter_callback_t callback;
-    void                          *original_user_data;
+    const flight_manager_iter_callback_t callback;
+    void *const                          original_user_data;
 } flight_manager_iter_flight_data_t;
 
 /**
@@ -140,15 +148,14 @@ typedef struct {
  * @details Auxiliary function for ::flight_manager_iter. Makes sure the target callback is only
  *          called for valid flights.
  *
- * @param user_data A ::flight_manager_iter_flight_data_t.
- * @param item      A ::flight_t in a flight manager's pool.
+ * @param user_data A pointer to a ::flight_manager_iter_flight_data_t.
+ * @param item      A pointer to a ::flight_t in a manager's pool.
  *
  * @return The return value of the target callback, or `0` for filtered-out items.
  */
 int __flight_manager_iter_callback(void *user_data, const void *item) {
     if (flight_is_valid((const flight_t *) item) == 0) {
-        flight_manager_iter_flight_data_t *helper_data =
-            (flight_manager_iter_flight_data_t *) user_data;
+        const flight_manager_iter_flight_data_t *const helper_data = user_data;
         return helper_data->callback(helper_data->original_user_data, (const flight_t *) item);
     }
 
@@ -167,6 +174,6 @@ int flight_manager_iter(const flight_manager_t        *manager,
 void flight_manager_free(flight_manager_t *manager) {
     pool_free(manager->flights);
     string_pool_no_duplicates_free(manager->strings);
-    g_hash_table_destroy(manager->id_flights_rel);
+    g_hash_table_unref(manager->id_flights_rel);
     free(manager);
 }

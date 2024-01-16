@@ -18,7 +18,7 @@
  * @file  dataset_input.c
  * @brief Implementation of methods in include/dataset/dataset_input.h
  *
- * #### Example
+ * ### Example
  * See [the header file's documentation](@ref dataset_input_examples).
  */
 
@@ -41,7 +41,7 @@
  * @var dataset_input::flights
  *     @brief File containing the dataset's flights.
  * @var dataset_input::passengers
- *     @brief File containing the dataset's user-flight relationships.
+ *     @brief File containing the dataset's user-flight relationships (passengers).
  * @var dataset_input::reservations
  *     @brief File containing the dataset's hotel reservations.
  */
@@ -53,12 +53,15 @@ struct dataset_input {
 };
 
 dataset_input_t *dataset_input_create(const char *path) {
-    dataset_input_t *input = malloc(sizeof(dataset_input_t));
+    dataset_input_t *const input = malloc(sizeof(dataset_input_t));
     if (!input)
         return NULL;
 
-    const char *types[4] = {"users", "flights", "passengers", "reservations"};
-    FILE **files[4] = {&input->users, &input->flights, &input->passengers, &input->reservations};
+    const char *const types[4] = {"users", "flights", "passengers", "reservations"};
+    FILE **const      files[4] = {&input->users,
+                                  &input->flights,
+                                  &input->passengers,
+                                  &input->reservations};
 
     for (int i = 0; i < 4; ++i) {
         char file_path[PATH_MAX];
@@ -67,9 +70,8 @@ dataset_input_t *dataset_input_create(const char *path) {
         *files[i] = fopen(file_path, "r");
 
         if (!*files[i]) {
-            for (int j = 0; j < i - 1; ++i)
+            for (int j = 0; j < i; ++i)
                 fclose(*files[i]);
-
             free(input);
             return NULL;
         }

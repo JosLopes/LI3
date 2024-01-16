@@ -16,7 +16,7 @@
 
 /**
  * @file  email.h
- * @brief The email of a ::user_t.
+ * @brief Verifies emails of a ::user_t.
  *
  * @anchor email_examples
  * ### Examples
@@ -57,8 +57,8 @@
 /**
  * @brief Verifies if a **MODIFIABLE** string is a valid email.
  *
- * @param input  String to validate, that won't be modified. Must be in the format
- *               `"user@domain.tld"`.
+ * @param input String to validate, that will be modified during parsing, but then restored to its
+ *              original form. Must be in the format `"user@domain.tld"`.
  *
  * @retval 0 Valid email.
  * @retval 1 Validation failure.
@@ -71,11 +71,11 @@
 int email_validate_string(char *input);
 
 /**
- * @brief Verifies if a string is a valid email.
+ * @brief  Verifies if a string is a valid email.
  * @details The current implementation copies the provided string to a temporary buffer. Keep that
  *          in mind for performance reasons.
  *
- * @param input  String to validate. Must be in the format `"user@domain.tld"`.
+ * @param input String to validate. Must be in the format `"user@domain.tld"`.
  *
  * @retval 0 Valid email.
  * @retval 1 Validation or allocation failure.

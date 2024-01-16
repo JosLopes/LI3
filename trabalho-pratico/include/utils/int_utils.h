@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    int_utils.h
- * @brief   Utilities for integers.
+ * @file  int_utils.h
+ * @brief Utilities for integers.
  *
  * @anchor int_utils_examples
  * ### Example
@@ -40,38 +40,37 @@
 #include <inttypes.h>
 
 /**
- * @brief Determine the minimum of two numbers.
+ * @brief Determines the minimum of two numbers.
  *
  * @param x First number to compare.
  * @param y Second number to compare.
  *
- * @return The minimum of two numbers.
+ * @return The minimum between @p x and @p y.
  */
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
 /**
- * @brief Determine the maximum of two numbers.
+ * @brief Determines the maximum of two numbers.
  *
  * @param x First number to compare.
  * @param y Second number to compare.
  *
- * @return The maximum of two numbers.
+ * @return The maximum between @p x and @p y.
  */
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 
 /**
- * @brief Parses an integer, failing on any characters other than decimal digits.
+ * @brief   Parses an integer in base `10`, failing on any characters other than decimal digits.
  * @details Unlike `atoi` and `strtol`, this function assures a positive integer and purposely
  *          fails on any whitespace or ``'+'`` / ``'-'`` characters.
  *
  * @param output Where to place the parsed integer. Nothing will be written on failure.
  * @param input  String to be parsed.
  *
- * @retval 0 Parsing success
- * @retval 1 Parsing failure
+ * @retval 0 Parsing success.
+ * @retval 1 Parsing failure.
  *
  * #### Example
- *
  * See [the header file's documentation](@ref int_utils_examples).
  */
 int int_utils_parse_positive(uint64_t *output, const char *input);

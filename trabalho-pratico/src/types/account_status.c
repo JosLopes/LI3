@@ -19,10 +19,9 @@
  * @brief Implementation of methods in include/types/account_status.h
  */
 
-#include <ctype.h>
-
 /** @cond FALSE */
 #ifndef _BSD_SOURCE
+    /* Expose strcasecmp */
     #define _BSD_SOURCE
 #endif
 /** @endcond */
@@ -32,7 +31,6 @@
 #include "types/account_status.h"
 
 int account_status_from_string(account_status_t *output, const char *input) {
-
     if (strcasecmp(input, "inactive") == 0) {
         *output = ACCOUNT_STATUS_INACTIVE;
         return 0;

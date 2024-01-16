@@ -30,7 +30,7 @@
 
 /**
  * @struct fixed_n_delimiter_parser_grammar
- * @brief  The grammar definition for a parser for strings with a known number of data points,
+ * @brief  The grammar definition for a parser of strings with a known number of data points,
  *         separated by a single-character delimiter.
  *
  * @var fixed_n_delimiter_parser_grammar::delimiter
@@ -38,8 +38,8 @@
  * @var fixed_n_delimiter_parser_grammar::n
  *     @brief Number of expected data points (e.g.: `3` for dates, year, month and day).
  * @var fixed_n_delimiter_parser_grammar::callbacks
- *     @brief A callback for each token to be parsed. There must be
- *     @ref fixed_n_delimiter_parser_grammar::n callbacks.
+ *     @brief A callback for each token to be parsed. There have a length of
+ *            ::fixed_n_delimiter_parser_grammar::n.
  */
 struct fixed_n_delimiter_parser_grammar {
     char                                      delimiter;
@@ -49,12 +49,11 @@ struct fixed_n_delimiter_parser_grammar {
 
 /**
  * @struct fixed_n_delimiter_parser_t
- * @brief A parser for strings with a known number of data points, separated by a single-character
- *        delimiter.
+ * @brief The state of a parser of strings with a known number of data points, separated by a
+ *        single-character delimiter.
  *
  * @var fixed_n_delimiter_parser_t::grammar
  *     @brief Grammar that defines the parser.
- *     @details Not owned by this `struct`.
  * @var fixed_n_delimiter_parser_t::token_count
  *     @brief Current state of the parser (number of tokens already read).
  * @var fixed_n_delimiter_parser_t::user_data
@@ -64,15 +63,15 @@ struct fixed_n_delimiter_parser_grammar {
 typedef struct {
     const fixed_n_delimiter_parser_grammar_t *grammar;
     size_t                                    token_count;
-    void                                     *user_data;
+    void *const                               user_data;
 } fixed_n_delimiter_parser_t;
 
-fixed_n_delimiter_parser_grammar_t *
-    fixed_n_delimiter_parser_grammar_new(char                                     delimiter,
-                                         size_t                                   n,
-                                         fixed_n_delimiter_parser_iter_callback_t callbacks[n]) {
+fixed_n_delimiter_parser_grammar_t *fixed_n_delimiter_parser_grammar_new(
+    char                                           delimiter,
+    size_t                                         n,
+    const fixed_n_delimiter_parser_iter_callback_t callbacks[n]) {
 
-    fixed_n_delimiter_parser_grammar_t *grammar =
+    fixed_n_delimiter_parser_grammar_t *const grammar =
         malloc(sizeof(fixed_n_delimiter_parser_grammar_t));
     if (!grammar)
         return NULL;
@@ -92,7 +91,7 @@ fixed_n_delimiter_parser_grammar_t *
 fixed_n_delimiter_parser_grammar_t *
     fixed_n_delimiter_parser_grammar_clone(const fixed_n_delimiter_parser_grammar_t *grammar) {
 
-    fixed_n_delimiter_parser_grammar_t *new_grammar =
+    fixed_n_delimiter_parser_grammar_t *const new_grammar =
         malloc(sizeof(fixed_n_delimiter_parser_grammar_t));
     if (!new_grammar)
         return NULL;
@@ -124,16 +123,18 @@ void fixed_n_delimiter_parser_grammar_free(fixed_n_delimiter_parser_grammar_t *g
  *
  * @param parser_data A pointer to a ::fixed_n_delimiter_parser_t.
  * @param token       The token to be parsed.
+ *
+ * @return `0` when successful, to continue with iteration, or another number to stop it.
  */
 int __parse_string_iter(void *parser_data, char *token) {
-    fixed_n_delimiter_parser_t *parser = (fixed_n_delimiter_parser_t *) parser_data;
+    fixed_n_delimiter_parser_t *const parser = parser_data;
 
     if (parser->token_count >= parser->grammar->n)
         return FIXED_N_DELIMITER_PARSER_PARSE_STRING_RET_TOO_MANY_ITEMS;
 
-    fixed_n_delimiter_parser_iter_callback_t callback =
+    const fixed_n_delimiter_parser_iter_callback_t callback =
         parser->grammar->callbacks[parser->token_count];
-    int retval = callback(parser->user_data, token, parser->token_count);
+    const int retval = callback(parser->user_data, token, parser->token_count);
 
     parser->token_count++;
     return retval;
@@ -147,7 +148,7 @@ int fixed_n_delimiter_parser_parse_string(char                                  
                                          .token_count = 0,
                                          .user_data   = user_data};
 
-    int tok_ret = string_tokenize(input, grammar->delimiter, __parse_string_iter, &parser);
+    const int tok_ret = string_tokenize(input, grammar->delimiter, __parse_string_iter, &parser);
     if (tok_ret)
         return tok_ret;
 
@@ -161,11 +162,11 @@ int fixed_n_delimiter_parser_parse_string(char                                  
 int fixed_n_delimiter_parser_parse_string_const(const char                               *input,
                                                 const fixed_n_delimiter_parser_grammar_t *grammar,
                                                 void *user_data) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return FIXED_N_DELIMITER_PARSER_PARSE_STRING_CONST_RET_MALLOC_FAILURE;
 
-    int retval = fixed_n_delimiter_parser_parse_string(buffer, grammar, user_data);
+    const int retval = fixed_n_delimiter_parser_parse_string(buffer, grammar, user_data);
 
     free(buffer);
     return retval;

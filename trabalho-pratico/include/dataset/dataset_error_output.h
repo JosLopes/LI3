@@ -15,9 +15,9 @@
  */
 
 /**
- * @file  dataset_error_output.h
- * @brief Module to report dataset errors. See [dataset_loader](@ref dataset_loader.h) for more
- *        information.
+ * @file    dataset_error_output.h
+ * @brief   Module to report dataset errors.
+ * @details See [dataset_loader](@ref dataset_loader.h) for more information.
  *
  * @anchor dataset_error_output_examples
  * ### Example
@@ -37,10 +37,11 @@ typedef struct dataset_error_output dataset_error_output_t;
 /**
  * @brief Attempts to open all file handles for dataset error files.
  *
- * @param path Path to the directory where to create the error files. If the directory does not
- *             exists, it'll be created aswell. Provide `NULL` for no error output.
+ * @param path Path to the directory where to create the error files. If that directory does not
+ *             exist, it'll be created aswell (but not its parents). Provide `NULL` for no error
+ *             output.
  *
- * @return A collection of file handles that must be `free`'d with ::dataset_error_output_free, or
+ * @return A collection of file handles that must be `free`d with ::dataset_error_output_free, or
  *         `NULL` on IO error.
  *
  * #### Example
@@ -50,14 +51,14 @@ dataset_error_output_t *dataset_error_output_create(const char *path);
 
 /**
  * @brief Writes a line to the `users_errors.csv` file.
- * @param error_output ::dataset_error_output_t that opened the errors file.
+ * @param output     The contained of the error file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_error_output_report_user_error(dataset_error_output_t *output, const char *error_line);
 
 /**
  * @brief Writes a line to the `flights_errors.csv` file.
- * @param error_output ::dataset_error_output_t that opened the errors file.
+ * @param output     The contained of the error file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_error_output_report_flight_error(dataset_error_output_t *output,
@@ -65,7 +66,7 @@ void dataset_error_output_report_flight_error(dataset_error_output_t *output,
 
 /**
  * @brief Writes a line to the `passengers_errors.csv` file.
- * @param error_output ::dataset_error_output_t that opened the errors file.
+ * @param output     The contained of the error file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_error_output_report_passenger_error(dataset_error_output_t *output,
@@ -73,7 +74,7 @@ void dataset_error_output_report_passenger_error(dataset_error_output_t *output,
 
 /**
  * @brief Writes a line to the `reservations_errors.csv` file.
- * @param error_output ::dataset_error_output_t that opened the errors file.
+ * @param output     The contained of the error file.
  * @param error_line Error to be reported (musn't include ``'\n'``).
  */
 void dataset_error_output_report_reservation_error(dataset_error_output_t *output,

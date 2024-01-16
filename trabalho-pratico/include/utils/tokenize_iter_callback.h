@@ -15,9 +15,8 @@
  */
 
 /**
- * @file tokenize_iter_callback.h
+ * @file  tokenize_iter_callback.h
  * @brief Defines a callback type for tokenizers.
- *
  */
 
 #ifndef TOKENIZE_ITER_CALLBACK_H

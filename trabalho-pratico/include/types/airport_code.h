@@ -30,7 +30,7 @@
  *     "O",    // Too short
  *     "OP",   // Too short
  *     "OPO",  // Just right
- *     "oPo",  // Everything should be converted to upper-case
+ *     "oPo",  // Everything will be converted to upper-case
  *     "OPOR", // Too long
  * };
  *
@@ -54,13 +54,11 @@
 
 #include <stdint.h>
 
-/**
- * @brief An airport code of a ::flight_t.
- */
+/** @brief An airport code of a ::flight_t. */
 typedef uint32_t airport_code_t;
 
 /**
- * @brief Creates (and validates) a airport code from a string.
+ * @brief Creates (and validates) an airport code from a string.
  *
  * @param output Where to place the parsed airport code (not modified on failure).
  * @param input  String to parse.
@@ -85,11 +83,11 @@ int airport_code_from_string(airport_code_t *output, const char *input);
 #define AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE 4
 
 /**
- * @brief Prints a airport code using `sprintf`.
+ * @brief Prints an airport code using `sprintf`.
  *
  * @param output  Where to print the airport code to. Must be at least
- *                ::AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE long.
- * @param airport Country code to be printed.
+ *                ::AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE characters long.
+ * @param airport Airport code to be printed.
  *
  * #### Examples
  * See [the header file's documentation](@ref airport_code_examples).

@@ -22,7 +22,6 @@
  * See [the header file's documentation](@ref string_utils_examples).
  */
 
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -34,7 +33,7 @@ char *string_single_delimiter_strsep(char **str, char delimiter) {
      * https://git.musl-libc.org/cgit/musl/tree/src/string/strsep.c
      */
 
-    char *iter = *str, *previous_input = *str;
+    char *iter = *str, *const previous_input = *str;
     if (!iter)
         return NULL;
 
@@ -57,7 +56,7 @@ int string_tokenize(char                    *input,
 
     char *token;
     while ((token = string_single_delimiter_strsep(&input, delimiter))) {
-        int cb_result = callback(user_data, token);
+        const int cb_result = callback(user_data, token);
 
         if (input)
             *(input - 1) = delimiter; /* Restore string */
@@ -74,11 +73,11 @@ int string_const_tokenize(const char              *input,
                           tokenize_iter_callback_t callback,
                           void                    *user_data) {
 
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return STRING_CONST_TOKENIZE_FAILED_MALLOC;
 
-    int retval = string_tokenize(buffer, delimiter, callback, user_data);
+    const int retval = string_tokenize(buffer, delimiter, callback, user_data);
 
     free(buffer);
     return retval;

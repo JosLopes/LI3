@@ -30,7 +30,7 @@
  * @anchor string_pool_examples
  * ### Examples
  *
- * The following example allocates string in a string pool. In practice, `TEST_POOL_BLOCK_SIZE`
+ * The following example allocates strings on a string pool. In practice, `TEST_POOL_BLOCK_SIZE`
  * should be way larger. It's only small to demonstrate how this string pool can handle strings
  * larger than its block size.
  *
@@ -89,11 +89,12 @@ typedef struct string_pool string_pool_t;
 
 /**
  * @brief   Creates a string pool.
- * @details The returned value is owned by the caller, and should be freed with ::string_pool_free.
+ * @details The returned value is owned by the caller, that should be freed with ::string_pool_free.
  *
- * @param block_capacity The number of characters in each block in the pool.
+ * @param block_capacity The number of characters in each block in the pool. See ::pool_create for
+ *                       more information.
  *
- * @return The allocated pool, or `NULL` on failure.
+ * @return The newly created pool, or `NULL` on failure.
  *
  * #### Examples
  * See [the header file's documentation](@ref string_pool_examples).
@@ -103,10 +104,11 @@ string_pool_t *string_pool_create(size_t block_capacity);
 /**
  * @brief   Allocates space for a string in the pool.
  * @details That string does not need to be `free`'d, as that's done when @p pool itself is freed in
- *          ::string_pool_free.
+ *          ::string_pool_free. However, keep in mind that the pool must oulive the allocated
+ *          string.
  *
- * @param pool Pool to allocate the string in.
- * @param length Lenght of the string (not including null terminator).
+ * @param pool   Pool to allocate the string in.
+ * @param length Length of the string (not including null terminator).
  *
  * @return The pointer to the allocated string, `NULL` on failure.
  *
@@ -116,9 +118,10 @@ string_pool_t *string_pool_create(size_t block_capacity);
 char *string_pool_allocate(string_pool_t *pool, size_t length);
 
 /**
- * @brief Allocates space and copies a string to a string pool.
+ * @brief   Allocates space for a string and copies it to @p pool.
  * @details That string does not need to be `free`'d, as that's done when @p pool itself is freed in
- *          ::string_pool_free.
+ *          ::string_pool_free. However, keep in mind that the pool must oulive the allocated
+ *          string.
  *
  * @param pool Pool to allocate the string in.
  * @param str  String to be copied to the pool.
@@ -132,9 +135,10 @@ char *string_pool_put(string_pool_t *pool, const char *str);
 
 /**
  * @brief   Removes all strings from @p pool.
- * @details Keep in mind that all values allocated using @p pool will no longer be valid. This
- *          should only be used when you want to allocate temporary data and free it many times
- *          over. This method allows you to reduce the number of pool creations (thus, allocations).
+ * @details Keep in mind that all strings allocated using @p pool will no longer be valid (this will
+ *          essentially `free` those pointers). This should only be used when you want to allocate
+ *          temporary data and free it many time over. This method allows you to reduce the number
+ *          of pool creations (thus, allocations).
  *
  * @p pool String pool to have all its strings removed from it.
  */

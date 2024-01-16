@@ -22,7 +22,6 @@
  * See [the header file's documentation](@ref email_examples).
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,32 +29,44 @@
 #include "utils/fixed_n_delimiter_parser.h"
 
 /**
- * @brief   Grammar for parsing emails.
- * @details Shall not be modified apart from its creation.
+ * @brief   Grammar for validating emails.
+ * @details Shall not be modified apart from its creation. It's not constant because it requires
+ *          run-time initialization. This global variable is justified for the following reasons:
+ *
+ *          -# It's not modified (no mutable global state);
+ *          -# It's module-local (no breaking of encapsulation);
+ *          -# Helps performance, as a new grammar doesn't need to be generated for every email to
+ *             be validated.
  */
 fixed_n_delimiter_parser_grammar_t *__email_grammar = NULL;
 
 /**
- * @brief   Grammar for parsing email domains.
- * @details Shall not be modified apart from its creation.
+ * @brief   Grammar for validating email domains.
+ * @details Shall not be modified apart from its creation. It's not constant because it requires
+ *          run-time initialization. This global variable is justified for the following reasons:
+ *
+ *          -# It's not modified (no mutable global state);
+ *          -# It's module-local (no breaking of encapsulation);
+ *          -# Helps performance, as a new grammar doesn't need to be generated for every email to
+ *             be validated.
  */
 fixed_n_delimiter_parser_grammar_t *__email_domain_grammar = NULL;
 
-/** @brief Auxiliary method for ::email_validate_string. Validates a username in an email. */
+/** @brief Auxiliary method for ::email_validate_string. Validates the username in an email. */
 int __email_validate_username(void *user_data, char *token, size_t ntoken) {
     (void) user_data;
     (void) ntoken;
     return (*token == '\0'); /* Fail on empty string */
 }
 
-/** @brief Auxiliary method for ::__email_validate_domain. Validates a name in an email's domain. */
+/** @brief Auxiliary method for ::__email_validate_domain. Validates the name of an email's domain. */
 int __email_validate_domain_name(void *user_data, char *token, size_t ntoken) {
     (void) user_data;
     (void) ntoken;
     return (*token == '\0'); /* Fail on empty string */
 }
 
-/** @brief Auxiliary method for ::__email_validate_domain. Validates a TLD in an email's domain. */
+/** @brief Auxiliary method for ::__email_validate_domain. Validates the TLD in an email's domain. */
 int __email_validate_domain_tld(void *user_data, char *token, size_t ntoken) {
     (void) user_data;
     (void) ntoken;
@@ -70,21 +81,22 @@ int __email_validate_domain(void *user_data, char *token, size_t ntoken) {
 }
 
 /**
- * @brief Automatically initializes ::__email_grammar and ::email_domain_grammar when the program
+ * @brief Automatically initializes ::__email_grammar and ::__email_domain_grammar when the program
  *        starts.
  */
 void __attribute__((constructor)) __email_grammars_create(void) {
-    fixed_n_delimiter_parser_iter_callback_t email_callbacks[2] = {__email_validate_username,
-                                                                   __email_validate_domain};
+    const fixed_n_delimiter_parser_iter_callback_t email_callbacks[2] = {__email_validate_username,
+                                                                         __email_validate_domain};
     __email_grammar = fixed_n_delimiter_parser_grammar_new('@', 2, email_callbacks);
 
-    fixed_n_delimiter_parser_iter_callback_t domain_callbacks[2] = {__email_validate_domain_name,
-                                                                    __email_validate_domain_tld};
+    const fixed_n_delimiter_parser_iter_callback_t domain_callbacks[2] = {
+        __email_validate_domain_name,
+        __email_validate_domain_tld};
     __email_domain_grammar = fixed_n_delimiter_parser_grammar_new('.', 2, domain_callbacks);
 }
 
 /**
- * @brief Automatically frees ::__email_grammar and ::email_domain_grammar when the program
+ * @brief Automatically frees ::__email_grammar and ::__email_domain_grammar when the program
  *        terminates.
  */
 void __attribute__((destructor)) __email_grammars_free(void) {
@@ -97,11 +109,11 @@ int email_validate_string(char *input) {
 }
 
 int email_validate_string_const(const char *input) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return 1;
 
-    int retval = email_validate_string(buffer);
+    const int retval = email_validate_string(buffer);
     free(buffer);
     return retval;
 }

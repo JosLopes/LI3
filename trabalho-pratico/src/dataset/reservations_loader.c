@@ -17,20 +17,23 @@
 /**
  * @file  reservations_loader.c
  * @brief Implementation of methods in include/dataset/reservations_loader.h
+ *
+ * @details Many internal methods in this module are lacking parameter documentation, as they all
+ *          follow the same convention: all are ::fixed_n_delimiter_parser_iter_callback_t. The
+ *          `loader_data` is a pointer to a ::reservations_loader_t.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "dataset/dataset_parser.h"
 #include "dataset/reservations_loader.h"
 #include "utils/int_utils.h"
 
-/** @brief Table header for `reservations_errors.csv` */
-#define RESERVATIONS_LOADER_HEADER                                                                 \
-    "id;user_id;hotel_id;hotel_name;hotel_stars;city_tax;address;begin_date;end_date;"             \
-    "price_per_night;includes_breakfast;room_details;rating;comment"
+/** @cond FALSE */
+#ifndef __GNUC__
+    #define __builtin_unreachable() return 0;
+#endif
+/** @endcond */
 
 /**
  * @struct reservations_loader_t
@@ -41,280 +44,241 @@
  * @var reservations_loader_t::database
  *     @brief Database to add new reservations to.
  * @var reservations_loader_t::users
- *     @brief Users manager to check for existence of users mentioned in reservations.
+ *     @brief User manager, to check for the existence of users mentioned in reservations.
  * @var reservations_loader_t::error_line
- *     @brief Current line being processed, in case it needs to be put in the error file.
+ *     @brief Current line being processed, in case it needs to be put in the errors file.
+ * @var reservations_loader_t::current_reservation
+ *     @brief Reservation being currently parsed, whose fields are still being filled in.
+ * @var reservations_loader_t::first_line
+ *     @brief   Whether the line being parsed is the first line in the file.
+ *     @details Used to print an error on the CSV's table header.
  */
 typedef struct {
-    dataset_error_output_t *output;
-    database_t             *database;
-    const user_manager_t   *users;
+    dataset_error_output_t *const output;
+    database_t *const             database;
+    const user_manager_t *const   users;
 
-    const char    *error_line;
-    reservation_t *current_reservation;
+    const char          *error_line;
+    reservation_t *const current_reservation;
+    int                  first_line;
 } reservations_loader_t;
 
 /**
  * @brief Stores the beginning of the current line, in case it needs to be printed to the errors
  *        file.
+ *
+ * @param loader_data A pointer to a ::reservations_loader_t.
+ * @param line        Line that is going to be parsed.
+ *
+ * @retval 0 Always successful.
  */
 int __reservations_loader_before_parse_line(void *loader_data, char *line) {
     ((reservations_loader_t *) loader_data)->error_line = line;
     return 0;
 }
 
-/** @brief Parses a reservation's identifier */
+/** @brief Parses a reservation's identifier. */
 int __reservation_loader_parse_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
+    reservations_loader_t *const loader = loader_data;
 
     reservation_id_t id;
-    int              retval = reservation_id_from_string(&id, token);
+    const int        retval = reservation_id_from_string(&id, token);
     if (retval == 0) {
         reservation_set_id(loader->current_reservation, id);
-        return 0;
-    } else if (retval == 2) {
+    } else if (retval == 2 && !(loader->first_line && strcmp(token, "id") == 0)) {
         fprintf(stderr,
                 "Reservation ID \"%s\" not if format BookXXXXXXXXXX. This isn't supported by our "
                 "program!\n",
                 token);
     }
-    return 1;
+    return retval;
 }
 
-/** @brief Parses a reservation's user identifier */
+/** @brief Parses the identifier of the user that booked a reservation. */
 int __reservation_loader_parse_user_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
+    reservations_loader_t *const loader = loader_data;
 
-    if (*token && user_manager_get_by_id(loader->users, token) != NULL) {
-        reservation_set_user_id(NULL, loader->current_reservation, token);
-        return 0;
-    } else {
+    if (*token && user_manager_get_by_id(loader->users, token) != NULL)
+        return reservation_set_user_id(NULL, loader->current_reservation, token);
+    else
         return 1;
-    }
 }
 
-/** @brief Parses a reservation's hotel id */
+/** @brief Parses the identifier of the hotel of a reservation. */
 int __reservation_loader_parse_hotel_id(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
+    reservations_loader_t *const loader = loader_data;
 
     hotel_id_t id;
-    int        retval = hotel_id_from_string(&id, token);
+    const int  retval = hotel_id_from_string(&id, token);
     if (retval == 0) {
         reservation_set_hotel_id(loader->current_reservation, id);
-        return 0;
-    } else if (retval == 2) {
+    } else if (retval == 2 && !(loader->first_line && strcmp(token, "hotel_id") == 0)) {
         fprintf(stderr,
                 "Hotel ID \"%s\" not if format HTLXXXXX. This isn't supported by our program!\n",
                 token);
     }
-    return 1;
+    return retval;
 }
 
-/** @brief Parses a reservation's hotel name */
+/** @brief Parses a reservation's hotel name. */
 int __reservation_loader_parse_hotel_name(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
+    return reservation_set_hotel_name(NULL,
+                                      ((reservations_loader_t *) loader_data)->current_reservation,
+                                      token);
+}
 
-    if (*token) {
-        reservation_set_hotel_name(NULL, loader->current_reservation, token);
-        return 0;
-    } else {
-        return 1;
+/**
+ * @brief   Parses numbers in hotel reservations.
+ * @details This includes hotel stars, city tax and prices per night. Because ratings can be left
+ *          empty, they require a different handler function.
+ */
+int __reservation_loader_parse_mandatory_numeral(void *loader_data, char *token, size_t ntoken) {
+    reservations_loader_t *const loader = loader_data;
+
+    uint64_t  numeral;
+    const int retval = int_utils_parse_positive(&numeral, token);
+    if (retval)
+        return retval;
+
+    switch (ntoken) {
+        case 4:
+            return reservation_set_hotel_stars(loader->current_reservation, numeral);
+        case 5:
+            reservation_set_city_tax(loader->current_reservation, numeral);
+            return 0;
+        case 9:
+            return reservation_set_price_per_night(loader->current_reservation, numeral);
+        default:
+            __builtin_unreachable();
     }
 }
 
-/** @brief Parses a reservation's hotel number of stars */
-int __reservation_loader_parse_hotel_stars(void *loader_data, char *token, size_t ntoken) {
-    (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-
-    uint64_t hotel_stars;
-    int      retval = int_utils_parse_positive(&hotel_stars, token);
-
-    if (retval == 0 && hotel_stars >= 1 && hotel_stars <= 5) {
-        reservation_set_hotel_stars(loader->current_reservation, hotel_stars);
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
-/** @brief Parses a reservation's hotel city tax */
-int __reservation_loader_parse_city_tax(void *loader_data, char *token, size_t ntoken) {
-    (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-
-    uint64_t city_tax;
-    int      retval = int_utils_parse_positive(&city_tax, token);
-
-    if (!retval) {
-        reservation_set_city_tax(loader->current_reservation, city_tax);
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
-/** @brief Parses a reservation's hotel address */
+/** @brief Parses a reservation's hotel address. */
 int __reservation_loader_parse_address(void *loader_data, char *token, size_t ntoken) {
     (void) loader_data;
     (void) ntoken;
-
     return (*token == '\0'); /* Fail on empty addresses */
 }
 
-/** @brief Parses a reservation's beginning date */
-int __reservation_loader_parse_begin_date(void *loader_data, char *token, size_t ntoken) {
-    (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
+/** @brief Parses a reservation's beginning and end dates. */
+int __reservation_loader_parse_date(void *loader_data, char *token, size_t ntoken) {
+    reservations_loader_t *const loader = loader_data;
 
-    date_t date;
-    int    date_parse_ret = date_from_string(&date, token);
-    if (date_parse_ret) {
-        return date_parse_ret;
-    } else {
-        reservation_set_begin_date(loader->current_reservation, date);
-        return 0;
+    date_t    date;
+    const int retval = date_from_string(&date, token);
+    if (retval)
+        return retval;
+
+    switch (ntoken) {
+        case 7:
+            return reservation_set_begin_date(loader->current_reservation, date);
+        case 8:
+            return reservation_set_end_date(loader->current_reservation, date);
+        default:
+            __builtin_unreachable();
     }
 }
 
-/** @brief Parses a reservation's end date */
-int __reservation_loader_parse_end_date(void *loader_data, char *token, size_t ntoken) {
-    (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-
-    date_t date;
-    int    date_parse_ret = date_from_string(&date, token);
-    if (date_parse_ret) {
-        return date_parse_ret;
-    } else if (date_diff(date, reservation_get_begin_date(loader->current_reservation)) < 0) {
-        return 1;
-    } else {
-        reservation_set_end_date(loader->current_reservation, date);
-        return 0;
-    }
-}
-
-/** @brief Parses a reservation's price per night */
-int __reservation_loader_parse_price_per_night(void *loader_data, char *token, size_t ntoken) {
-    (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-
-    uint64_t price_per_night;
-    int      retval = int_utils_parse_positive(&price_per_night, token);
-
-    if (retval == 0 && price_per_night > 0) {
-        reservation_set_price_per_night(loader->current_reservation, price_per_night);
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
-/** @brief Parses a reservation's "includes breakfast" tag */
+/** @brief Parses a reservation's "includes breakfast" field. */
 int __reservation_loader_parse_includes_breakfast(void *loader_data, char *token, size_t ntoken) {
     (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
 
     includes_breakfast_t includes_breakfast;
-    int includes_breakfast_ret = includes_breakfast_from_string(&includes_breakfast, token);
+    const int            retval = includes_breakfast_from_string(&includes_breakfast, token);
+    if (retval)
+        return retval;
 
-    if (!includes_breakfast_ret) {
-        reservation_set_includes_breakfast(loader->current_reservation, includes_breakfast);
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
-/** @brief Parses a reservation's room details */
-int __reservation_loader_parse_room_details(void *loader_data, char *token, size_t ntoken) {
-    (void) loader_data;
-    (void) token;
-    (void) ntoken;
-
-    return 0; /* no verification needed */
-}
-
-/** @brief Parses a reservation's rating */
-int __reservation_loader_parse_rating(void *loader_data, char *token, size_t ntoken) {
-    (void) ntoken;
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-
-    if (*token == '\0') {
-        reservation_set_rating(loader->current_reservation, RESERVATION_NO_RATING);
-        return 0;
-    }
-
-    uint64_t rating;
-    int      retval = int_utils_parse_positive(&rating, token);
-
-    if (retval == 0 && rating >= 1 && rating <= 5) {
-        reservation_set_rating(loader->current_reservation, rating);
-        return 0;
-    } else {
-        return 1;
-    }
-}
-
-/** @brief Parses a reservation's comment */
-int __reservation_loader_parse_comment(void *loader_data, char *token, size_t ntoken) {
-    (void) loader_data;
-    (void) token;
-    (void) ntoken;
-
-    return 0; /* no verification needed */
-}
-
-/** @brief Places a parsed reservation in the database and handles errors */
-int __reservations_loader_after_parse_line(void *loader_data, int retval) {
-    reservations_loader_t *loader = (reservations_loader_t *) loader_data;
-
-    if (retval) {
-        dataset_error_output_report_reservation_error(loader->output, loader->error_line);
-    } else if (database_add_reservation(loader->database, loader->current_reservation)) {
-        return 1;
-    }
+    reservation_set_includes_breakfast(((reservations_loader_t *) loader_data)->current_reservation,
+                                       includes_breakfast);
     return 0;
 }
 
+/**
+ * @brief   Parses a reservation's room details and comment fields.
+ * @details These are strings that do not require verification.
+ */
+int __reservation_loader_parse_dont_verify(void *loader_data, char *token, size_t ntoken) {
+    (void) loader_data;
+    (void) token;
+    (void) ntoken;
+    return 0;
+}
+
+/** @brief Parses a reservation's rating. */
+int __reservation_loader_parse_rating(void *loader_data, char *token, size_t ntoken) {
+    (void) ntoken;
+
+    uint64_t  rating = RESERVATION_NO_RATING;
+    const int retval = int_utils_parse_positive(&rating, token);
+    if (retval && *token)
+        return retval; /* Invalid number */
+
+    return reservation_set_rating(((reservations_loader_t *) loader_data)->current_reservation,
+                                  rating);
+}
+
+/**
+ * @brief Places a parsed reservation in the database and handles errors.
+ *
+ * @param loader_data A pointer to a ::reservations_loader_t.
+ * @param retval      Value returned by the last token callback (`0` for success, another value for
+ *                    a parsing error).
+ *
+ * @retval 0 Success.
+ * @retval 1 Allocation failure.
+ */
+int __reservations_loader_after_parse_line(void *loader_data, int retval) {
+    reservations_loader_t *const loader = loader_data;
+    loader->first_line                  = 0;
+
+    if (retval) {
+        dataset_error_output_report_reservation_error(loader->output, loader->error_line);
+        retval = 0;
+    } else {
+        retval = database_add_reservation(loader->database, loader->current_reservation);
+    }
+
+    reservation_reset_dates(loader->current_reservation);
+    return retval;
+}
+
 int reservations_loader_load(FILE *stream, database_t *database, dataset_error_output_t *output) {
-    dataset_error_output_report_reservation_error(output, RESERVATIONS_LOADER_HEADER);
     reservations_loader_t data = {.output              = output,
                                   .database            = database,
                                   .users               = database_get_users(database),
-                                  .current_reservation = reservation_create(NULL)};
-
+                                  .current_reservation = reservation_create(NULL),
+                                  .first_line          = 1};
     if (!data.current_reservation)
         return 1;
 
-    fixed_n_delimiter_parser_iter_callback_t token_callbacks[14] = {
+    const fixed_n_delimiter_parser_iter_callback_t token_callbacks[14] = {
         __reservation_loader_parse_id,
         __reservation_loader_parse_user_id,
         __reservation_loader_parse_hotel_id,
         __reservation_loader_parse_hotel_name,
-        __reservation_loader_parse_hotel_stars,
-        __reservation_loader_parse_city_tax,
+        __reservation_loader_parse_mandatory_numeral,
+        __reservation_loader_parse_mandatory_numeral,
         __reservation_loader_parse_address,
-        __reservation_loader_parse_begin_date,
-        __reservation_loader_parse_end_date,
-        __reservation_loader_parse_price_per_night,
+        __reservation_loader_parse_date,
+        __reservation_loader_parse_date,
+        __reservation_loader_parse_mandatory_numeral,
         __reservation_loader_parse_includes_breakfast,
-        __reservation_loader_parse_room_details,
+        __reservation_loader_parse_dont_verify,
         __reservation_loader_parse_rating,
-        __reservation_loader_parse_comment};
+        __reservation_loader_parse_dont_verify};
 
-    fixed_n_delimiter_parser_grammar_t *line_grammar =
+    fixed_n_delimiter_parser_grammar_t *const line_grammar =
         fixed_n_delimiter_parser_grammar_new(';', 14, token_callbacks);
     if (!line_grammar) {
         reservation_free(data.current_reservation);
         return 1;
     }
 
-    dataset_parser_grammar_t *grammar =
+    dataset_parser_grammar_t *const grammar =
         dataset_parser_grammar_new('\n',
                                    line_grammar,
                                    __reservations_loader_before_parse_line,
@@ -325,7 +289,7 @@ int reservations_loader_load(FILE *stream, database_t *database, dataset_error_o
         return 1;
     }
 
-    int retval = dataset_parser_parse(stream, grammar, &data);
+    const int retval = dataset_parser_parse(stream, grammar, &data);
 
     fixed_n_delimiter_parser_grammar_free(line_grammar);
     dataset_parser_grammar_free(grammar);

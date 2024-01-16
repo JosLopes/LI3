@@ -22,24 +22,23 @@
  * See [the header file's documentation](@ref airport_code_examples).
  */
 
-#include <ctype.h>
-#include <string.h>
-
 #include "types/airport_code.h"
 
 /**
- * @brief   Macro implementation of `isalpha`.
+ * @brief   Macro implementation of `isalpha` (for inlining).
  * @details See musl's implementation of `isalpha` for source.
  */
-#define inline_isalpha(c) ((((unsigned) c | 32) - 'a') < 26)
+#define inline_isalpha(c) ((((unsigned) (c) | 32) - 'a') < 26)
 
 int airport_code_from_string(airport_code_t *output, const char *input) {
     if (input[0] && input[1] && input[2] && !input[3]) { /* inline strlen(input) == 3 */
         if (inline_isalpha(input[0]) && inline_isalpha(input[1]) && inline_isalpha(input[2])) {
 
             /*
-             * "Vectorized" toupper, when all characters are certain to be letters.
+             * "Vectorized" toupper, when we're certain all characters are letters.
              * In musl's implementation of toupper, c & 0x5f is done.
+             *
+             * Why do this? Because I have a test about vectorization tomorrow and want to study.
              */
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
             *output = (*(int32_t *) input) & 0x5f5f5f00;

@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    daytime.h
- * @brief   A time, containing hours, minutes and seconds.
+ * @file  daytime.h
+ * @brief A time, containing hours, minutes and seconds.
  *
  * @anchor daytime_examples
  * ### Examples
@@ -68,7 +68,7 @@
 #include <stdint.h>
 
 /** @brief A time containing hours, minutes and seconds. */
-typedef int32_t daytime_t;
+typedef uint32_t daytime_t;
 
 /**
  * @brief Creates a time from @p hours, @p minutes and @p seconds.
@@ -78,7 +78,7 @@ typedef int32_t daytime_t;
  * @param minutes Minutes of the time (between 0 and 59).
  * @param seconds Seconds of the time (between 0 and 59).
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Failure due to out of range values.
  */
 int daytime_from_values(daytime_t *output, uint8_t hours, uint8_t minutes, uint8_t seconds);
@@ -101,7 +101,7 @@ int daytime_from_values(daytime_t *output, uint8_t hours, uint8_t minutes, uint8
 int daytime_from_string(daytime_t *output, char *input);
 
 /**
- * @brief Parses a string containing a time.
+ * @brief   Parses a string containing a time.
  * @details The current implementation copies the provided string to a temporary buffer. Keep that
  *          in mind for performance reasons.
  *
@@ -131,7 +131,7 @@ int daytime_from_string_const(daytime_t *output, const char *input);
  * @brief Prints a time using `sprintf` in the format `HH:MM:SS`.
  *
  * @param output Where to print the time to. Must be at least ::DAYTIME_SPRINTF_MIN_BUFFER_SIZE
- *               long.
+ *               characters long.
  * @param time   Time to be printed.
  *
  * #### Examples
@@ -150,9 +150,9 @@ void daytime_sprintf(char *output, daytime_t time);
 int32_t daytime_diff(daytime_t a, daytime_t b);
 
 /**
- * @brief Gets the hours from a time.
- * @param time Time to get the hours from.
- * @return Hour in the time.
+ * @brief  Gets the hours from a time.
+ * @param  time Time to get the hours from.
+ * @return Hour in @p time.
  */
 uint8_t daytime_get_hours(daytime_t time);
 
@@ -162,15 +162,15 @@ uint8_t daytime_get_hours(daytime_t time);
  * @param time  Time to be modified.
  * @param hours Value of the hours.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Failure due to out of range value.
  */
 int daytime_set_hours(daytime_t *time, uint8_t hours);
 
 /**
- * @brief Gets the minutes from a time.
- * @param time Time to get the minutes from.
- * @return Minutes in the time.
+ * @brief  Gets the minutes from a time.
+ * @param  time Time to get the minutes from.
+ * @return Minutes in @p time.
  */
 uint8_t daytime_get_minutes(daytime_t time);
 
@@ -180,25 +180,25 @@ uint8_t daytime_get_minutes(daytime_t time);
  * @param time    Time to be modified.
  * @param minutes Value of the minutes.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Failure due to out of range value.
  */
 int daytime_set_minutes(daytime_t *time, uint8_t minutes);
 
 /**
- * @brief Gets the seconds from a time.
- * @param time Time to get the seconds from.
- * @return Seconds in the time.
+ * @brief  Gets the seconds from a time.
+ * @param  time Time to get the seconds from.
+ * @return Seconds in @p time.
  */
 uint8_t daytime_get_seconds(daytime_t time);
 
 /**
  * @brief Sets the seconds in a time.
  *
- * @param time   Time to be modified.
+ * @param time    Time to be modified.
  * @param seconds Value of the seconds.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Failure due to out of range value.
  */
 int daytime_set_seconds(daytime_t *time, uint8_t seconds);
