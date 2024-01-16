@@ -287,8 +287,8 @@ int user_manager_iter(const user_manager_t        *manager,
  *     @brief Original callback provided to ::user_manager_iter_with_flights.
  */
 typedef struct {
-    void                                     *user_data;
-    user_manager_iter_with_flights_callback_t original_callback;
+    void *const                                     user_data;
+    const user_manager_iter_with_flights_callback_t original_callback;
 } user_manager_iter_with_flights_data_t;
 
 /**
@@ -300,8 +300,8 @@ typedef struct {
  * @return The value of the original callback called.
  */
 int __user_manager_iter_with_flights_callback(void *iter_data, const void *user_data) {
-    const user_manager_iter_with_flights_data_t *iter_data_struct = iter_data;
-    const user_and_data_t                       *user_data_struct = user_data;
+    const user_manager_iter_with_flights_data_t *const iter_data_struct = iter_data;
+    const user_manager_user_and_data_t *const          user_data_struct = user_data;
 
     return iter_data_struct->original_callback(iter_data_struct->user_data,
                                                user_data_struct->user,

@@ -107,8 +107,8 @@ typedef struct user_manager user_manager_t;
  * @brief   Callback type for user manager iterations.
  * @details Method called by ::user_manager_iter for every item in a ::user_manager_t.
  *
- * @param user_data Argument passed to ::user_manager_iter, that is further passed to every
- *                  callback, so that this method can change the program's state.
+ * @param user_data Argument passed to ::user_manager_iter, that is then passed to every callback,
+ *                  so that this method can change the program's state.
  * @param user      User in the manager.
  *
  * @return `0` on success, or any other value to order iteration to stop.
@@ -116,13 +116,13 @@ typedef struct user_manager user_manager_t;
 typedef int (*user_manager_iter_callback_t)(void *user_data, const user_t *user);
 
 /**
- * @brief   Callback type for user manager iterations with flight information.
+ * @brief   Callback type for user manager iterations with flight (passengers) information.
  * @details Method called by ::user_manager_iter_with_flights for every item in a ::user_manager_t.
  *
- * @param user_data Argument passed to ::user_manager_iter_with_flights that is passed to every
- *                  callback, so that this method can change the program's state.
+ * @param user_data Argument passed to ::user_manager_iter_with_flights, that is then passed to
+ *                  every callback, so that this method can change the program's state.
  * @param user      User in the manager.
- * @param flights   Flights related to @p user
+ * @param flights   Flights related to @p user (passengers).
  *
  * @return `0` on success, or any other value to order iteration to stop.
  */
@@ -244,18 +244,17 @@ int user_manager_iter(const user_manager_t        *manager,
                       void                        *user_data);
 
 /**
- * @brief   Iterates through every user in a user manager, calling @p callback for each one.
- * @details Flights related to every user are also provided.
+ * @brief   Iterates through every user in a user manager, calling a callback for each one.
+ * @details Flights related to every user (passengers) are also provided to callbacks, unlike in
+ *          ::user_manager_iter.
  *
  * @param manager   User manager to iterate thorugh.
  * @param callback  Method to be called for every user stored in @p manager.
  * @param user_data Pointer to be passed to every @p callback, so that it can modify the program's
  *                  state.
  *
- * @return The return value of the last-called @p callback.
- *
- * #### Example
- * See [the header file's documentation](@ref user_manager_examples).
+ * @return The return value of the last-called @p callback (`0` means success, another value means
+ *         the iteration was stopped by a callback).
  */
 int user_manager_iter_with_flights(const user_manager_t                     *manager,
                                    user_manager_iter_with_flights_callback_t callback,
