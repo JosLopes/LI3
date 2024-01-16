@@ -17,19 +17,19 @@
 /**
  * @file    database.h
  * @brief   Collection of managers of the different entities.
- * @details Its contents are to be created with the ::dataset_loader_t.
+ * @details Its contents are to be populated by the [dataset loader](@ref dataset_loader.h).
  *
  * @anchor database_examples
  * ### Example
  *
- * This example describes how to create a ::database_t and load data to it using a
- * ::dataset_loader_t.
+ * This example describes how to create a ::database_t and load data to it using the
+ * [dataset loader](@ref dataset_loader.h).
  *
  * ```c
  * int main(void) {
  *     database_t *database = database_create();
  *     if (!database) {
- *         fprintf(stderr, "Failed to allocate database!");
+ *         fprintf(stderr, "Failed to allocate database!\n");
  *         return 1;
  *     }
  *
@@ -45,9 +45,13 @@
  * }
  * ```
  *
- * If you don't wish to use ::dataset_loader_load, you may get the entity managers in the database
- * (by using ::database_get_users for a ::user_manager_t, for example) and interact with those
- * managers directly.
+ * If you don't wish to use ::dataset_loader_load, you may add entities directly to the base using
+ * methods such as:
+ *
+ *  - Users:       ::database_add_user;
+ *  - Flights:     ::database_add_flight (remove a flight using ::database_invalidate_flight);
+ *  - Reservation: ::database_add_reservation;
+ *  - Passengers:  ::database_add_passengers (passengers must be added all at once).
  */
 
 #ifndef DATABASE_H
@@ -57,13 +61,13 @@
 #include "database/reservation_manager.h"
 #include "database/user_manager.h"
 
-/** @brief A database is a collection of the managers of different entities. */
+/** @brief A collection of managers of the different entities. */
 typedef struct database database_t;
 
 /**
  * @brief   Instantiates a new ::database_t.
- * @details The returned value is owned by the caller and should be `free`'d with ::database_free.
- * @return  The new database, or `NULL` on failure.
+ * @details The returned value is owned by the caller and should be `free`d with ::database_free.
+ * @return  The new database, or `NULL` on allocation failure.
  *
  * #### Example
  * See [the header file's documentation](@ref database_examples).
@@ -71,22 +75,34 @@ typedef struct database database_t;
 database_t *database_create(void);
 
 /**
- * @brief Gets the user manager in a database.
- * @param database Database to get the user manager from.
+ * @brief   Creates a deep copy of a database.
+ * @details Databases usually contain lots of data, possibly even gigabytes! Keep that in mind for
+ *          performance and memory usage reasons.
+ *
+ * @param database Database to be cloned.
+ *
+ * @return A pointer to a new database, that must be `free`d with ::database_free. `NULL` is also
+ *         possible on allocations.
+ */
+database_t *database_clone(const database_t *database);
+
+/**
+ * @brief   Gets the user manager in a database.
+ * @param   database Database to get the user manager from.
  * @returns The user manager in @p database.
  */
 const user_manager_t *database_get_users(const database_t *database);
 
 /**
- * @brief Gets the reservation manager in a database.
- * @param database Database to get the reservation manager from.
+ * @brief   Gets the reservation manager in a database.
+ * @param   database Database to get the reservation manager from.
  * @returns The reservation manager in @p database.
  */
 const reservation_manager_t *database_get_reservations(const database_t *database);
 
 /**
- * @brief Gets the flight manager in a database.
- * @param database Database to get the flight manager from.
+ * @brief   Gets the flight manager in a database.
+ * @param   database Database to get the flight manager from.
  * @returns The flight manager in @p database.
  */
 const flight_manager_t *database_get_flights(const database_t *database);
@@ -97,7 +113,7 @@ const flight_manager_t *database_get_flights(const database_t *database);
  * @param database Database to add @p user to.
  * @param user     User to be added to @p database.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Allocation failure.
  */
 int database_add_user(database_t *database, const user_t *user);
@@ -108,7 +124,7 @@ int database_add_user(database_t *database, const user_t *user);
  * @param database    Database to add @p reservation to.
  * @param reservation Reservation to be added to @p database.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Allocation failure.
  */
 int database_add_reservation(database_t *database, const reservation_t *reservation);
@@ -119,14 +135,15 @@ int database_add_reservation(database_t *database, const reservation_t *reservat
  * @param database Database to add @p flight to.
  * @param flight   Flight to be added to @p database.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Allocation failure.
  */
 int database_add_flight(database_t *database, const flight_t *flight);
 
 /**
- * @brief   Removes a flight from the database.
- * @details It's assumed that there are no users with passenger relations to @p flight.
+ * @brief   Removes a flight from a database.
+ * @details It's assumed that there are no users with passenger relations to @p flight. Otherwise,
+ *          those will remain, and will point to flights that no longer exist.
  *
  * @param database Database to get a flight removed from.
  * @param id       Identifier of the flight to invalidate.
@@ -137,20 +154,26 @@ int database_add_flight(database_t *database, const flight_t *flight);
 int database_invalidate_flight(database_t *database, flight_id_t id);
 
 /**
- * @brief Adds a user-flight relation to the user manager.
+ * @brief   Adds user-flight relations (passengers) to the user manager in a database.
+ * @details All passengers of a flight must be added in bulk.
  *
- * @param database  Database to add the relation to.
- * @param user_id   Identifier of the user to add @p flight_id to.
- * @param flight_id Identifier of the flight to be associated with @p user_id.
+ * @param database  Database to add passenger relations to.
+ * @param flight_id Identifier of the flight to be associated with @p user_ids.
+ * @param user_ids  Identifiers of the users to add @p flight_id to.
+ * @param n         Number of users in @p user_ids.
  *
- * @retval 0 Success
- * @retval 1 Allocation failure or user / flight not found.
+ * @retval 0 Success.
+ * @retval 1 Allocation failure, user / flight not found, or too many passengers for number of
+ *           flight seats.
  */
-int database_add_passenger(database_t *database, const char *user_id, flight_id_t flight_id);
+int database_add_passengers(database_t       *database,
+                            flight_id_t       flight_id,
+                            size_t            n,
+                            const char *const user_ids[n]);
 
 /**
  * @brief Frees memory used by a database.
- * @param database Database whose memory is to be `free`'d.
+ * @param database Database whose memory is to be `free`d.
  *
  * #### Example
  * See [the header file's documentation](@ref database_examples).

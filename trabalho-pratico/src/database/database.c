@@ -18,7 +18,7 @@
  * @file  database.c
  * @brief Implementation of methods in include/database/database.h
  *
- * #### Examples
+ * ### Examples
  * See [the header file's documentation](@ref database_examples).
  */
 
@@ -28,7 +28,7 @@
 
 /**
  * @struct database
- * @brief  A collection of the managers of different entities.
+ * @brief  A collection of managers of different entities.
  *
  * @var database::users
  *     @brief All users and user relationships.
@@ -44,14 +44,61 @@ struct database {
 };
 
 database_t *database_create(void) {
-    database_t *database = malloc(sizeof(struct database));
+    database_t *const database = malloc(sizeof(database_t));
     if (!database)
-        return NULL;
+        goto DEFER_1;
 
-    database->users        = user_manager_create();
+    database->users = user_manager_create();
+    if (!database->users)
+        goto DEFER_2;
+
     database->reservations = reservation_manager_create();
-    database->flights      = flight_manager_create();
+    if (!database->reservations)
+        goto DEFER_3;
+
+    database->flights = flight_manager_create();
+    if (!database->flights)
+        goto DEFER_4;
+
     return database;
+
+DEFER_4:
+    reservation_manager_free(database->reservations);
+DEFER_3:
+    user_manager_free(database->users);
+DEFER_2:
+    free(database);
+DEFER_1:
+    return NULL;
+}
+
+database_t *database_clone(const database_t *database) {
+    database_t *const clone = malloc(sizeof(database_t));
+    if (!database)
+        goto DEFER_1;
+
+    clone->users = user_manager_clone(database->users);
+    if (!clone->users)
+        goto DEFER_2;
+
+    clone->reservations = reservation_manager_clone(database->reservations);
+    if (!clone->reservations)
+        goto DEFER_3;
+
+    clone->flights = flight_manager_clone(database->flights);
+    if (!clone->flights)
+        goto DEFER_4;
+
+    return clone;
+
+DEFER_4:
+    reservation_manager_free(clone->reservations);
+DEFER_3:
+    user_manager_free(clone->users);
+DEFER_2:
+    free(clone);
+DEFER_1:
+    return NULL;
 }
 
 const user_manager_t *database_get_users(const database_t *database) {
@@ -73,6 +120,7 @@ int database_add_user(database_t *database, const user_t *user) {
 int database_add_reservation(database_t *database, const reservation_t *reservation) {
     if (reservation_manager_add_reservation(database->reservations, reservation))
         return 1;
+
     return user_manager_add_user_reservation_association(database->users,
                                                          reservation_get_const_user_id(reservation),
                                                          reservation_get_id(reservation));
@@ -86,15 +134,20 @@ int database_invalidate_flight(database_t *database, flight_id_t id) {
     return flight_manager_invalidate_by_id(database->flights, id);
 }
 
-int database_add_passenger(database_t *database, const char *user_id, flight_id_t flight_id) {
-    if (flight_manager_add_passagers(database->flights, flight_id, 1))
+int database_add_passengers(database_t       *database,
+                            flight_id_t       flight_id,
+                            size_t            n,
+                            const char *const user_ids[n]) {
+    if (flight_manager_add_passagers(database->flights, flight_id, n))
         return 1;
 
-    if (user_manager_add_user_flight_association(database->users, user_id, flight_id)) {
-        flight_manager_add_passagers(database->flights, flight_id, -1); /* Revert +1 passenger */
-        return 1;
+    for (size_t i = 0; i < n; ++i) {
+        if (user_manager_add_user_flight_association(database->users, user_ids[i], flight_id)) {
+            /* Revert the n passengers added and fail. Additions to users are non-reversible. */
+            flight_manager_add_passagers(database->flights, flight_id, -n);
+            return 1;
+        }
     }
-
     return 0;
 }
 

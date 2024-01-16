@@ -17,13 +17,13 @@
 /**
  * @file    flight_manager.h
  * @brief   Contains and manages all flights in a database.
- * @details Usually, a flight manager won't be created by itself, but inside a ::database_t.
+ * @details Usually, a flight manager won't be created by itself, but instead by a ::database_t.
  *
  * @anchor flight_manager_examples
  * ### Examples
  *
  * In the following example, a dataset is loaded into a database. The flight manager is then
- * extracted from the database, and the program iterates over all valid flights.
+ * extracted from the database, and the program iterates over all flights.
  *
  * ```c
  * #include <stdio.h>
@@ -78,7 +78,7 @@
  * int main() {
  *     database_t *database = database_create();
  *     if (!database) {
- *         fprintf(stderr, "Failed to allocate database!");
+ *         fprintf(stderr, "Failed to allocate database!\n");
  *         return 1;
  *     }
  *
@@ -93,6 +93,14 @@
  *     return 0;
  * }
  * ```
+ *
+ * Another operation (other than iteration) that can be performed on a ::flight_manager_t is a
+ * lookup by flight identifier (::flight_manager_get_by_id).
+ *
+ * If you'd rather not use a database, you could create the flight manager yourself with
+ * ::flight_manager_create, add flights to it using ::flight_manager_add_flight, and free it in the
+ * end with ::flight_manager_free. Just keep in mind that added flights and their associated strings
+ * will be copied to memory pools.
  */
 
 #ifndef FLIGHT_MANAGER_H
@@ -107,8 +115,8 @@ typedef struct flight_manager flight_manager_t;
  * @brief   Callback type for flight manager iterations.
  * @details Method called by ::flight_manager_iter for every item in a ::flight_manager_t.
  *
- * @param user_data Argument passed to ::flight_manager_iter that is passed to every callback, so
- *                  that this method can change the program's state.
+ * @param user_data Argument passed to ::flight_manager_iter, that is then passed to every callback,
+ *                  so that this method can change the program's state.
  * @param flight    Flight in the manager.
  *
  * @return `0` on success, or any other value to order iteration to stop.
@@ -116,13 +124,24 @@ typedef struct flight_manager flight_manager_t;
 typedef int (*flight_manager_iter_callback_t)(void *user_data, const flight_t *flight);
 
 /**
- * @brief   Creates a new flight manager.
- * @details A flight manager is a data structure that contains and manages all flights in a
- *          database.
- *
- * @return A new flight manager, or `NULL` if there was not enough memory.
+ * @brief   Instantiates a new ::flight_manager_t.
+ * @details The returned value is owned by the caller and should be `free`d with
+ *          ::flight_manager_free.
+ * @return  The new flight manager, or `NULL` on allocation failure.
  */
 flight_manager_t *flight_manager_create(void);
+
+/**
+ * @brief   Creates a deep copy of a flight manager.
+ * @details Managers usually contain lots of data, possibly even gigabytes! Keep that in mind for
+ *          performance and memory usage reasons.
+ *
+ * @param manager Manager to be copied.
+ *
+ * @return A copy of @p manager, that must be `free`d with ::flight_manager_free. `NULL` can also be
+ *         returned, meaning an allocation failure happened.
+ */
+flight_manager_t *flight_manager_clone(const flight_manager_t *manager);
 
 /**
  * @brief Adds a flight to a flight manager.
@@ -130,20 +149,21 @@ flight_manager_t *flight_manager_create(void);
  * @param manager Flight manager to add @p flight to.
  * @param flight  Flight to add to @p manager.
  *
- * @retval 0 Success
+ * @retval 0 Success.
  * @retval 1 Allocation failure.
  */
 int flight_manager_add_flight(flight_manager_t *manager, const flight_t *flight);
 
 /**
- * @brief Adds a number of passengers to a flight in @p manager.
+ * @brief Adds a number of passengers to a flight in a flight manager.
  *
- * @param manager Manager whose flight needs to be modified.
- * @param id      Identifier of the flight to have its number of passagers added.
+ * @param manager Manager containing the flight that needs to be modified.
+ * @param id      Identifier of the flight to have its number of passagers modified.
  * @param count   Number of passengers to add to the flight.
  *
  * @retval 0 Success.
- * @retval 1 Flight didn't exist.
+ * @retval 1 Flight didn't exist or too many passengers for number of seats. Check which case
+ *           applies by calling ::flight_manager_get_by_id.
  */
 int flight_manager_add_passagers(flight_manager_t *manager, flight_id_t id, int count);
 
@@ -159,10 +179,10 @@ const flight_t *flight_manager_get_by_id(const flight_manager_t *manager, flight
 
 /**
  * @brief   Invalidates a flight stored in a manager.
- * @details Memory can't be cleared by deleting a flight, given the internal structure of the
+ * @details Memory can't be `free`d by deleting a flight, given the internal structure of the
  *          manager. However, the deleted flight won't appear in later lookups or iterations.
  *
- * @param manager Flight manager to get a flight removed from.
+ * @param manager Flight manager remove a flight from.
  * @param id      Identifier of the flight to invalidate.
  *
  * @retval 0 Flight was in the manager and was invalidated.
@@ -171,15 +191,14 @@ const flight_t *flight_manager_get_by_id(const flight_manager_t *manager, flight
 int flight_manager_invalidate_by_id(flight_manager_t *manager, flight_id_t id);
 
 /**
- * @brief   Iterates over all flights in a flight manager.
- * @details Calls @p callback for every flight in @p manager.
+ * @brief Iterates through every user in a flight manager, calling a callback for each one.
  *
- * @param manager    Flight manager to iterate over.
- * @param callback   Method called for every flight in @p manager.
- * @param user_data  Argument passed to @p callback.
+ * @param manager   Flight manager to iterate over.
+ * @param callback  Method called for every flight in @p manager.
+ * @param user_data Argument passed to @p callback.
  *
- * @return `0` if iteration was successful, or any other value if @p callback returned a non-zero
- *         value.
+ * @return The return value of the last-called @p callback (`0` means success, another value means
+ *         the iteration was stopped by a callback).
  */
 int flight_manager_iter(const flight_manager_t        *manager,
                         flight_manager_iter_callback_t callback,
