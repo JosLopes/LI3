@@ -265,7 +265,18 @@ argumento do alocador, para o uso de \texttt{malloc}:
 \subsubsection{Conciliação com a \texttt{glib}}
 \label{sec:glib-conciliation}
 
-{\color{red} I still need to think how to handle this}
+O uso de \emph{const} é um contrato de que um módulo não irá modificar um objeto. A documentação das
+estruturas genéricas da \texttt{glib} assegura isto.\footnote{Há algumas exceções (como uma função
+\texttt{GDestroyNotify} ser providenciada), mas garantimos que a nossa solução para este problema
+não permite nenhuma destas.} No entanto, estas utilizam \texttt{void *} sem \texttt{const}, dado
+que os programadores podem querer utilizá-las para armazenar dados não constantes.
+
+Para podermos usar a \texttt{glib} para armazenar apontadores constantes, criámos \emph{wrappers}
+que os aceitam e lhes tiram o \emph{modifier const} antes de interagirem com uma estrutura da
+\texttt{glib}, algo que podemos que podemos fazer com o aval da documentação. Estes \emph{wrappers}
+são preferíveis a usar as estruturas da \texttt{glib} diretamente e fazer \emph{casts} quando
+necessário, pois reduzimos o potencial de erro do programador a pequenos excertos de código, em
+vez de toda a aplicação, de um modo semelhante a conceito de \texttt{unsafe} em Rust.
 
 \section{Desempenho}
 \label{sec:performance}
