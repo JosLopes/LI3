@@ -252,3 +252,16 @@ uint8_t date_get_day(date_t date) {
 int date_set_day(date_t *date, uint8_t day) {
     DATE_SETTER_FUNCTION_BODY(day, DATE_DAY_MIN, DATE_DAY_MAX);
 }
+
+uint32_t date_generate_dayless(date_t date) {
+    date_union_helper_t date_union = {.date = date};
+    date_union.fields.day          = 0;
+    return date_union.date;
+}
+
+uint32_t date_generate_monthless(date_t date) {
+    date_union_helper_t date_union = {.date = date};
+    date_union.fields.day          = 0;
+    date_union.fields.month        = 0;
+    return date_union.date;
+}
