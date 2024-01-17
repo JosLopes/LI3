@@ -4,8 +4,7 @@ CC              := gcc
 CFLAGS          := -Wall -Wextra -Werror -pedantic -Iinclude $(shell pkg-config --cflags glib-2.0) \
 	$(shell pkg-config --cflags ncursesw)
 STANDARDS       := -std=c99 -D_POSIX_C_SOURCE=200809L
-LIBS            := -lm -lpthread $(shell pkg-config --libs glib-2.0) \
-	$(shell pkg-config --libs ncursesw)
+LIBS            := -lm $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs ncursesw)
 
 DEBUG_CFLAGS    := -O0 -ggdb3
 RELEASE_CFLAGS  := -O2
