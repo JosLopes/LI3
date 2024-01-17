@@ -8,6 +8,7 @@
 \usepackage{amsfonts}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{float}
+\usepackage{footnote}
 
 \chardef\_=`_
 
@@ -19,12 +20,15 @@
 }
 \date{janeiro de 2024}
 
+\makesavenoteenv{tabular}
 \begin{document}
+
 \maketitle
 \onehalfspacing
 \setlength{\parskip}{\baselineskip}
 \setlength{\parindent}{0pt}
 
+\pagebreak
 \begin{abstract}
     Após a entrega da primeira fase deste trabalho, procurámos implementar as funcionalidades em
     falta para a conclusão do desenvolvimento desta aplicação: as restantes quatro \emph{queries},
@@ -309,6 +313,55 @@ auxiliares usados durante a execução das mesmas.
 \subsection{\emph{Benchmarking}}
 \label{sec:benchmarking}
 
+Para testar o desempenho do programa, corremos, nos seguintes sistemas, 500 \emph{queries} no
+\emph{dataset} grande com erros:
+
+\begin{center}
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        & Desktop & Laptop & Mac & Tablet \\
+        \hline
+        CPU & Intel i3-7100 & Ryzen & M1 & Mediatek Helio P22T \\
+        \hline
+        Frequência\footnote{Em sistemas heterogéneos, a frequência do \emph{cluster} de maior
+                            desempenho, dado que o nosso programa apenas usa um núcleo.} &
+        3.9 GHz & ? & ? & 2.3 GHz \\
+        \hline
+        Memória & DDR4 2400 MT/s & ? & ? & LPDDR4X 4266 MT/s \\
+        \hline
+        Linux & 6.6.11 (chroot) & ? & ? & ? \\
+        \hline
+        Compilador & gcc 12.2.0 & ? & ? & ? \\
+        \hline
+    \end{tabular}
+\end{center}
+
+A aplicação foi executada 10 vezes, com as execuções mais rápida e a mais lenta removidas. A partir
+das 8 restantes, calculam-se as seguintes médias de tempo, em segundos:
+
+\begin{center}
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        & Desktop & Laptop & Mac & Tablet \\
+        \hline
+        Utilizadores & ? & ? & ? & ? \\
+        \hline
+        Voos & ? & ? & ? & ? \\
+        \hline
+        Reservas & ? & ? & ? & ? \\
+        \hline
+        Passageiros & ? & ? & ? & ? \\
+        \hline
+        Q10 & ? & ? & ? & ? \\
+        \hline
+        Restantes \emph{queries} & ? & ? & ? & ? \\
+        \hline
+        Total & ? & ? & ? & ? \\
+        \hline
+    \end{tabular}
+\end{center}
+
+
 % TODO - benchmarking
 
 \subsection{Possíveis melhorias}
@@ -333,9 +386,20 @@ lidos após os utilizadores, conseguimos reduzir o tempo de \emph{parsing} de 16
 teórico 8.6 s! A única dependência de dados que encontrámos, um alocador, é facilmente resolúvel
 com o uso de dois alocadores distintos para as relações utilizador -- voo / reserva.
 
-Acreditamos que o desempenho das \emph{queries} ainda pode ser melhorado sem recorrer a paralelismo.
-No entanto, constituem apenas uma pequena fração do tempo total do programa, pelo que a sua
-otimização não é da mais elevada prioridade.
+Acreditamos que o desempenho das \emph{query} 10 ainda pode ser melhorado. Quanto às restantes,
+não vemos muito interesse na sua otimização, mesmo que possível, dado que constituem uma fração de
+tempo muito pequena no modo \emph{batch} e são quase instantâneas para um utilizador do modo
+interativo.
+
+\hspace{1cm}\parbox{15cm}{\small
+    The real problem is that programmers have spent far too much time worrying about efficiency in
+    the wrong places and at the wrong times; premature optimization is the root of all evil (or at
+    least most of it) in programming.
+
+    \begin{flushright}
+        -- Donald Knuth, Computer Programming as an Art, p. 671
+    \end{flushright}
+}
 
 \section{Conclusão}
 \label{sec:conclusion}
