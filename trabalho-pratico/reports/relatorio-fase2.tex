@@ -314,7 +314,33 @@ auxiliares usados durante a execução das mesmas.
 \subsection{Possíveis melhorias}
 \label{sec:possible-performance-improvements}
 
-{\color{red} Falar um pouco de multithreading só para chatear}
+A parte mais lenta do nosso programa é a leitura de um dataset. Como as estruturas de dados
+presentes nos catálogos apresentam tempo de inserção amortizado $\Theta(1)$ e já otimizámos a
+localidade de memória o mais que pudemos (alocadores customizados), não vemos mais otimizações que
+não sacrifiquem a modularidade e encapsulamento que não a paralelização da leitura do
+\emph{dataset}:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.20]{res-fase2/threading.png}
+    \caption{Possível distribuição de tarefas por \emph{threads}, com os tempos da
+             \hyperref[fig:dataset-screenshot]{Figura \ref*{fig:dataset-screenshot}}}
+    \label{fig:threading}
+\end{figure}
+
+Usando a distribuição de tarefas acima, que garante a condição das reservas e passageiros serem
+lidos após os utilizadores, conseguimos reduzir o tempo de \emph{parsing} de 16 s para um mínimo
+teórico 8.6 s! A única dependência de dados que encontrámos, um alocador, é facilmente resolúvel
+com o uso de dois alocadores distintos para as relações utilizador -- voo / reserva.
+
+Acreditamos que o desempenho das \emph{queries} ainda pode ser melhorado sem recorrer a paralelismo.
+No entanto, constituem apenas uma pequena fração do tempo total do programa, pelo que a sua
+otimização não é da mais elevada prioridade.
+
+\section{Conclusão}
+\label{sec:conclusion}
+
+{\color{red} TODO}
 
 \pagebreak
 \section{Anexos}
