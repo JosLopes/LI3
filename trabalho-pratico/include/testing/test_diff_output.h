@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    test_diff_output.h
- * @brief   Formatter of information in a ::test_diff_t for user output.
+ * @file  test_diff_output.h
+ * @brief Formatter of information in a ::test_diff_t for output to the user.
  *
  * @anchor test_diff_output_example
  * ### Example
@@ -32,9 +32,9 @@
 #include "testing/test_diff.h"
 
 /**
- * @brief Prints @p diff to @p output.
+ * @brief Prints the result of a directory difference test to a file stream.
  *
- * @param output Stream where to output data to.
+ * @param output Stream where to output formatted data to.
  * @param diff   Difference test results to be printed.
  */
 void test_diff_output_print(FILE *output, const test_diff_t *diff);
