@@ -194,6 +194,9 @@ void performance_metrics_start_measuring_query_statistics(performance_metrics_t 
     if (!metrics)
         return;
 
+    if (metrics->statistical_events[query_type - 1])
+        performance_metrics_free(metrics->statistical_events[query_type - 1]);
+
     performance_event_t *const perf = performance_event_start_measuring();
     if (!perf)
         fprintf(stderr,
