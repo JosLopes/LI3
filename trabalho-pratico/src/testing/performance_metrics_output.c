@@ -174,16 +174,23 @@ void __performance_metrics_output_print_table(FILE                            *o
  *
  * @param output  Stream where to output formatted performance data to.
  * @param metrics Performance metrics to extract dataset information from.
+ *
+ * @return The time (in microseconds) it took to load the dataset.
  */
-void __performance_metrics_output_print_dataset(FILE                        *output,
-                                                const performance_metrics_t *metrics) {
+uint64_t __performance_metrics_output_print_dataset(FILE                        *output,
+                                                    const performance_metrics_t *metrics) {
+    uint64_t ret = 0;
 
     const performance_event_t *dataset_events[PERFORMANCE_METRICS_DATASET_STEP_DONE];
-    for (size_t i = 0; i < PERFORMANCE_METRICS_DATASET_STEP_DONE; ++i)
+    for (size_t i = 0; i < PERFORMANCE_METRICS_DATASET_STEP_DONE; ++i) {
         dataset_events[i] = performance_metrics_get_dataset_measurement(metrics, i);
+        if (dataset_events[i])
+            ret += performance_event_get_elapsed_time(dataset_events[i]);
+    }
 
     const char *const event_names[] = {"Users", "Flights", "Passengers", "Reservations"};
     __performance_metrics_output_print_table(output, 4, dataset_events, event_names);
+    return ret;
 }
 
 /**
@@ -191,14 +198,21 @@ void __performance_metrics_output_print_dataset(FILE                        *out
  *
  * @param output  Stream where to output formatted performance data to.
  * @param metrics Performance metrics to extract query statistical data generation information from.
+ *
+ * @return The time (in microseconds) it took to generate query statistics (for all queries).
  */
-void __performance_metrics_output_print_query_statistics(FILE                        *output,
-                                                         const performance_metrics_t *metrics) {
+uint64_t __performance_metrics_output_print_query_statistics(FILE                        *output,
+                                                             const performance_metrics_t *metrics) {
+    uint64_t ret = 0;
 
     const performance_event_t *statistical_events[QUERY_TYPE_LIST_COUNT];
-    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
+    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         statistical_events[i] =
             performance_metrics_get_query_statistics_measurement(metrics, i + 1);
+
+        if (statistical_events[i])
+            ret += performance_event_get_elapsed_time(statistical_events[i]);
+    }
 
     char *event_names[QUERY_TYPE_LIST_COUNT];
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
@@ -213,10 +227,12 @@ void __performance_metrics_output_print_query_statistics(FILE                   
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
         free(event_names[i]);
+
+    return ret;
 }
 
 /**
- * @brief Prints performance information about execution of all queries of the same type.
+ * @brief Prints performance information about the execution of all queries of the same type.
  *
  * @param output          Stream where to output formatted performance data to.
  * @param query_type      Type of the query the performance information relates to.
@@ -225,22 +241,28 @@ void __performance_metrics_output_print_query_statistics(FILE                   
  * @param times           Times (in microseconds) it took to process each query.
  * @param statistics_time Time it took to generate query statistical data. Leave `0` to inform that
  *                        @p query_type doesn't generate statistical data.
+ *
+ * @return The time (in microseconds) it took to execute all queries of type @p query_type (doesn't
+ *         include statistical data generation).
  */
-void __performance_metrics_output_print_query(FILE          *output,
-                                              const size_t   query_type,
-                                              size_t         n,
-                                              const size_t   line_numbers[n],
-                                              const uint64_t times[n],
-                                              uint64_t       statistics_time) {
+uint64_t __performance_metrics_output_print_query(FILE          *output,
+                                                  const size_t   query_type,
+                                                  size_t         n,
+                                                  const size_t   line_numbers[n],
+                                                  const uint64_t times[n],
+                                                  uint64_t       statistics_time) {
+    uint64_t ret = 0;
+
     if (n == 0)
-        return;
+        return 0;
     fprintf(output, "\nQuery %zu\n\n", query_type);
 
     /* Calulate amortized times */
     uint64_t *const amortized = malloc(n * sizeof(uint64_t));
     if (!amortized)
-        return;
+        return 0;
     for (size_t i = 0; i < n; ++i) {
+        ret += times[i];
         amortized[i] = times[i] + statistics_time / n;
     }
 
@@ -256,7 +278,7 @@ void __performance_metrics_output_print_query(FILE          *output,
     table_t *const table = table_create(3, n + 1);
     if (!table) {
         free(amortized);
-        return;
+        return ret;
     }
     table_insert_format(table, 1, 0, "Time (%s)", time_unit_name);
     table_insert_format(table, 2, 0, "Amortized (%s)", amortized_unit_name);
@@ -276,29 +298,22 @@ void __performance_metrics_output_print_query(FILE          *output,
     table_draw(output, table);
     table_free(table);
     free(amortized);
+
+    return ret;
 }
 
-void performance_metrics_output_print(FILE *output, const performance_metrics_t *metrics) {
-    /* To know if ANSI escape codes for bold and underline can be used. */
-    const int tty = isatty(fileno(output));
-
-    if (tty)
-        fprintf(output, "\n\x1b[1;4mDATASET LOADING\x1b[22;24m\n\n");
-    else
-        fprintf(output, "\nDATASET LOADING\n\n");
-    __performance_metrics_output_print_dataset(output, metrics);
-
-    if (tty)
-        fprintf(output, "\n\x1b[1;4mQUERY STATISTICAL DATA GENERATION\x1b[22;24m\n\n");
-    else
-        fprintf(output, "\nQUERY STATISTICAL DATA GENERATION\n\n");
-    __performance_metrics_output_print_query_statistics(output, metrics);
-
-    if (tty)
-        fprintf(output, "\n\x1b[1;4mQUERY EXECUTION\x1b[22;24m\n\n");
-    else
-        fprintf(output, "\nQUERY EXECUTION\n");
-
+/**
+ * @brief Prints performance information about the execution of all queries in batch mode's input.
+ *
+ * @param output  Stream where to output formatted performance data to.
+ * @param metrics Performance metrics to extract query execution information from.
+ *
+ * @return The time (in microseconds) it took to execute all queries (doesn't include statistical
+ *         data generation).
+ */
+uint64_t __performance_metrics_output_print_all_queries(FILE                        *output,
+                                                        const performance_metrics_t *metrics) {
+    uint64_t ret = 0;
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
         size_t   *line_numbers;
         uint64_t *times;
@@ -312,15 +327,87 @@ void performance_metrics_output_print(FILE *output, const performance_metrics_t 
                                                                                 i + 1,
                                                                                 &line_numbers,
                                                                                 &times);
-        __performance_metrics_output_print_query(output,
-                                                 i + 1,
-                                                 len,
-                                                 line_numbers,
-                                                 times,
-                                                 statistics_time);
+        ret += __performance_metrics_output_print_query(output,
+                                                        i + 1,
+                                                        len,
+                                                        line_numbers,
+                                                        times,
+                                                        statistics_time);
         free(line_numbers);
         free(times);
     }
+    return ret;
+}
 
+/**
+ * @brief Prints a summary of the performance data collected.
+ *
+ * @param output       Stream where to output formatted performance data to.
+ * @param metrics      Performance metrics to extract query execution information from.
+ * @param dataset_time Time (in microseconds) it took to load the dataset.
+ * @param query_time   Time (in microseconds) it took to execute all queries (including statistical
+ *                     data generation).
+ */
+void __performance_metrics_output_summary(FILE                        *output,
+                                          const performance_metrics_t *metrics,
+                                          uint64_t                     dataset_time,
+                                          uint64_t                     query_time) {
+
+    const char *const time_unit_names[3] = {"us", "ms", "s"};
+    const char *const mem_unit_names[3]  = {"KiB", "MiB", "GiB"};
+    const char       *unit_name;
+    int               multiplier;
+
+    const uint64_t total_time = performance_metrics_get_program_total_time(metrics);
+    multiplier = __performance_metrics_choose_unit(1, &total_time, time_unit_names, &unit_name);
+    fprintf(output, "Total time: %6.2lf %2s\n", (double) total_time / multiplier, unit_name);
+
+    multiplier = __performance_metrics_choose_unit(1, &dataset_time, time_unit_names, &unit_name);
+    fprintf(output,
+            "   Dataset: %6.2lf %2s (%4.1f %%)\n",
+            (double) dataset_time / multiplier,
+            unit_name,
+            (dataset_time * 100.0) / total_time);
+
+    multiplier = __performance_metrics_choose_unit(1, &query_time, time_unit_names, &unit_name);
+    fprintf(output,
+            "   Queries: %6.2lf %2s (%4.1f %%)\n",
+            (double) query_time / multiplier,
+            unit_name,
+            (query_time * 100.0) / total_time);
+
+    const uint64_t total_mem = performance_metrics_get_program_total_mem(metrics);
+    multiplier = __performance_metrics_choose_unit(1, &total_mem, mem_unit_names, &unit_name);
+    fprintf(output, "\nPeak memory: %.2lf %s\n", (double) total_mem / multiplier, unit_name);
+}
+
+void performance_metrics_output_print(FILE *output, const performance_metrics_t *metrics) {
+    /* To know if ANSI escape codes for bold and underline can be used. */
+    const int tty = isatty(fileno(output));
+
+    if (tty)
+        fprintf(output, "\n\x1b[1;4mDATASET LOADING\x1b[22;24m\n\n");
+    else
+        fprintf(output, "\nDATASET LOADING\n\n");
+    const uint64_t dataset_time = __performance_metrics_output_print_dataset(output, metrics);
+
+    if (tty)
+        fprintf(output, "\n\x1b[1;4mQUERY STATISTICAL DATA GENERATION\x1b[22;24m\n\n");
+    else
+        fprintf(output, "\nQUERY STATISTICAL DATA GENERATION\n\n");
+    uint64_t query_time = __performance_metrics_output_print_query_statistics(output, metrics);
+
+    if (tty)
+        fprintf(output, "\n\x1b[1;4mQUERY EXECUTION\x1b[22;24m\n\n");
+    else
+        fprintf(output, "\nQUERY EXECUTION\n\n");
+    query_time += __performance_metrics_output_print_all_queries(output, metrics);
+
+    if (tty)
+        fprintf(output, "\n\x1b[1;4mPERFORMANCE SUMMARY\x1b[22;24m\n\n");
+    else
+        fprintf(output, "\nPERFORMANCE SUMMARY\n\n");
+
+    __performance_metrics_output_summary(output, metrics, dataset_time, query_time);
     putchar('\n');
 }

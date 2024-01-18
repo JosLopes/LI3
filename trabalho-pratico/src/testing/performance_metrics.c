@@ -25,6 +25,7 @@
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 
 #include "queries/query_type_list.h"
 #include "testing/performance_metrics.h"
@@ -43,12 +44,19 @@
  *     @brief   Performance information about individual query execution.
  *     @details Hash tables that associate a query's line number in a file (integer) to a
  *              ::performance_event_t.
+ * @var performance_metrics::program_total_time
+ *     @brief Time (in microseconds) that the whole program took to be executed.
+ * @var performance_metrics::program_total_mem
+ *     @brief Peak memory usage (in KiB) of the program.
  */
 struct performance_metrics {
     performance_metrics_dataset_step_t current_dataset_step;
     performance_event_t               *dataset_events[PERFORMANCE_METRICS_DATASET_STEP_DONE];
     performance_event_t               *statistical_events[QUERY_TYPE_LIST_COUNT];
     GHashTable                        *query_events[QUERY_TYPE_LIST_COUNT];
+
+    uint64_t program_total_time;
+    size_t   program_total_mem;
 };
 
 performance_metrics_t *performance_metrics_create(void) {
@@ -68,6 +76,9 @@ performance_metrics_t *performance_metrics_create(void) {
                                                      (GDestroyNotify) performance_event_free);
     }
 
+    ret->program_total_time = 0;
+    ret->program_total_mem  = 0;
+
     return ret;
 }
 
@@ -86,8 +97,6 @@ performance_metrics_t *performance_metrics_clone(const performance_metrics_t *me
                 performance_metrics_free(ret);
                 return NULL;
             }
-        } else {
-            ret->dataset_events[i] = NULL;
         }
     }
 
@@ -99,8 +108,6 @@ performance_metrics_t *performance_metrics_clone(const performance_metrics_t *me
                 performance_metrics_free(ret);
                 return NULL;
             }
-        } else {
-            ret->statistical_events[i] = NULL;
         }
 
         /* glib doesn't have a hash table cloning method. Go figure! */
@@ -121,6 +128,9 @@ performance_metrics_t *performance_metrics_clone(const performance_metrics_t *me
             g_hash_table_insert(ret->query_events[i], key, event_clone);
         }
     }
+
+    ret->program_total_time = metrics->program_total_time;
+    ret->program_total_mem  = metrics->program_total_mem;
 
     return ret;
 }
@@ -241,6 +251,23 @@ void performance_metrics_stop_measuring_query_execution(performance_metrics_t *m
                 line_in_file);
 }
 
+void performance_metrics_measure_whole_program(performance_metrics_t *metrics) {
+    if (!metrics)
+        return;
+
+    struct rusage usage;
+    const int     insuccess = getrusage(RUSAGE_SELF, &usage);
+    if (insuccess) {
+        fputs("Failed to measure resource usage of the whole program!\n", stderr);
+        metrics->program_total_time = 0;
+        metrics->program_total_mem  = 0;
+    } else {
+        metrics->program_total_time = (usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000 +
+                                      (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+        metrics->program_total_mem = usage.ru_maxrss;
+    }
+}
+
 const performance_event_t *
     performance_metrics_get_dataset_measurement(const performance_metrics_t       *metrics,
                                                 performance_metrics_dataset_step_t step) {
@@ -251,6 +278,14 @@ const performance_event_t *
     performance_metrics_get_query_statistics_measurement(const performance_metrics_t *metrics,
                                                          size_t                       query_type) {
     return metrics->statistical_events[query_type - 1];
+}
+
+uint64_t performance_metrics_get_program_total_time(const performance_metrics_t *metrics) {
+    return metrics->program_total_time;
+}
+
+size_t performance_metrics_get_program_total_mem(const performance_metrics_t *metrics) {
+    return metrics->program_total_mem;
 }
 
 /**

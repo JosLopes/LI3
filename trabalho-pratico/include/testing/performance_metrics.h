@@ -134,6 +134,18 @@ void performance_metrics_stop_measuring_query_execution(performance_metrics_t *m
                                                         size_t                 line_in_file);
 
 /**
+ * @brief   Measures execution time and peak memory usage of the whole program.
+ * @details Must be called after the program is done executing and before @p metrics are displayed.
+ *          Measuring failures are reported to `stderr`.
+ *
+ * @param metrics Performance metrics to be modified. Can be `NULL`, for no performance profiling.
+ *
+ * #### Example
+ * See [the header file's documentation](@ref performance_metrics_example).
+ */
+void performance_metrics_measure_whole_program(performance_metrics_t *metrics);
+
+/**
  * @brief Gets a measurement of dataset loading performance from a ::performance_metrics_t.
  *
  * @param metrics Performance metrics to get dataset loading performance information from.
@@ -183,6 +195,29 @@ size_t performance_metrics_get_query_execution_measurements(const performance_me
                                                             size_t                       query_type,
                                                             size_t   **out_line_numbers,
                                                             uint64_t **out_times);
+
+/**
+ * @brief   Gets the time it took to run the whole program from a ::performance_metrics_t.
+ * @details Must be called after ::performance_metrics_measure_whole_program.
+ *
+ * @param  metrics Performance metrics to get performance information from.
+ *
+ * @return The time (in microseconds) it took to run the whole program. `0` can be returned if that
+ *         hasn't been measured or if that measurement failed.
+ */
+uint64_t performance_metrics_get_program_total_time(const performance_metrics_t *metrics);
+
+/**
+ * @brief   Gets the peak memory usage during the program's execution from a
+ *          ::performance_metrics_t.
+ * @details Must be called after ::performance_metrics_measure_whole_program.
+ *
+ * @param  metrics Performance metrics to get performance information from.
+ *
+ * @return The peak memory usage in KiB (kibikytes). `0` can be returned if that hasn't been
+ *         measured or if that measurement failed.
+ */
+size_t performance_metrics_get_program_total_mem(const performance_metrics_t *metrics);
 
 /**
  * @brief Frees memory in a ::performance_metrics_t.
