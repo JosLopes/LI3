@@ -27,12 +27,11 @@
 #include <stdlib.h>
 
 #include "queries/query_type_list.h"
-#include "testing/performance_event.h"
 #include "testing/performance_metrics.h"
 
 /**
  * @struct performance_metrics
- * @brief  Information about performance for dataset loading and query execution.
+ * @brief  Information about performance about different parts of the application.
  *
  * @var performance_metrics::current_dataset_step
  *     @brief Current part of the dataset being loaded.
@@ -42,7 +41,8 @@
  *     @brief Performance information about query statistical data collection.
  * @var performance_metrics::query_events
  *     @brief   Performance information about individual query execution.
- *     @details Hash tables that associate a query line (in a file) to a ::performance_event.
+ *     @details Hash tables that associate a query's line number in a file (integer) to a
+ *              ::performance_event_t.
  */
 struct performance_metrics {
     performance_metrics_dataset_step_t current_dataset_step;
@@ -52,7 +52,7 @@ struct performance_metrics {
 };
 
 performance_metrics_t *performance_metrics_create(void) {
-    performance_metrics_t *ret = malloc(sizeof(performance_metrics_t));
+    performance_metrics_t *const ret = malloc(sizeof(performance_metrics_t));
     if (!ret)
         return NULL;
 
@@ -60,11 +60,9 @@ performance_metrics_t *performance_metrics_create(void) {
     for (size_t i = 0; i < PERFORMANCE_METRICS_DATASET_STEP_DONE; ++i)
         ret->dataset_events[i] = NULL;
 
-    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
-        ret->statistical_events[i] = NULL;
-
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
-        ret->query_events[i] = g_hash_table_new_full(g_direct_hash,
+        ret->statistical_events[i] = NULL;
+        ret->query_events[i]       = g_hash_table_new_full(g_direct_hash,
                                                      g_direct_equal,
                                                      NULL,
                                                      (GDestroyNotify) performance_event_free);
@@ -74,22 +72,61 @@ performance_metrics_t *performance_metrics_create(void) {
 }
 
 performance_metrics_t *performance_metrics_clone(const performance_metrics_t *metrics) {
-    performance_metrics_t *ret = malloc(sizeof(performance_metrics_t));
+    performance_metrics_t *const ret = malloc(sizeof(performance_metrics_t));
     if (!ret)
         return NULL;
+    memset(ret, 0, sizeof(performance_metrics_t)); /* To ease cleanup on allocation failure */
 
     ret->current_dataset_step = metrics->current_dataset_step;
-    for (size_t i = 0; i < PERFORMANCE_METRICS_DATASET_STEP_DONE; ++i)
-        ret->dataset_events[i] = performance_event_clone(metrics->dataset_events[i]);
+    for (size_t i = 0; i < PERFORMANCE_METRICS_DATASET_STEP_DONE; ++i) {
+        if (metrics->dataset_events[i]) {
 
-    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
-        ret->statistical_events[i] = performance_event_clone(metrics->statistical_events[i]);
+            ret->dataset_events[i] = performance_event_clone(metrics->dataset_events[i]);
+            if (!ret->dataset_events[i]) { /* Allocation failure */
+                performance_metrics_free(ret);
+                return NULL;
+            }
+        } else {
+            ret->dataset_events[i] = NULL;
+        }
+    }
+
+    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
+        if (metrics->statistical_events[i]) {
+
+            ret->statistical_events[i] = performance_event_clone(metrics->statistical_events[i]);
+            if (!ret->statistical_events[i]) { /* Allocation failure */
+                performance_metrics_free(ret);
+                return NULL;
+            }
+        } else {
+            ret->statistical_events[i] = NULL;
+        }
+
+        /* glib doesn't have a hash table cloning method. Go figure! */
+        ret->query_events[i] = g_hash_table_new_full(g_direct_hash,
+                                                     g_direct_equal,
+                                                     NULL,
+                                                     (GDestroyNotify) performance_event_free);
+        GHashTableIter iter;
+        gpointer       key, value;
+        g_hash_table_iter_init(&iter, metrics->query_events[i]);
+        while (g_hash_table_iter_next(&iter, &key, &value)) {
+            performance_event_t *const event_clone = performance_event_clone(value);
+            if (!event_clone) {
+                performance_metrics_free(ret);
+                return NULL;
+            }
+
+            g_hash_table_insert(ret->query_events[i], key, event_clone);
+        }
+    }
 
     return ret;
 }
 
 /**
- * @brief Prints a dataset performance measurement errpr to `stderr`.
+ * @brief Prints a dataset performance measurement error to `stderr`.
  * @param step Step of dataset loading the error happened in.
  */
 void __performance_metrics_print_dataset_measurement_error(
@@ -110,7 +147,7 @@ void __performance_metrics_print_dataset_measurement_error(
             where = "reservations.csv";
             break;
         default:
-            where = "unknown location";
+            where = "?.csv";
             break;
     };
     fprintf(stderr, "Failed to perform resource usage measurement in dataset! (%s)\n", where);
@@ -125,18 +162,16 @@ void performance_metrics_measure_dataset(performance_metrics_t             *metr
     if (metrics->current_dataset_step != PERFORMANCE_METRICS_DATASET_STEP_NOT_STARTED &&
         metrics->dataset_events[metrics->current_dataset_step]) {
 
-        int insuccess = performance_event_stop_measuring(
-            metrics->dataset_events[metrics->current_dataset_step]);
-        if (insuccess)
+        if (performance_event_stop_measuring(
+                metrics->dataset_events[metrics->current_dataset_step]))
             __performance_metrics_print_dataset_measurement_error(metrics->current_dataset_step);
     }
 
     /* Start current measurement */
-
     if (step == PERFORMANCE_METRICS_DATASET_STEP_DONE)
         return;
 
-    performance_event_t *perf = performance_event_start_measuring();
+    performance_event_t *const perf = performance_event_start_measuring();
     if (!perf)
         __performance_metrics_print_dataset_measurement_error(step);
 
@@ -149,7 +184,7 @@ void performance_metrics_start_measuring_query_statistics(performance_metrics_t 
     if (!metrics)
         return;
 
-    performance_event_t *perf = performance_event_start_measuring();
+    performance_event_t *const perf = performance_event_start_measuring();
     if (!perf)
         fprintf(stderr,
                 "Failed to measure resource usage in query %zu's statistical data generation!\n",
@@ -178,7 +213,7 @@ void performance_metrics_start_measuring_query_execution(performance_metrics_t *
     if (!metrics)
         return;
 
-    performance_event_t *perf = performance_event_start_measuring();
+    performance_event_t *const perf = performance_event_start_measuring();
     if (!perf)
         fprintf(stderr,
                 "Failed to measure resource usage in query %zu's (line %zu) execution!\n",
@@ -196,7 +231,7 @@ void performance_metrics_stop_measuring_query_execution(performance_metrics_t *m
     if (!metrics)
         return;
 
-    performance_event_t *perf =
+    performance_event_t *const perf =
         g_hash_table_lookup(metrics->query_events[query_type - 1], GUINT_TO_POINTER(line_in_file));
 
     if (!perf || performance_event_stop_measuring(perf))
@@ -230,16 +265,22 @@ size_t performance_metrics_get_query_execution_measurements(const performance_me
                                                             size_t                       query_type,
                                                             size_t   **out_line_numbers,
                                                             uint64_t **out_times) {
-    guint   length;
-    size_t *line_numbers =
+    guint         length;
+    size_t *const line_numbers_gmalloc =
         (size_t *) g_hash_table_get_keys_as_array(metrics->query_events[query_type - 1], &length);
-    qsort(line_numbers, length, sizeof(size_t), __performance_metrics_size_compare_func);
+    qsort(line_numbers_gmalloc, length, sizeof(size_t), __performance_metrics_size_compare_func);
 
-    uint64_t *times = g_malloc(length * sizeof(uint64_t));
+    /* Make line_numbers a malloc (instead of g_malloc) allocated pointer */
+    size_t *const line_numbers = malloc(sizeof(size_t) * length);
+    memcpy(line_numbers, line_numbers_gmalloc, sizeof(size_t) * length);
+    g_free(line_numbers_gmalloc);
+
+    uint64_t *const times = malloc(length * sizeof(uint64_t));
 
     for (size_t i = 0; i < length; ++i) {
-        performance_event_t *perf = g_hash_table_lookup(metrics->query_events[query_type - 1],
-                                                        GUINT_TO_POINTER(line_numbers[i]));
+        const performance_event_t *const perf =
+            g_hash_table_lookup(metrics->query_events[query_type - 1],
+                                GUINT_TO_POINTER(line_numbers[i]));
 
         times[i] = performance_event_get_elapsed_time(perf);
     }
@@ -259,7 +300,8 @@ void performance_metrics_free(performance_metrics_t *metrics) {
             performance_event_free(metrics->statistical_events[i]);
 
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
-        g_hash_table_unref(metrics->query_events[i]);
+        if (metrics->query_events[i]) /* If statement to ease cleanup after allocation failure */
+            g_hash_table_unref(metrics->query_events[i]);
 
     free(metrics);
 }

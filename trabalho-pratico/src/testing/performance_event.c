@@ -18,7 +18,7 @@
  * @file  performance_event.c
  * @brief Implementation of methods in include/testing/performance_event.h
  *
- * #### Examples
+ * ### Examples
  * See [the header file's documentation](@ref performance_event_example).
  */
 
@@ -38,13 +38,14 @@
  *
  * @var performance_event::elapsed_time
  *     @brief   Time spent in microseconds. Includes both system and user time.
- *     @details If ::performance_event_end_measuring has been called, this is the time spent running
- *              the task. Otherwise, it's the time running the program until the task.
+ *     @details If ::performance_event_stop_measuring has been called, this is the time spent
+ *              running the task. Otherwise, it's the time running the program until the task
+ *              (timestamp).
  * @var performance_event::used_memory
  *     @brief   Memory spent (in KiB).
- *     @details If ::performance_event_end_measuring has been called, this is the difference between
- *              memory in the beginning and in the end of the task, clamped to zero. Otherwise,
- *              it's the memory used before starting to run the task.
+ *     @details If ::performance_event_stop_measuring has been called, this is the difference
+ *              between memory in the beginning and in the end of the task, clamped to zero.
+ *              Otherwise, it's the memory used before starting to run the task.
  */
 struct performance_event {
     uint64_t elapsed_time;
@@ -66,7 +67,7 @@ uint64_t __performance_event_add_user_system_time(struct timeval user, struct ti
 /**
  * @brief Parses a line from `/proc/self/status`, looking for `VmSize`.
  *
- * @param user_data A pointer to a `size_t`, where to write the ammount of used memory to.
+ * @param user_data A pointer to a `size_t`, where to write the amount of used memory to.
  * @param line      Line of `/proc/self/status` to be parsed.
  *
  * @retval 0 `VmSize` not found on this line. Continue parsing.
@@ -96,32 +97,30 @@ int __performance_event_get_memory_usage_parse_line(void *user_data, char *line)
 }
 
 /**
- * @brief   Parses `/proc/self/status` to get memory usage information
- * @details Exclusive to Linux. Wouldn't be needed if `getrusage` weren't broken (Linux does not
- *          expose current memory usage, while other BSDs do).
+ * @brief   Parses `/proc/self/status` to get current memory usage information
+ * @details Exclusive to Linux. This wouldn't be needed if `getrusage` weren't broken (Linux does
+ *          not expose current memory usage, while other BSDs do).
  *
  * @param output Where to output the memory usage (in KiB), only on success.
  *
- * @retval 0 Success
- * @retval 1 Failure
+ * @retval 0 Success.
+ * @retval 1 Failure.
  */
 int __performance_event_get_memory_usage(size_t *output) {
     FILE *status = fopen("/proc/self/status", "r");
     if (!status)
         return 1;
 
-    if (stream_tokenize(status, '\n', __performance_event_get_memory_usage_parse_line, output) !=
-        1) {
-        fclose(status);
-        return 1;
-    }
+    int retval = 0;
+    if (stream_tokenize(status, '\n', __performance_event_get_memory_usage_parse_line, output) != 1)
+        retval = 1;
 
     fclose(status);
-    return 0;
+    return retval;
 }
 
 performance_event_t *performance_event_start_measuring(void) {
-    performance_event_t *perf = malloc(sizeof(performance_event_t));
+    performance_event_t *const perf = malloc(sizeof(performance_event_t));
     if (!perf)
         return NULL;
 
@@ -131,7 +130,7 @@ performance_event_t *performance_event_start_measuring(void) {
     }
 
     struct rusage usage;
-    int           insuccess = getrusage(RUSAGE_SELF, &usage);
+    const int     insuccess = getrusage(RUSAGE_SELF, &usage);
     if (insuccess) {
         free(perf);
         return NULL;
@@ -142,7 +141,7 @@ performance_event_t *performance_event_start_measuring(void) {
 }
 
 performance_event_t *performance_event_clone(const performance_event_t *perf) {
-    performance_event_t *ret = malloc(sizeof(performance_event_t));
+    performance_event_t *const ret = malloc(sizeof(performance_event_t));
     if (!ret)
         return NULL;
 
@@ -152,14 +151,15 @@ performance_event_t *performance_event_clone(const performance_event_t *perf) {
 
 int performance_event_stop_measuring(performance_event_t *perf) {
     struct rusage usage;
-    int           insuccess = getrusage(RUSAGE_SELF, &usage);
+    const int     insuccess = getrusage(RUSAGE_SELF, &usage);
     if (insuccess) {
         perf->elapsed_time = 0;
         perf->used_memory  = 0;
         return 1;
     }
 
-    uint64_t elapsed   = __performance_event_add_user_system_time(usage.ru_utime, usage.ru_stime);
+    const uint64_t elapsed =
+        __performance_event_add_user_system_time(usage.ru_utime, usage.ru_stime);
     perf->elapsed_time = elapsed - perf->elapsed_time;
 
     size_t new_memory;

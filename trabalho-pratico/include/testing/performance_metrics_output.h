@@ -16,17 +16,19 @@
 
 /**
  * @file  performance_metrics_output.h
- * @brief Method to produce beautiful output from data in ::performance_metrics_t.
+ * @brief Method to produce formatted output from data in ::performance_metrics_t.
  *
  * @anchor performance_metrics_output_example
  * ### Example
  *
  * See test.c to know how to create a ::performance_metrics_t structure. Then, just call
- * ::performance_metrics_output_print with an output file.
+ * ::performance_metrics_output_print with an output file (usually `stdout`).
  */
 
 #ifndef PERFORMANCE_OUTPUT_H
 #define PERFORMANCE_OUTPUT_H
+
+#include <stdio.h>
 
 #include "testing/performance_metrics.h"
 
