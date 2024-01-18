@@ -65,7 +65,7 @@ typedef struct table table_t;
 /**
  * @brief Creates a new table.
  *
- * @param wdith  Height of the table. This includes its header. Must be at least `2`.
+ * @param width  Height of the table. This includes its header. Must be at least `2`.
  * @param height Width of the table.  This includes its header. Must be at least `2`.
  *
  * @return A pointer to a new table that must later be deleted with ::table_free, or `NULL` on

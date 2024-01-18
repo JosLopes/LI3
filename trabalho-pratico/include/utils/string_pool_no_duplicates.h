@@ -110,8 +110,8 @@ string_pool_no_duplicates_t *string_pool_no_duplicates_create(size_t block_capac
  * @param pool Pool to allocate the string in, if necessary.
  * @param str  String to be copied to the pool, if necessary.
  *
- * @return The pointer to the string in @pool, or `NULL` on allocation failure. It must be constant,
- *         as the same pointer may be returned when the same string is allocate.
+ * @return The pointer to the string in @p pool, or `NULL` on allocation failure. It must be
+ *         constant, as the same pointer may be returned when the same string is allocate.
  *
  * #### Examples
  * See [the header file's documentation](@ref string_pool_no_duplicates_examples).
