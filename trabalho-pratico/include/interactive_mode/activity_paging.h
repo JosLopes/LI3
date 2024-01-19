@@ -26,8 +26,8 @@
  * strings in the said array, and whether lines should be grouped in blocks (the definition of a
  * block can also be found on the documentation for ::activity_paging_run).
  *
- * The pages generated will look like the following on screen (in this particular case there are
- * three lines per block and three total blocks, one hidden on the next page):
+ * The generated pages will look like the following on screen. In this example there are three lines
+ * per block and three total blocks (one hidden on the next page).
  *
  * ```text
  * +---------------------Query output--------------------+
@@ -37,14 +37,12 @@
  * | 1º line of the 2º block                             |
  * | 2º line of the 2º block                             |
  * |                                                     |
- * | Use the left and right arrows to navigate     1 / 2 |
+ * | Use the ← and → to navigate                   1 / 2 |
  * +-----------------------------------------------------+
  * ```
  */
 #ifndef ACTIVITY_PAGING_H
 #define ACTIVITY_PAGING_H
-
-#include "interactive_mode/activity.h"
 
 /**
  * @brief Runs a TUI activity for a paginator.
@@ -54,16 +52,17 @@
  *          This paginator supports either no blocks, or fixed-sized blocks, whose size is
  *          automatically determined.
  *
- * @param lines        The lines of output be shown on the screen.
- * @param lines_length The length of @p lines.
- * @param blocking     If text blocks should be considered in page separation.
+ *
+ * @param n        The number of @p lines.
+ * @param lines    The lines of output be shown on the screen.
+ * @param blocking If text blocks should be considered in page separation.
  *
  * @retval 0 Success.
- * @retval 1 Allocation Failure.
+ * @retval 1 Allocation failure.
  *
  * #### Examples
  * See [the header file's documentation](@ref activity_paging_examples).
  */
-int activity_paging_run(const char *const *lines, size_t lines_length, int blocking);
+int activity_paging_run(size_t n, const char *const lines[n], int blocking);
 
 #endif

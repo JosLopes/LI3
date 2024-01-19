@@ -22,7 +22,11 @@
  * See [the header file's documentation](@ref table_examples).
  */
 
+#include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/string_pool.h"

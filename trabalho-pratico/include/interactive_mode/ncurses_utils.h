@@ -35,22 +35,23 @@
  * +-----+
  * ```
  *
- * The internal area of the rectangle is `5 x 5`, but the rectangle becomes `7 x 7` when its borders
- * are considered. The internal rectangle area starts spans from `(1, 1)` until `(5, 5)`. However,
- * the rectangle's border touches the top-left corner of the screen (`(0, 0)` to `(7, 7)`).
+ * The internal area of the rectangle is `5 x 5`, but the rectangle's dimensions become `7 x 7` when
+ * its borders are considered. The internal rectangle area spans from `(1, 1)` until `(5, 5)`.
+ * However, the rectangle's border touches the top-left corner of the screen (with the border, the
+ * rectangle goes from `(0, 0)` to `(7, 7)`).
  *
  * #### String measurement
  *
- * Here is an example of the widths of different characters. `g_utf8_get_char` in this example, for
- * extracting Unicode characters from a string.
+ * Here is an example of the widths of different characters. `g_utf8_get_char` is used in this
+ * example for extracting Unicode characters from a string.
  *
  *  - `ncurses_measure_character(g_utf8_get_char("G"))` returns 1;
- *  - `ncurses_measure_character(g_utf8_get_char("命"))` returns 2;
+ *  - `ncurses_measure_character(g_utf8_get_char("命"))` returns 2.
  *
  * UTF-8 strings can be measured using ::ncurses_measure_string:
  *
  *  - `ncurses_measure_string("Life!")` returns 5;
- *  - `ncurses_measure_string("命!")` returns 3, as 命 is a double-width character;
+ *  - `ncurses_measure_string("命!")` returns 3, as 命 is a double-width character.
  *
  * If you have a UTF-32 string, please use ::ncurses_measure_unicode_string.
  *
@@ -59,8 +60,10 @@
  * Before rendering a string in a limited space, you might want to know how many characters you
  * can draw before overflowing the drawing area. That can be done using the following methods:
  *
- * - ::ncurses_prefix_from_maximum_length calculates the width of the longest drawable prefix;
- * - ::ncurses_suffix_from_maximum_length calculates the width of the longest drawable suffix.
+ * - ::ncurses_prefix_from_maximum_length calculates the number of characters (and width) of the
+ *   longest drawable prefix;
+ * - ::ncurses_suffix_from_maximum_length calculates the number of characters (and width) of the
+ *   longest drawable suffix.
  *
  * Suppose you can only draw 3 monospace characters and need to render the string `"花火!"`. We can
  * convert it to UTF-32 in the following way:
@@ -80,8 +83,17 @@
  * Don't forget to call `g_free` for `utf32` in the end.
  */
 
-#include <glib.h>
+#ifndef NCURSES_UTILS
+#define NCURSES_UTILS
+
 #include <inttypes.h>
+#include <stddef.h>
+
+/**
+ * @brief   An UTF-32 codepoint.
+ * @details Equivalent to a `gunichar`, but does not incur the `glib` dependency.
+ */
+typedef uint32_t unichar_t;
 
 /**
  * @brief   Renders a rectangle using ncurses.
@@ -100,7 +112,17 @@
 void ncurses_render_rectangle(int x, int y, int width, int height);
 
 /**
- * @brief   Measures the width of a unicode codepoint (interpreted as a single glyph) for ncurses
+ * @brief   Writes an UTF-32 to an `ncurses` window.
+ * @details Similar to `addnwstr`, but for a 32-bit codepoints, instead of whatever mess `wchar_t`
+ *          might be on a given system.
+ *
+ * @param str Null-terminated UTF-32 string to be printed.
+ * @param n   Maximum number of characters of @p str to be printed.
+ */
+void ncurses_put_wide_string(const unichar_t *str, size_t n);
+
+/**
+ * @brief   Measures the width of a Unicode codepoint (interpreted as a single glyph) for `ncurses`
  *          rendering.
  * @details This doesn't always return `1`, as there are both `0`-width and double-width characters.
  *          Examples of this are unprintable characters and most CJK characters, respectively.
@@ -113,7 +135,7 @@ void ncurses_render_rectangle(int x, int y, int width, int height);
  * #### Examples
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
-int8_t ncurses_measure_character(gunichar c);
+int ncurses_measure_character(unichar_t c);
 
 /**
  * @brief   Measures the width of a null-terminated UTF-32 string for `ncurses` rendering.
@@ -132,7 +154,7 @@ int8_t ncurses_measure_character(gunichar c);
  * #### Examples
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
-size_t ncurses_measure_unicode_string(const gunichar *str);
+size_t ncurses_measure_unicode_string(const unichar_t *str);
 
 /**
  * @brief   Measures the width of a null-terminated UTF-8 string for `ncurses` rendering.
@@ -141,8 +163,8 @@ size_t ncurses_measure_unicode_string(const gunichar *str);
  *          described ::ncurses_measure_character. Emojis (or any other multi-codepoint character
  *          not formed by diacritics) aren't supported. Multi-line strings aren't supported as well.
  *
- *          This function is somewhat slow, as it requires allocations and lots of lookups in
- *          Unicode tables. Try to keep its use to a minimum.
+ *          This function is somewhat slow, as it requires lots of lookups in Unicode tables.
+ *          Try to keep its use to a minimum.
  *
  * @param str Null-terminated UTF-8 string to have its width measured.
  *
@@ -173,7 +195,7 @@ size_t ncurses_measure_string(const char *str);
  * #### Examples
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
-size_t ncurses_prefix_from_maximum_length(const gunichar *str, size_t max, size_t *width);
+size_t ncurses_prefix_from_maximum_length(const unichar_t *str, size_t max, size_t *width);
 
 /**
  * @brief   Calculates the length of the longest suffix of @p str that can be printed without going
@@ -196,4 +218,6 @@ size_t ncurses_prefix_from_maximum_length(const gunichar *str, size_t max, size_
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
 size_t
-    ncurses_suffix_from_maximum_length(const gunichar *str, size_t len, size_t max, size_t *width);
+    ncurses_suffix_from_maximum_length(const unichar_t *str, size_t len, size_t max, size_t *width);
+
+#endif
