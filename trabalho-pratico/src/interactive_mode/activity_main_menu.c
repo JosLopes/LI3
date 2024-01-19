@@ -27,8 +27,8 @@
 #include "interactive_mode/activity_menu.h"
 
 activity_main_menu_chosen_option_t activity_main_menu_run(void) {
-    const char *const menu_options[3] = {"Load dataset", "Run query", "Leave"};
-    const ssize_t     menu_return     = activity_menu_run("MAIN MENU", 3, menu_options);
+    const char *const menu_options[] = {"Load dataset", "Run query", "License", "Leave"};
+    const ssize_t     menu_return    = activity_menu_run("MAIN MENU", 4, menu_options);
 
     switch (menu_return) {
         case 0:
@@ -36,6 +36,8 @@ activity_main_menu_chosen_option_t activity_main_menu_run(void) {
         case 1:
             return ACTIVITY_MAIN_MENU_RUN_QUERY;
         case 2:
+            return ACTIVITY_MAIN_MENU_LICENSE;
+        case 3:
             return ACTIVITY_MAIN_MENU_LEAVE;
         default:
             return ACTIVITY_MAIN_MENU_LEAVE; /* Leave on error */

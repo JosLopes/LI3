@@ -52,13 +52,17 @@ typedef enum {
  *     @brief The line where the current page being displayed starts.
  * @var activity_paging_data_t::change_page
  *     @brief An user action to change, or keep, the current page.
+ * @var activity_paging_data_t::title
+ *     @brief Title of the activity.
  */
 typedef struct {
-    gunichar **lines;
-    size_t     lines_length, block_length;
+    unichar_t **lines;
+    size_t      lines_length, block_length;
 
     size_t                   page_reference_index;
     activity_paging_action_t change_page;
+
+    unichar_t *title;
 } activity_paging_data_t;
 
 /**
@@ -82,9 +86,11 @@ int __activity_paging_keypress(void *activity_data, wint_t key, int is_key_code)
     } else if (is_key_code) {
         /* Page changing is done during rendering, as there there's context about screen size. */
         switch (key) {
+            case KEY_PPAGE:
             case KEY_LEFT:
                 paging->change_page = ACTIVITY_PAGING_ACTION_PREVIOUS_PAGE;
                 return 0;
+            case KEY_NPAGE:
             case KEY_RIGHT:
                 paging->change_page = ACTIVITY_PAGING_ACTION_NEXT_PAGE;
                 return 0;
@@ -121,8 +127,11 @@ int __activity_paging_render(void *activity_data) {
     ncurses_render_rectangle(menu_x, menu_y, menu_width, menu_height);
 
     /* Print the title */
-    move(menu_y - 1, menu_x + (menu_width - strlen("Query output")) / 2);
-    printw("%s", "Query output");
+    size_t       title_width;
+    const size_t title_max_chars =
+        ncurses_prefix_from_maximum_length(paging->title, menu_width - 3, &title_width);
+    move(menu_y - 1, menu_x + (menu_width - title_width) / 2);
+    ncurses_put_wide_string(paging->title, title_max_chars);
 
     /*
      * Handle page changes. This is done here because only the renderer known about screen
@@ -189,6 +198,7 @@ void __activity_paging_free_data(void *activity_data) {
     for (size_t i = 0; i < paging->lines_length; i++)
         g_free(paging->lines[i]);
     free(paging->lines);
+    g_free(paging->title);
     free(paging);
 }
 
@@ -198,11 +208,16 @@ void __activity_paging_free_data(void *activity_data) {
  * @param n            The number of @p lines.
  * @param lines        The lines of output be shown on the screen.
  * @param block_length The number of lines in an unbreakable block (include empty line).
+ * @param title        The title of the activity.
  *
  * @return  An ::activity_t for a paginator, that must be deleted using ::activity_free. `NULL` is
  *          also a possibility, when an allocation failure occurs.
  */
-activity_t *__activity_paging_create(size_t n, const char *const lines[n], size_t block_length) {
+activity_t *__activity_paging_create(size_t            n,
+                                     const char *const lines[n],
+                                     size_t            block_length,
+                                     const char       *title) {
+
     activity_paging_data_t *const activity_data = malloc(sizeof(activity_paging_data_t));
     if (!activity_data)
         return NULL;
@@ -220,6 +235,7 @@ activity_t *__activity_paging_create(size_t n, const char *const lines[n], size_
     activity_data->block_length         = block_length;
     activity_data->page_reference_index = 0;
     activity_data->change_page          = ACTIVITY_PAGING_ACTION_KEEP;
+    activity_data->title                = g_utf8_to_ucs4_fast(title, -1, NULL);
 
     activity_t *const ret = activity_create(__activity_paging_keypress,
                                             __activity_paging_render,
@@ -232,7 +248,7 @@ activity_t *__activity_paging_create(size_t n, const char *const lines[n], size_
     return ret;
 }
 
-int activity_paging_run(size_t n, const char *const lines[n], int blocking) {
+int activity_paging_run(size_t n, const char *const lines[n], int blocking, const char *title) {
     const char *const single_empty_line[] = {""};
     if (n == 0) { /* Simplify edge case */
         lines = single_empty_line;
@@ -255,7 +271,7 @@ int activity_paging_run(size_t n, const char *const lines[n], int blocking) {
         block_length = 1;
     }
 
-    activity_t *const activity = __activity_paging_create(n, lines, block_length);
+    activity_t *const activity = __activity_paging_create(n, lines, block_length, title);
     if (!activity)
         return 1;
 

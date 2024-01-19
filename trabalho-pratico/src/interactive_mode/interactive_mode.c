@@ -29,6 +29,7 @@
 
 #include "dataset/dataset_loader.h"
 #include "interactive_mode/activity_dataset_picker.h"
+#include "interactive_mode/activity_license.h"
 #include "interactive_mode/activity_main_menu.h"
 #include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_paging.h"
@@ -144,9 +145,13 @@ void __interactive_mode_run_query(const query_type_list_t *query_type_list,
                 activity_messagebox_run("Failed to create writer for query output.");
             } else {
                 query_dispatcher_dispatch_single(database, query_parsed, query_type_list, writer);
+
                 size_t                   nlines;
                 const char *const *const lines = query_writer_get_lines(writer, &nlines);
-                activity_paging_run(nlines, lines, query_instance_get_formatted(query_parsed));
+                activity_paging_run(nlines,
+                                    lines,
+                                    query_instance_get_formatted(query_parsed),
+                                    "QUERY OUTPUT");
 
                 query_writer_free(writer);
             }
@@ -182,6 +187,9 @@ int interactive_mode_run(void) {
                 break;
             case ACTIVITY_MAIN_MENU_RUN_QUERY:
                 __interactive_mode_run_query(query_type_list, database);
+                break;
+            case ACTIVITY_MAIN_MENU_LICENSE:
+                activity_license_run();
                 break;
             case ACTIVITY_MAIN_MENU_LEAVE:
                 query_type_list_free(query_type_list);

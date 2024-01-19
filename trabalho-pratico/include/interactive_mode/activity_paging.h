@@ -44,6 +44,8 @@
 #ifndef ACTIVITY_PAGING_H
 #define ACTIVITY_PAGING_H
 
+#include <stddef.h>
+
 /**
  * @brief Runs a TUI activity for a paginator.
  *
@@ -56,6 +58,7 @@
  * @param n        The number of @p lines.
  * @param lines    The lines of output be shown on the screen.
  * @param blocking If text blocks should be considered in page separation.
+ * @param title    The title of the activity.
  *
  * @retval 0 Success.
  * @retval 1 Allocation failure.
@@ -63,6 +66,6 @@
  * #### Examples
  * See [the header file's documentation](@ref activity_paging_examples).
  */
-int activity_paging_run(size_t n, const char *const lines[n], int blocking);
+int activity_paging_run(size_t n, const char *const lines[n], int blocking, const char *title);
 
 #endif
