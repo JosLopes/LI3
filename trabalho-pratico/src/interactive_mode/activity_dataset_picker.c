@@ -24,6 +24,7 @@
 
 #include <dirent.h>
 #include <glib.h>
+#include <limits.h>
 #include <ncurses.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -145,7 +146,7 @@ void __activity_dataset_picker_render_help_text(int window_width, int window_hei
         const int width = min((int) ncurses_measure_string(help_strings[i]), window_width - 4);
         move(window_height - ACTIVITY_DATASET_PICKER_HELP_TEXT_LINE_COUNT - 1 + i,
              (window_width - width) / 2);
-        addnstr(help_strings[i], width);
+        addnstr(help_strings[i], INT_MAX);
     }
 }
 
@@ -325,7 +326,7 @@ void __activity_dataset_picker_run_textbox(char pwd[PATH_MAX]) {
             activity_messagebox_run("Error listing directory!");
         } else {
             path_normalize(new_pwd);
-            strncpy(pwd, new_pwd, PATH_MAX);
+            strncpy(pwd, new_pwd, PATH_MAX - 1);
             closedir(dir);
         }
 
