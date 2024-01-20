@@ -120,7 +120,7 @@ uint64_t performance_event_get_elapsed_time(const performance_event_t *perf);
 size_t performance_event_get_used_memory(const performance_event_t *perf);
 
 /**
- * @brief Frees memory allocated bu a performance event.
+ * @brief Frees memory allocated by a performance event.
  * @param perf Event to have its memory `free`d.
  *
  * #### Examples
