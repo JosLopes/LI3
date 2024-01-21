@@ -19,12 +19,18 @@
  * @brief Implementation of methods in include/utils/glib/GConstKeyHashTable.h
  */
 
-#include <glib.h>
-
 #include "utils/glib/GConstKeyHashTable.h"
 
 GConstKeyHashTable *g_const_key_hash_table_new(GHashFunc hash_func, GEqualFunc key_equal_func) {
     return (GConstKeyHashTable *) g_hash_table_new(hash_func, key_equal_func);
+}
+
+GConstKeyHashTable *g_const_key_hash_table_new_full(GHashFunc      hash_func,
+                                                    GEqualFunc     key_equal_func,
+                                                    GDestroyNotify value_destroy_func) {
+
+    return (GConstKeyHashTable *)
+        g_hash_table_new_full(hash_func, key_equal_func, NULL, value_destroy_func);
 }
 
 gboolean g_const_key_hash_table_insert(GConstKeyHashTable *hash_table,
@@ -34,6 +40,11 @@ gboolean g_const_key_hash_table_insert(GConstKeyHashTable *hash_table,
 }
 
 gpointer g_const_key_hash_table_lookup(GConstKeyHashTable *hash_table, gconstpointer key) {
+    return g_hash_table_lookup((GHashTable *) hash_table, key);
+}
+
+gconstpointer g_const_key_hash_table_const_lookup(const GConstKeyHashTable *hash_table,
+                                                  gconstpointer             key) {
     return g_hash_table_lookup((GHashTable *) hash_table, key);
 }
 

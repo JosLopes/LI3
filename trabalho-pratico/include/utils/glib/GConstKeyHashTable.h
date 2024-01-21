@@ -48,6 +48,24 @@ typedef struct GConstKeyHashTable GConstKeyHashTable;
 GConstKeyHashTable *g_const_key_hash_table_new(GHashFunc hash_func, GEqualFunc key_equal_func);
 
 /**
+ * @brief   Creates a new hash table where keys are pointers to constant values.
+ * @details A method must be provided to automatically destroy the table's values when they are
+ *          ovewritten or the table is deleted. No method is provided for destroying keys, unlike in
+ *          `glib`'s original method, because those are constant in this data structure.
+ *
+ *          See https://libsoup.org/glib/glib-Hash-Tables.html#g-hash-table-new-full
+ *
+ * @param hash_func          Function called for hashing a key.
+ * @param key_equal_func     Function called for comparing keys.
+ * @param value_destroy_func Function called for destroying hash table values.
+ *
+ * @return A pointer to a ::GConstKeyHashTable. The program may be killed on allocation failure.
+ */
+GConstKeyHashTable *g_const_key_hash_table_new_full(GHashFunc      hash_func,
+                                                    GEqualFunc     key_equal_func,
+                                                    GDestroyNotify value_destroy_func);
+
+/**
  * @brief   Inserts a key-value pair into a hash table.
  * @details See https://libsoup.org/glib/glib-Hash-Tables.html#g-hash-table-insert
  *
@@ -71,6 +89,22 @@ gboolean g_const_key_hash_table_insert(GConstKeyHashTable *hash_table,
  * @return The value @p key is associated to, or `NULL` if that key is not in @p hash_table.
  */
 gpointer g_const_key_hash_table_lookup(GConstKeyHashTable *hash_table, gconstpointer key);
+
+/**
+ * @brief   Gets the value a key is associated to in an hash table.
+ * @details Just like ::g_const_key_hash_table_lookup, but this method allows the hash table to be
+ *          constant. Of course, this function cannot return a modifiable pointer to the value
+ *          associated to the provided key.
+ *
+ *          See https://libsoup.org/glib/glib-Hash-Tables.html#g-hash-table-lookup
+ *
+ * @param hash_table Table where to perform the lookup.
+ * @param key        Key to be searched for.
+ *
+ * @return The value @p key is associated to, or `NULL` if that key is not in @p hash_table.
+ */
+gconstpointer g_const_key_hash_table_const_lookup(const GConstKeyHashTable *hash_table,
+                                                  gconstpointer             key);
 
 /**
  * @brief   Decrements the reference count of a hash table.
