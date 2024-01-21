@@ -16,12 +16,13 @@
 
 /**
  * @file  ncurses_utils.c
- * @brief Implementation of methods in ncurses_utils.h
+ * @brief Implementation of methods in include/interactive_mode/ncurses_utils.h
  *
  * ### Examples
  * See [the header file's documentation](@ref ncurses_utils_examples).
  */
 
+#include <glib.h>
 #include <ncurses.h>
 
 #include "interactive_mode/ncurses_utils.h"
@@ -50,18 +51,28 @@ void ncurses_render_rectangle(int x, int y, int width, int height) {
     mvaddch(y - 1, x + width, '+');
 }
 
-int8_t ncurses_measure_character(gunichar c) {
+void ncurses_put_wide_string(const unichar_t *str, size_t n) {
+    for (size_t i = 0; str[i] && i < n; ++i) {
+        char      utf8[6];
+        const int count = g_unichar_to_utf8(str[i], utf8);
+        addnstr(utf8, count);
+    }
+}
+
+int ncurses_measure_character(unichar_t c) {
     if (g_unichar_isprint(c)) {
         if (g_unichar_iswide(c))
             return 2;
-        else if (!g_unichar_iszerowidth(c))
+        else if (g_unichar_iszerowidth(c))
+            return 0;
+        else
             return 1;
     }
 
     return 0;
 }
 
-size_t ncurses_measure_unicode_string(const gunichar *str) {
+size_t ncurses_measure_unicode_string(const unichar_t *str) {
     size_t width = 0;
 
     const gunichar *iter = str;
@@ -74,18 +85,20 @@ size_t ncurses_measure_unicode_string(const gunichar *str) {
 }
 
 size_t ncurses_measure_string(const char *str) {
-    gunichar *utf32 = g_utf8_to_ucs4_fast(str, -1, NULL);
-    size_t    ret   = ncurses_measure_unicode_string(utf32);
-    g_free(utf32);
-    return ret;
+    size_t width = 0;
+    while (*str) {
+        width += ncurses_measure_character(g_utf8_get_char(str));
+        str = g_utf8_next_char(str);
+    }
+    return width;
 }
 
-size_t ncurses_prefix_from_maximum_length(const gunichar *str, size_t max, size_t *width) {
+size_t ncurses_prefix_from_maximum_length(const unichar_t *str, size_t max, size_t *width) {
     size_t acc_width = 0;
 
     const gunichar *iter = str;
     while (*iter) {
-        size_t new_width = acc_width + ncurses_measure_character(*iter);
+        const size_t new_width = acc_width + ncurses_measure_character(*iter);
         if (new_width > max) {
             iter++;
             break;
@@ -100,13 +113,15 @@ size_t ncurses_prefix_from_maximum_length(const gunichar *str, size_t max, size_
     return (size_t) (iter - str);
 }
 
-size_t
-    ncurses_suffix_from_maximum_length(const gunichar *str, size_t len, size_t max, size_t *width) {
+size_t ncurses_suffix_from_maximum_length(const unichar_t *str,
+                                          size_t           len,
+                                          size_t           max,
+                                          size_t          *width) {
     size_t acc_width = 0;
 
     const gunichar *iter = str + len - 1;
     while (iter >= str) {
-        size_t new_width = acc_width + ncurses_measure_character(*iter);
+        const size_t new_width = acc_width + ncurses_measure_character(*iter);
         if (new_width > max)
             break;
 

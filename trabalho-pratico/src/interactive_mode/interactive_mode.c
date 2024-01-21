@@ -16,23 +16,20 @@
 
 /**
  * @file  interactive_mode.c
- * @brief Implementation of methods in interactive_mode.h
+ * @brief Implementation of methods in include/interactive_mode/interactive_mode.h
  *
  * ### Examples
  * See [the header file's documentation](@ref interactive_mode_examples).
  */
 
-/** @cond FALSE */
-#define _XOPEN_SOURCE_EXTENDED
-/** @endcond */
-
 #include <glib.h>
 #include <locale.h>
 #include <ncurses.h>
-#include <stdlib.h>
+#include <unistd.h>
 
 #include "dataset/dataset_loader.h"
 #include "interactive_mode/activity_dataset_picker.h"
+#include "interactive_mode/activity_license.h"
 #include "interactive_mode/activity_main_menu.h"
 #include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/activity_paging.h"
@@ -43,23 +40,21 @@
 #include "queries/query_parser.h"
 
 /**
- * @brief Initializes ncurses for the interactive mode.
- *
- * @retval 0 Success
- * @retval 1 Failure
+ * @brief  Initializes `ncurses` for the interactive mode.
+ * @retval 0 Success.
+ * @retval 1 Failure.
  */
 int __interactive_mode_init_ncurses(void) {
     setlocale(LC_ALL, "");
 
     /* clang-format off */
-
+    if (!isatty(fileno(stdout)))      return 1;
     if (initscr()            == NULL) return 1;
     if (raw()                == ERR)  return 1; /* Raw input */
     if (noecho()             == ERR)  return 1; /* Don't show input on the terminal */
     if (nl()                 == ERR)  return 1; /* Don't print carriage returns */
     if (keypad(stdscr, 1)    == ERR)  return 1; /* Let ncurses parse escape sequences */
     if (curs_set(0)          == ERR)  return 1; /* Hide the cursor */
-
     /* clang-format on */
 
     /* Limit of 10ms for ncurses to give up on finding characters for escape sequences */
@@ -74,7 +69,7 @@ int __interactive_mode_init_ncurses(void) {
  */
 void __interactive_mode_load_dataset(database_t **database) {
     /* Ask for dataset path */
-    char *path = activity_dataset_picker_run();
+    char *const path = activity_dataset_picker_run();
     if (!path)
         return;
 
@@ -104,81 +99,85 @@ void __interactive_mode_load_dataset(database_t **database) {
 
 /**
  * @brief Method called when the user chooses to run a query in the main menu.
- *
  * @param query_type_list List of known query types (query definitions).
  * @param database        Database to be queried.
  */
-void __interactive_mode_run_query(query_type_list_t *query_type_list, const database_t *database) {
+void __interactive_mode_run_query(const query_type_list_t *query_type_list,
+                                  const database_t        *database) {
     if (!database) {
         activity_messagebox_run("Please load a dataset first!");
         return;
     }
 
-    gchar *query_old_str = g_strdup("");
+    char *query_old_str = strdup("");
+    if (!query_old_str) {
+        /* This may also fail from being out of memory */
+        activity_messagebox_run("Allocation error!");
+        return;
+    }
+
     while (1) {
-        gchar *query_str = activity_textbox_run("Input a query", query_old_str, 40);
+        char *const query_str = activity_textbox_run("Input a query", query_old_str, 40);
         if (!query_str) {
-            g_free(query_old_str);
+            free(query_old_str);
             return;
         }
 
-        query_instance_t *query_parsed = query_instance_create();
+        query_instance_t *const query_parsed = query_instance_create();
+        if (!query_parsed) {
+            free(query_old_str);
+
+            /* This may also fail from being out of memory */
+            activity_messagebox_run("Allocation error!");
+            return;
+        }
+
         if (query_parser_parse_string_const(query_parsed, query_str, query_type_list, NULL)) {
-            g_free(query_old_str);
+            free(query_old_str);
             query_old_str = query_str;
 
             query_instance_free(query_parsed, query_type_list);
             activity_messagebox_run("Failed to parse query.");
         } else {
-            query_writer_t *writer =
+            query_writer_t *const writer =
                 query_writer_create(NULL, query_instance_get_formatted(query_parsed));
             if (!writer) {
                 activity_messagebox_run("Failed to create writer for query output.");
             } else {
-                /* TODO - fix cast when query system is fixed */
-                query_dispatcher_dispatch_single((database_t *) database,
-                                                 query_parsed,
-                                                 query_type_list,
-                                                 writer);
-                size_t             nlines;
-                const char *const *lines = query_writer_get_lines(writer, &nlines);
-                activity_paging_run(lines, nlines, query_instance_get_formatted(query_parsed));
+                query_dispatcher_dispatch_single(database, query_parsed, query_type_list, writer);
+
+                size_t                   nlines;
+                const char *const *const lines = query_writer_get_lines(writer, &nlines);
+                activity_paging_run(nlines,
+                                    lines,
+                                    query_instance_get_formatted(query_parsed),
+                                    "QUERY OUTPUT");
 
                 query_writer_free(writer);
             }
 
             query_instance_free(query_parsed, query_type_list);
-            g_free(query_old_str);
-            g_free(query_str);
+            free(query_old_str);
+            free(query_str);
             return;
         }
     }
 }
 
-/**
- * @brief Terminates ncurses when interactive mode isn't needed anymore.
- *
- * @retval 0 Success
- * @retval 1 Failure
- */
-int __interactive_mode_terminate_ncurses(void) {
-    return endwin() == ERR; /* Restore previous terminal mode */
-}
-
 int interactive_mode_run(void) {
-    query_type_list_t *query_type_list = query_type_list_create();
+    query_type_list_t *const query_type_list = query_type_list_create();
     if (!query_type_list) {
         fputs("Failed to allocate query definitions!\n", stderr);
         return 1;
     }
 
     if (__interactive_mode_init_ncurses()) {
+        fputs("Failed to initialized ncurses!\n", stderr);
         query_type_list_free(query_type_list);
         return 1;
     }
 
     database_t *database = NULL;
-
     while (1) {
         activity_main_menu_chosen_option_t option = activity_main_menu_run();
 
@@ -189,14 +188,14 @@ int interactive_mode_run(void) {
             case ACTIVITY_MAIN_MENU_RUN_QUERY:
                 __interactive_mode_run_query(query_type_list, database);
                 break;
+            case ACTIVITY_MAIN_MENU_LICENSE:
+                activity_license_run();
+                break;
             case ACTIVITY_MAIN_MENU_LEAVE:
                 query_type_list_free(query_type_list);
                 if (database)
                     database_free(database);
-
-                if (__interactive_mode_terminate_ncurses())
-                    return 1;
-                return 0;
+                return endwin() == ERR;
         }
     }
 }

@@ -16,7 +16,7 @@
 
 /**
  * @file  performance_event.h
- * @brief Information about elapsed time and used memory while running a task.
+ * @brief Information about elapsed time and difference in used memory while running a task.
  *
  * @anchor performance_event_example
  * ### Example
@@ -60,13 +60,13 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-/** @brief Information about elapsed time and used memory while running a task. */
+/** @brief Information about elapsed time and difference in used memory while running a task. */
 typedef struct performance_event performance_event_t;
 
 /**
  * @brief  Starts collecting data to measure the performance of a task.
  * @return A new performance event, that must be deleted with ::performance_event_free, or `NULL` in
- *         case of failure.
+ *         case of failure (allocation or measurement).
  *
  * #### Examples
  * See [the header file's documentation](@ref performance_event_example).
@@ -74,10 +74,10 @@ typedef struct performance_event performance_event_t;
 performance_event_t *performance_event_start_measuring(void);
 
 /**
- * @brief Creates a deep clone of a performance event.
- * @param perf Performance event to be cloned.
+ * @brief  Creates a deep clone of a performance event.
+ * @param  perf Performance event to be cloned.
  * @return A pointer to a new ::performance_event_t, that must be deleted using
- *         ::performance_event_free. `NULL` is possible on failure.
+ *         ::performance_event_free. `NULL` is possible on allocation failure.
  */
 performance_event_t *performance_event_clone(const performance_event_t *perf);
 
@@ -94,10 +94,9 @@ performance_event_t *performance_event_clone(const performance_event_t *perf);
 int performance_event_stop_measuring(performance_event_t *perf);
 
 /**
- * @brief   Gets the time that it took to run a task, in microseconds.
- * @details ::performance_event_end_measuring must have been called before this method.
- *
- * @param perf Performance event to get the elapsed time from.
+ * @brief Gets the time it took to run a task, in microseconds.
+ * @param perf Performance event to get the elapsed time from. ::performance_event_stop_measuring
+ *             must have been called before this method.
  *
  * @return The time that it took to run a task, in microseconds.
  *
@@ -107,10 +106,9 @@ int performance_event_stop_measuring(performance_event_t *perf);
 uint64_t performance_event_get_elapsed_time(const performance_event_t *perf);
 
 /**
- * @brief   Gets the memory usage, in kibibytes, that a task added to the program.
- * @details ::performance_event_end_measuring must have been called before this method.
- *
- * @param perf Performance event to get the memory from.
+ * @brief Gets the memory usage, in kibibytes, of a task in a program.
+ * @param perf Performance event to get the memory from. ::performance_event_stop_measuring
+ *             must have been called before this method.
  *
  * @return The difference between memory usage in the beginning and in the end of a task, clamped to
  *         zero (in case the task `free`'d more memory than allocated). No peak memory usage is
@@ -122,8 +120,8 @@ uint64_t performance_event_get_elapsed_time(const performance_event_t *perf);
 size_t performance_event_get_used_memory(const performance_event_t *perf);
 
 /**
- * @brief Frees memory allocated in ::performance_event_start_measuring.
- * @param perf Event to have its memory `free`'d.
+ * @brief Frees memory allocated by a performance event.
+ * @param perf Event to have its memory `free`d.
  *
  * #### Examples
  * See [the header file's documentation](@ref performance_event_example).

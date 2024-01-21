@@ -29,8 +29,8 @@
 /**
  * @brief Starts interactive mode.
  *
- * @retval 0 Success
- * @retval 1 Failure
+ * @retval 0 Success.
+ * @retval 1 Failure.
  *
  * #### Examples
  * See [the header file's documentation](@ref interactive_mode_examples).

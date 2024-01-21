@@ -18,7 +18,7 @@
  * @file  test_diff.c
  * @brief Implementation of methods in include/testing/test_diff.h
  *
- * #### Examples
+ * ### Examples
  * See [the header file's documentation](@ref test_diff_example).
  */
 
@@ -34,7 +34,8 @@
 #include "utils/int_utils.h"
 
 /**
- * @brief Differences between generated and expected program output.
+ * @struct test_diff
+ * @brief  Differences between generated and expected program output.
  *
  * @var test_diff::extra_files
  *     @brief Files present in the program's results but not in the expected results (strings).
@@ -57,20 +58,20 @@ struct test_diff {
  * @brief Comparsion function for sorting strings in the array returned by ::__test_diff_read_dir.
  */
 gint __test_diff_read_dir_sort_compare(gconstpointer a, gconstpointer b) {
-    const char *ap = *(const char *const *) a;
-    const char *bp = *(const char *const *) b;
-    return strcmp(ap, bp);
+    return strcmp(*(const char *const *) a, *(const char *const *) b);
 }
 
 /**
- * @brief  Creates a sorted array of all regular files (excluding directories) in a directory.
+ * @brief  Creates a lexicographically sorted array of all regular files (this excludes directories)
+ *         in a directory.
  * @param  path Path to the directory to be listed.
- * @return A sorted array of `char *`, that should be deleted with `g_ptr_array_unref`.
+ * @return A lexicographically sorted array of `char *`, that should be deleted with
+ *         `g_ptr_array_unref`.
  */
 GPtrArray *__test_diff_read_dir(const char *path) {
-    GPtrArray *ret = g_ptr_array_new_with_free_func((GDestroyNotify) free);
+    GPtrArray *const ret = g_ptr_array_new_with_free_func((GDestroyNotify) free);
 
-    DIR *dir = opendir(path);
+    DIR *const dir = opendir(path);
     if (!dir) {
         g_ptr_array_unref(ret);
         return NULL;
@@ -81,7 +82,7 @@ GPtrArray *__test_diff_read_dir(const char *path) {
         char full_path[PATH_MAX];
         snprintf(full_path, PATH_MAX, "%s/%s", path, ent->d_name);
 
-        struct stat statbuf; /* Only show directories */
+        struct stat statbuf; /* Only show regular files */
         if (!stat(full_path, &statbuf) && S_ISREG(statbuf.st_mode)) {
             g_ptr_array_add(ret, strdup(ent->d_name));
         }
@@ -93,7 +94,8 @@ GPtrArray *__test_diff_read_dir(const char *path) {
 }
 
 /**
- * @brief Fills three arrays with information about files common between two directories.
+ * @brief   Fills three arrays with information about files common between two directories.
+ * @details The filled arrays are guaranteed to be lexicographically sorted.
  *
  * @param results  Directory where the program's output was placed into.
  * @param expected Directory containing expected program results.
@@ -110,30 +112,30 @@ int __test_diff_common_files(const char *results,
                              GPtrArray  *extra,
                              GPtrArray  *missing) {
 
-    GPtrArray *results_files = __test_diff_read_dir(results);
+    GPtrArray *const results_files = __test_diff_read_dir(results);
     if (!results_files)
         return 1;
-    GPtrArray *expected_files = __test_diff_read_dir(expected);
+    GPtrArray *const expected_files = __test_diff_read_dir(expected);
     if (!expected_files) {
         g_ptr_array_unref(results_files);
         return 1;
     }
 
-    /* Algorithm similar to a merge, for set partitioning */
+    /* Algorithm similar to a merge, but for set partitioning */
     guint ri = 0, ei = 0;
     while (ri < results_files->len || ei < expected_files->len) {
         if (ri == results_files->len) {
-            char *e = g_ptr_array_index(expected_files, ei);
+            const char *const e = g_ptr_array_index(expected_files, ei);
             g_ptr_array_add(missing, strdup(e));
             ei++;
         } else if (ei == expected_files->len) {
-            char *r = g_ptr_array_index(results_files, ri);
+            const char *const r = g_ptr_array_index(results_files, ri);
             g_ptr_array_add(extra, strdup(r));
             ri++;
         } else {
-            char *r   = g_ptr_array_index(results_files, ri);
-            char *e   = g_ptr_array_index(expected_files, ei);
-            int   cmp = strcmp(r, e);
+            const char *const r   = g_ptr_array_index(results_files, ri);
+            const char *const e   = g_ptr_array_index(expected_files, ei);
+            const int         cmp = strcmp(r, e);
 
             if (cmp < 0) { /* r < e */
                 g_ptr_array_add(extra, strdup(r));
@@ -164,12 +166,12 @@ int __test_diff_common_files(const char *results,
  *         `NULL` will be returned.
  */
 char *__test_diff_read_file(const char *path, size_t *n) {
-    FILE *f = fopen(path, "r");
+    FILE *const f = fopen(path, "r");
     if (!f)
         return NULL;
 
-    ssize_t len;
-    char   *ret = NULL;
+    long  len;
+    char *ret = NULL;
 
     /* Determine lenght of file */
     if (fseek(f, 0, SEEK_END))
@@ -180,9 +182,12 @@ char *__test_diff_read_file(const char *path, size_t *n) {
         goto END;
 
     /* Read file contents */
-    ret          = malloc(sizeof(char) * len);
-    ssize_t read = fread(ret, 1, len, f);
-    if (read != len || ferror(f)) {
+    ret = malloc(sizeof(char) * len);
+    if (!ret)
+        goto END;
+
+    const size_t read = fread(ret, 1, len, f);
+    if (read != (size_t) len || ferror(f)) {
         ret = NULL;
         free(ret);
         goto END;
@@ -195,27 +200,27 @@ END:
 }
 
 /**
- * @brief Compares two values to determine if they differ in any line.
+ * @brief Compares two files to determine if they differ in any line.
  *
- * @param result   Path to file generated by the program.
- * @param expected Path to file that the program is expected to output.
+ * @param result   Path to a file generated by the program.
+ * @param expected Path to a file that the program is expected to output.
  *
- * @return `0` if the files are the same, `-1` if an IO error occurs while reading from either file,
- *         the line where the files differ otherwise.
+ * @return `0` if the files are the same, `-1` if an IO error occurs while reading either file, the
+ *         line where the files differ otherwise.
  */
 ssize_t __test_diff_compare_files(const char *result, const char *expected) {
-    size_t result_len, expected_len;
-    char  *result_contents = __test_diff_read_file(result, &result_len);
+    size_t      result_len, expected_len;
+    char *const result_contents = __test_diff_read_file(result, &result_len);
     if (!result_contents)
         return -1;
-    char *expected_contents = __test_diff_read_file(expected, &expected_len);
+    char *const expected_contents = __test_diff_read_file(expected, &expected_len);
     if (!expected_contents) {
         free(result_contents);
         return -1;
     }
 
-    size_t min_len = min(result_len, expected_len);
-    size_t line = 1, ret = 0;
+    const size_t min_len = min(result_len, expected_len);
+    size_t       line = 1, ret = 0;
     for (size_t i = 0; i < min_len; ++i) {
         if (result_contents[i] == '\n' && expected_contents[i] == '\n')
             line++;
@@ -235,13 +240,14 @@ ssize_t __test_diff_compare_files(const char *result, const char *expected) {
 }
 
 test_diff_t *test_diff_create(const char *results, const char *expected) {
-    test_diff_t *diff = malloc(sizeof(test_diff_t));
+    test_diff_t *const diff = malloc(sizeof(test_diff_t));
     if (!diff)
         return NULL;
 
-    diff->extra_files   = g_ptr_array_new_with_free_func((GDestroyNotify) free);
-    diff->missing_files = g_ptr_array_new_with_free_func((GDestroyNotify) free);
-    diff->common_files  = g_ptr_array_new_with_free_func((GDestroyNotify) free);
+    diff->extra_files        = g_ptr_array_new_with_free_func((GDestroyNotify) free);
+    diff->missing_files      = g_ptr_array_new_with_free_func((GDestroyNotify) free);
+    diff->common_files       = g_ptr_array_new_with_free_func((GDestroyNotify) free);
+    diff->common_file_errors = NULL;
 
     if (__test_diff_common_files(results,
                                  expected,
@@ -253,8 +259,13 @@ test_diff_t *test_diff_create(const char *results, const char *expected) {
     }
 
     diff->common_file_errors = malloc(sizeof(ssize_t) * diff->common_files->len);
+    if (!diff->common_file_errors) {
+        test_diff_free(diff);
+        return NULL;
+    }
+
     for (guint i = 0; i < diff->common_files->len; ++i) {
-        const char *file_name = g_ptr_array_index(diff->common_files, i);
+        const char *const file_name = g_ptr_array_index(diff->common_files, i);
 
         char result_path[PATH_MAX], expected_path[PATH_MAX];
         snprintf(result_path, PATH_MAX, "%s/%s", results, file_name);
@@ -262,8 +273,33 @@ test_diff_t *test_diff_create(const char *results, const char *expected) {
 
         diff->common_file_errors[i] = __test_diff_compare_files(result_path, expected_path);
     }
-
     return diff;
+}
+
+/** @brief A `GCopyFunc` to duplicate a string in a `GPtrArray`. */
+gpointer g_strdup_data(gconstpointer src, gpointer data) {
+    (void) data;
+    return strdup(src);
+}
+
+test_diff_t *test_diff_clone(const test_diff_t *diff) {
+    test_diff_t *const clone = malloc(sizeof(test_diff_t));
+    if (!clone)
+        return NULL;
+
+    clone->extra_files   = g_ptr_array_copy(diff->extra_files, g_strdup_data, NULL);
+    clone->common_files  = g_ptr_array_copy(diff->common_files, g_strdup_data, NULL);
+    clone->missing_files = g_ptr_array_copy(diff->missing_files, g_strdup_data, NULL);
+
+    const size_t common_file_errors_size = sizeof(ssize_t) * diff->common_files->len;
+    clone->common_file_errors            = malloc(common_file_errors_size);
+    if (!clone->common_file_errors) {
+        test_diff_free(clone);
+        return NULL;
+    }
+    memcpy(clone->common_file_errors, diff->common_file_errors, common_file_errors_size);
+
+    return clone;
 }
 
 const char *const *test_diff_get_extra_files(const test_diff_t *diff, size_t *n) {
@@ -278,39 +314,18 @@ const char *const *test_diff_get_missing_files(const test_diff_t *diff, size_t *
 
 size_t test_diff_get_common_file_errors(const test_diff_t  *diff,
                                         const char *const **common_files,
-                                        ssize_t const     **errors) {
+                                        const ssize_t     **errors) {
 
     *common_files = (const char *const *) diff->common_files->pdata;
     *errors       = diff->common_file_errors;
     return diff->common_files->len;
 }
 
-/** @brief A `GCopyFunc` to duplicate a string in a `GPtrArray`. */
-gpointer g_strdup_data(gconstpointer src, gpointer data) {
-    (void) data;
-    return strdup(src);
-}
-
-test_diff_t *test_diff_clone(const test_diff_t *diff) {
-    test_diff_t *clone = malloc(sizeof(test_diff_t));
-    if (!clone)
-        return NULL;
-
-    clone->extra_files   = g_ptr_array_copy(diff->extra_files, g_strdup_data, NULL);
-    clone->common_files  = g_ptr_array_copy(diff->common_files, g_strdup_data, NULL);
-    clone->missing_files = g_ptr_array_copy(diff->missing_files, g_strdup_data, NULL);
-
-    size_t common_file_errors_size = sizeof(ssize_t) * diff->common_files->len;
-    clone->common_file_errors      = malloc(common_file_errors_size);
-    memcpy(clone->common_file_errors, diff->common_file_errors, common_file_errors_size);
-
-    return clone;
-}
-
 void test_diff_free(test_diff_t *diff) {
     g_ptr_array_unref(diff->extra_files);
     g_ptr_array_unref(diff->common_files);
     g_ptr_array_unref(diff->missing_files);
-    free(diff->common_file_errors);
+    if (diff->common_file_errors) /* If statement to ease allocation handler failure */
+        free(diff->common_file_errors);
     free(diff);
 }

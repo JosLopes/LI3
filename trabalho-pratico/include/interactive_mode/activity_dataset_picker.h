@@ -21,8 +21,9 @@
  * @anchor activity_dataset_picker_examples
  * ### Examples
  *
- * Creating a dataset is as simple as calling ::activity_dataset_picker_run. It will return the
- * path to the selected dataset, or `NULL` if the user didn't choose one.
+ * Creating an activity where the user can choose a dataset is as simple as calling
+ * ::activity_dataset_picker_run. It will return the path to the selected dataset, or `NULL` if the
+ * user didn't choose one.
  *
  * The dataset picker will look like the following on screen:
  *
@@ -45,10 +46,8 @@
 #ifndef ACTIVITY_DATASET_PICKER_H
 #define ACTIVITY_DATASET_PICKER_H
 
-#include "interactive_mode/activity.h"
-
 /**
- * @brief Runs a TUI activity for a dataset picker.
+ * @brief  Runs a TUI activity for a dataset picker.
  * @return The path to the dataset directory on success, `NULL` on failure or user cancellation. If
  *         non-`NULL`, `free` must be called for the returned value.
  *

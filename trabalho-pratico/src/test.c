@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
             return retval;
         }
 
+        performance_metrics_measure_whole_program(metrics);
         performance_metrics_output_print(stdout, metrics);
 
         test_diff_t *const diff = test_diff_create("Resultados", argv[3]);
