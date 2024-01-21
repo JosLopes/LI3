@@ -21,8 +21,8 @@
 
 #include <glib.h>
 #include <inttypes.h>
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
 
 #include "queries/q10.h"
 #include "queries/query_instance.h"
@@ -98,7 +98,7 @@ void *__q10_parse_arguments(char *const *argv, size_t argc) {
 uint16_t __q10_key_gen(const date_t date) {
     uint16_t key = 0;
 
-    key += (date_get_year(date) - STARTING_YEAR) << 9; 
+    key += (date_get_year(date) - STARTING_YEAR) << 9;
     key += date_get_month(date) << 5;
     key += date_get_day(date);
 
@@ -152,8 +152,8 @@ typedef struct {
  */
 typedef struct {
     q10_instant_statistics_t **stats;
-    const flight_manager_t   *flights;
-    GHashTable               *aux_counted;
+    const flight_manager_t    *flights;
+    int                       *aux_counted;
 } q10_foreach_user_data_t;
 
 /**
@@ -172,27 +172,40 @@ int __q10_generate_statistics_foreach_user(void                               *u
                                            const single_pool_id_linked_list_t *passengers) {
     q10_foreach_user_data_t *iter_data = user_data;
 
-    date_t date  = user_get_account_creation_date(user);
-    uint16_t key = __q10_key_gen(date);
-    
-    if((iter_data->stats)[key])
+    date_t   date = user_get_account_creation_date(user);
+    uint16_t key  = __q10_key_gen(date);
+
+    if ((iter_data->stats)[key])
         ((iter_data->stats)[key])->users++;
 
-    g_hash_table_remove_all(iter_data->aux_counted);
+    memset(iter_data->aux_counted, 0, sizeof(int));
     while (passengers) {
         const flight_t *flight =
             flight_manager_get_by_id(iter_data->flights,
                                      single_pool_id_linked_list_get_value(passengers));
         date = date_and_time_get_date(flight_get_schedule_departure_date(flight));
-        uint16_t passengers_key = __q10_key_gen(date);
 
+        uint16_t dayless_key   = __q10_key_gen(date_generate_dayless(date));
+        if ((iter_data->stats)[dayless_key]) {
+            if (!(iter_data->aux_counted)[dayless_key]) {
+                ((iter_data->stats)[dayless_key])->unique_passengers++;
+                (iter_data->aux_counted)[dayless_key] = 1;
+            }
+        }
+        
+        uint16_t monthless_key = __q10_key_gen(date_generate_monthless(date));
+        if ((iter_data->stats)[monthless_key]) {
+            if (!(iter_data->stats)[monthless_key]) {
+                ((iter_data->stats)[monthless_key])->unique_passengers++;
+                (iter_data->aux_counted)[monthless_key] = 1;
+            }
+        }
+        
+        uint16_t passengers_key = __q10_key_gen(date);
         if ((iter_data->stats)[passengers_key]) {
-            if (!g_hash_table_lookup(iter_data->aux_counted,
-                                     GUINT_TO_POINTER(passengers_key))) {
+            if (!(iter_data->aux_counted)[passengers_key]) {
                 ((iter_data->stats)[passengers_key])->unique_passengers++;
-                g_hash_table_insert(iter_data->aux_counted,
-                                    GUINT_TO_POINTER(passengers_key),
-                                    GUINT_TO_POINTER(1));
+                (iter_data->aux_counted)[passengers_key] = 1;
             }
 
             ((iter_data->stats)[passengers_key])->passengers++;
@@ -218,10 +231,10 @@ int __q10_generate_statistics_foreach_user(void                               *u
 int __q10_generate_statistics_foreach_flight(void *user_data, const flight_t *flight) {
     q10_instant_statistics_t **stats = (q10_instant_statistics_t **) user_data;
 
-    date_t date  = date_and_time_get_date(flight_get_schedule_departure_date(flight));
-    uint16_t key = __q10_key_gen(date); 
-    
-    if (stats[key]) 
+    date_t   date = date_and_time_get_date(flight_get_schedule_departure_date(flight));
+    uint16_t key  = __q10_key_gen(date);
+
+    if (stats[key])
         (stats[key])->flights++;
 
     return 0;
@@ -242,16 +255,16 @@ int __q10_generate_statistics_foreach_reservation(void                *user_data
                                                   const reservation_t *reservation) {
     q10_instant_statistics_t **stats = (q10_instant_statistics_t **) user_data;
 
-    date_t date  = reservation_get_begin_date(reservation);
-    uint16_t key = __q10_key_gen(date);
+    date_t   date = reservation_get_begin_date(reservation);
+    uint16_t key  = __q10_key_gen(date);
 
     if (stats[key])
         (stats[key])->reservations++;
-    
+
     return 0;
 }
 
-#define STATS_ARRAY_LENGTH pow(2,16)
+#define STATS_ARRAY_LENGTH pow(2, 16)
 
 /**
  * @brief Generates statistical data for queries of type 10.
@@ -267,7 +280,8 @@ void *__q10_generate_statistics(const database_t              *database,
                                 const query_instance_t *const *instances,
                                 size_t                         n) {
 
-    q10_instant_statistics_t **stats = malloc(STATS_ARRAY_LENGTH * sizeof(q10_instant_statistics_t *));
+    q10_instant_statistics_t **stats =
+        malloc(STATS_ARRAY_LENGTH * sizeof(q10_instant_statistics_t *));
     if (!stats)
         return NULL;
 
@@ -287,7 +301,8 @@ void *__q10_generate_statistics(const database_t              *database,
                         uint16_t key = __q10_key_gen(date);
 
                         if (!stats[key]) {
-                            q10_instant_statistics_t *istats = malloc(sizeof(q10_instant_statistics_t));
+                            q10_instant_statistics_t *istats =
+                                malloc(sizeof(q10_instant_statistics_t));
                             if (!istats) {
                                 free(stats);
                                 return NULL;
@@ -298,12 +313,22 @@ void *__q10_generate_statistics(const database_t              *database,
                         }
                     }
                 }
-            }
 
-            /* Every possibility has already written */
-            break;
-        }
-        else if (args->year != -1 && args->month == -1) {
+                date         = date_generate_monthless(date);
+                uint16_t key = __q10_key_gen(date);
+
+                if (!stats[key]) {
+                    q10_instant_statistics_t *istats = malloc(sizeof(q10_instant_statistics_t));
+                    if (!istats) {
+                        free(stats);
+                        return NULL;
+                    }
+
+                    memset(istats, 0, sizeof(q10_instant_statistics_t));
+                    stats[key] = istats;
+                }
+            }
+        } else if (args->year != -1 && args->month == -1) {
             date_t date;
 
             for (int month = 1; month <= 12; ++month) {
@@ -316,11 +341,25 @@ void *__q10_generate_statistics(const database_t              *database,
                         if (!istats) {
                             free(stats);
                             return NULL;
-                        } 
+                        }
 
                         memset(istats, 0, sizeof(q10_instant_statistics_t));
                         stats[key] = istats;
                     }
+                }
+
+                date         = date_generate_dayless(date);
+                uint16_t key = __q10_key_gen(date);
+
+                if (!stats[key]) {
+                    q10_instant_statistics_t *istats = malloc(sizeof(q10_instant_statistics_t));
+                    if (!istats) {
+                        free(stats);
+                        return NULL;
+                    }
+
+                    memset(istats, 0, sizeof(q10_instant_statistics_t));
+                    stats[key] = istats;
                 }
             }
         } else if (args->month != -1) {
@@ -330,7 +369,7 @@ void *__q10_generate_statistics(const database_t              *database,
                 date_from_values(&date, args->year, args->month, day);
                 uint16_t key = __q10_key_gen(date);
 
-                if (!stats[key]) {                
+                if (!stats[key]) {
                     printf("%d \n", key);
                     q10_instant_statistics_t *istats = malloc(sizeof(q10_instant_statistics_t));
                     if (!istats) {
@@ -347,12 +386,11 @@ void *__q10_generate_statistics(const database_t              *database,
 
     q10_foreach_user_data_t user_iter_data = {.stats   = stats,
                                               .flights = database_get_flights(database),
-                                              .aux_counted =
-                                                  g_hash_table_new(g_direct_hash, g_direct_equal)};
+                                              .aux_counted = malloc(STATS_ARRAY_LENGTH * sizeof(int))};
     user_manager_iter_with_flights(database_get_users(database),
                                    __q10_generate_statistics_foreach_user,
                                    &user_iter_data);
-    g_hash_table_unref(user_iter_data.aux_counted);
+    free(user_iter_data.aux_counted);
 
     flight_manager_iter(database_get_flights(database),
                         __q10_generate_statistics_foreach_flight,
@@ -390,12 +428,11 @@ void __q10_instant_statistics_write(const q10_instant_statistics_t *istats,
     query_writer_write_new_field(output, "reservations", "%" PRIu64, istats->reservations);
 }
 
-void __q10_add_instants (q10_instant_statistics_t* a, q10_instant_statistics_t* b) {
-    b->users             += a->users;
-    b->flights           += a->flights;
-    b->passengers        += a->passengers;
-    b->unique_passengers += a->unique_passengers;
-    b->reservations      += a->reservations;
+void __q10_add_instants(q10_instant_statistics_t *a, q10_instant_statistics_t *b) {
+    b->users += a->users;
+    b->flights += a->flights;
+    b->passengers += a->passengers;
+    b->reservations += a->reservations;
 }
 
 int __q10_execute(const database_t       *database,
@@ -404,49 +441,62 @@ int __q10_execute(const database_t       *database,
                   query_writer_t         *output) {
     (void) database;
 
-    /* TODO - fix const */
-    const q10_parsed_arguments_t *args = query_instance_get_argument_data(instance);
-    q10_instant_statistics_t **stats   = (q10_instant_statistics_t **) statistics;
+    const q10_parsed_arguments_t *args  = query_instance_get_argument_data(instance);
+    q10_instant_statistics_t    **stats = (q10_instant_statistics_t **) statistics;
 
     if (args->year == -1) {
-        date_t date;
-        q10_instant_statistics_t sum;
-        
+        date_t                   date;
+        q10_instant_statistics_t results;
+
         for (int year = STARTING_YEAR; year <= LAST_YEAR; ++year) {
-            memset(&sum, 0, sizeof(q10_instant_statistics_t));    
+            memset(&results, 0, sizeof(q10_instant_statistics_t));
+            
+            date_from_values(&date, year, 1, 1);
+            date         = date_generate_monthless(date);
+            uint16_t key = __q10_key_gen(date);
+            if (stats[key])
+                results.unique_passengers = (stats[key])->unique_passengers;
+            else
+                continue;
+
             for (int month = 1; month <= 12; ++month) {
                 for (int day = 1; day <= 31; ++day) {
                     date_from_values(&date, year, month, day);
                     uint16_t key = __q10_key_gen(date);
 
-                    if (stats[key])
-                        __q10_add_instants(stats[key], &sum);
+                    __q10_add_instants(stats[key], &results);
                 }
             }
 
-            if (sum.users || sum.flights || sum.passengers || sum.unique_passengers ||
-                sum.reservations)
-                __q10_instant_statistics_write(&sum, output, "year", year);                        
+            if (results.users || results.flights || results.passengers ||
+                results.unique_passengers || results.reservations)
+                __q10_instant_statistics_write(&results, output, "year", year);
         }
     } else if (args->month == -1) {
-        date_t date;
-        q10_instant_statistics_t sum;
-    
+        date_t                   date;
+        q10_instant_statistics_t results;
+
         for (int month = 1; month <= 12; ++month) {
-            memset(&sum, 0, sizeof(q10_instant_statistics_t));
+            memset(&results, 0, sizeof(q10_instant_statistics_t));
+            
+            date         = date_generate_dayless(date);
+            uint64_t key = __q10_key_gen(date);
+            if (stats[key])
+                results.unique_passengers = (stats[key])->unique_passengers;
+            else
+                continue;
+
             for (int day = 1; day <= 31; ++day) {
                 date_from_values(&date, args->year, month, day);
                 uint16_t key = __q10_key_gen(date);
 
-                if (stats[key])
-                    __q10_add_instants(stats[key], &sum);
+                __q10_add_instants(stats[key], &results);
             }
 
-            if (sum.users || sum.flights || sum.passengers || sum.unique_passengers ||
-                sum.reservations)
-                __q10_instant_statistics_write(&sum, output, "month", month);
+            if (results.users || results.flights || results.passengers ||
+                results.unique_passengers || results.reservations)
+                __q10_instant_statistics_write(&results, output, "month", month);
         }
-    
     } else if (args->month != -1) {
         date_t date;
 
@@ -456,7 +506,7 @@ int __q10_execute(const database_t       *database,
 
             q10_instant_statistics_t *istats = stats[key];
             if (istats && (istats->users || istats->flights || istats->passengers ||
-                istats->unique_passengers || istats->reservations))
+                           istats->unique_passengers || istats->reservations))
                 __q10_instant_statistics_write(istats, output, "day", day);
         }
     }
@@ -466,12 +516,12 @@ int __q10_execute(const database_t       *database,
 
 void __q10_free_statistics(void *statistics) {
     q10_instant_statistics_t **stats = (q10_instant_statistics_t **) statistics;
-    
+
     for (size_t i = 0; i < STATS_ARRAY_LENGTH; ++i)
         if (stats[i])
             free(stats[i]);
 
-    free(stats); 
+    free(stats);
 }
 
 query_type_t *q10_create(void) {
