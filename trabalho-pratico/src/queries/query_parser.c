@@ -80,7 +80,8 @@ int __query_parser_tokenize_callback(void *user_data, char *token) {
         /* Parse number of query */
         uint64_t                  query_type;
         const int                 retval = int_utils_parse_positive(&query_type, token);
-        const query_type_t *const type   = query_type_list_get_by_index((size_t) query_type);
+        const query_type_t *const type =
+            retval ? NULL : query_type_list_get_by_index((size_t) query_type);
         if (retval || !type) {
             if (token[token_len - 1] == '\0') /* Restore previous string form */
                 token[token_len - 1] = 'F';
