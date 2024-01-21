@@ -38,7 +38,7 @@
  *
  * @return `NULL` for invalid arguments, a copy of the only @p argv on success.
  */
-void *__q09_parse_arguments(char *const *argv, size_t argc) {
+void *__q09_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 1)
         return NULL;
     else
@@ -124,14 +124,14 @@ int __q09_sort_prefixes_callback(const void *a, const void *b) {
  * @brief Generates statistical data for queries of type 9.
  *
  * @param database  Database, to iterate through users.
- * @param instances Query instances that will need to be executed.
  * @param n         Number of query instances that will need to be executed.
+ * @param instances Query instances that will need to be executed.
  *
  * @return A pointer to a ::q09_statistical_data_t.
  */
-void *__q09_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q09_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
 
     /* Set locale for sorting and restore older locale later */
     char *old_locale = strdup(setlocale(LC_COLLATE, NULL));
@@ -254,7 +254,8 @@ int __q09_execute(const database_t       *database,
 }
 
 query_type_t *q09_create(void) {
-    return query_type_create(__q09_parse_arguments,
+    return query_type_create(9,
+                             __q09_parse_arguments,
                              (query_type_clone_arguments_callback_t) strdup,
                              free,
                              __q09_generate_statistics,

@@ -52,12 +52,12 @@ typedef struct {
  * @brief   Parses the arguments of a query of type 1.
  * @details Asserts there's only one string argument, that is stored.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` for invalid arguments, a copy of the only @p argv and its identifier on success.
  */
-void *__q01_parse_arguments(char *const *argv, size_t argc) {
+void *__q01_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 1)
         return NULL;
 
@@ -345,7 +345,8 @@ int __q01_execute(const database_t       *database,
 }
 
 query_type_t *q01_create(void) {
-    return query_type_create(__q01_parse_arguments,
+    return query_type_create(1,
+                             __q01_parse_arguments,
                              __q01_clone_arguments,
                              __q01_free_query_instance_argument_data,
                              NULL,

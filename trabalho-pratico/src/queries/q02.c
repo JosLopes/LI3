@@ -53,12 +53,12 @@ typedef struct {
  * @details The first argument, a user identifier, is mandatory. A optional second argument, taking
  *          the value of either `"flights"` or `"reservations"`, is allowed.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` on failure, a pointer to a `q02_argument_data_t` otherwise.
  */
-void *__q02_parse_arguments(char *const *argv, size_t argc) {
+void *__q02_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc == 1) {
         q02_argument_data_t *ret = malloc(sizeof(q02_argument_data_t));
         ret->user_id             = strdup(argv[0]);
@@ -260,7 +260,8 @@ int __q02_execute(const database_t       *database,
 }
 
 query_type_t *q02_create(void) {
-    return query_type_create(__q02_parse_arguments,
+    return query_type_create(2,
+                             __q02_parse_arguments,
                              __q02_clone_arguments,
                              __q02_free_query_instance_argument_data,
                              NULL,

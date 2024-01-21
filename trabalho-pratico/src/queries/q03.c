@@ -31,12 +31,12 @@
  * @brief   Parses arguments for the third query.
  * @details Asserts that there's only one argument, an hotel identifier.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` on failure, a pointer to a hotel ID otherwise.
  */
-void *__q03_parse_arguments(char *const *argv, size_t argc) {
+void *__q03_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 1)
         return NULL;
 
@@ -107,15 +107,15 @@ int __q03_generate_statistics_foreach_reservation(void                *user_data
  * @brief Generates statistical data for queries of type 3.
  *
  * @param database  Database, to iterate through reservations.
- * @param instances Query instances that will need to be executed.
  * @param n         Number of query instances that will need to be executed.
+ * @param instances Query instances that will need to be executed.
  *
  * @return A `GHashTable` that associates hotel identifiers with ::q03_average_t for those hotels,
  *         or `NULL` on failure.
  */
-void *__q03_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q03_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
 
     GHashTable *ratings_averages =
         g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free);
@@ -173,7 +173,8 @@ int __q03_execute(const database_t       *database,
 }
 
 query_type_t *q03_create(void) {
-    return query_type_create(__q03_parse_arguments,
+    return query_type_create(3,
+                             __q03_parse_arguments,
                              __q03_clone_arguments,
                              free,
                              __q03_generate_statistics,

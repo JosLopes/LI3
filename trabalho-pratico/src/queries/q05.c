@@ -47,12 +47,12 @@ typedef struct {
  * @brief   Parses arguments for the fifth query.
  * @details Asserts that there's three arguments, an airport code, and two dates with time.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` on failure, a pointer to a `q05_airport_data_t` otherwise.
  */
-void *__q05_parse_arguments(char *const *argv, size_t argc) {
+void *__q05_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 3)
         return NULL;
 
@@ -137,15 +137,15 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
  * @brief Generates statistical data for queries of type 5.
  *
  * @param database   Database, to iterate through flights.
- * @param instances  Instances of the query 5.
  * @param n          Number of query instances.
+ * @param instances  Instances of the query 5.
  *
  * @return A `GHashTable` associating a ::q05_foreach_airport_data_t for each query to a
  *         `GPtrArray` of ::flight_t `*`s.
  */
-void *__q05_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q05_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
     GPtrArray  *filter_data    = g_ptr_array_new();
     GHashTable *origin_flights = g_hash_table_new_full(g_direct_hash,
                                                        g_direct_equal,
@@ -249,7 +249,8 @@ int __q05_execute(const database_t       *database,
 }
 
 query_type_t *q05_create(void) {
-    return query_type_create(__q05_parse_arguments,
+    return query_type_create(5,
+                             __q05_parse_arguments,
                              __q05_clone_arguments,
                              free,
                              __q05_generate_statistics,

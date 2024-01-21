@@ -36,7 +36,7 @@
   *
   * @return `NULL` on failure, a pointer to a hotel ID otherwise.
   */
-void *__q04_parse_arguments(char *const *argv, size_t argc) {
+void *__q04_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 1)
         return NULL;
 
@@ -112,14 +112,14 @@ gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b) {
   * @brief Generates statistical data for queries of type 4.
   *
   * @param database   Database, to iterate through reservations.
-  * @param instances  Instances of the query.
   * @param n          Number of instances.
+  * @param instances  Instances of the query.
   *
   * @return A `GHashTable` associating hotel identifiers to `GPtrArray`s of `reservation_t`s.
   */
-void *__q04_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q04_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
 
     GHashTable *hotel_reservations = g_hash_table_new_full(g_direct_hash,
                                                            g_direct_equal,
@@ -201,7 +201,8 @@ int __q04_execute(const database_t       *database,
 }
 
 query_type_t *q04_create(void) {
-    return query_type_create(__q04_parse_arguments,
+    return query_type_create(4,
+                             __q04_parse_arguments,
                              __q04_clone_arguments,
                              free,
                              __q04_generate_statistics,

@@ -32,12 +32,12 @@
  * @brief   Parses the arguments of a query of type 7.
  * @details Asserts there's only one integer argument, that is stored.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` for invalid arguments, a `malloc`-allocated `uint64_t` otherwise.
  */
-void *__q07_parse_arguments(char *const *argv, size_t argc) {
+void *__q07_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 1)
         return NULL;
 
@@ -172,14 +172,14 @@ gint __q07_generate_statistics_airport_median_compare_func(gconstpointer a, gcon
  * @brief Generates statistical data for queries of type 7.
  *
  * @param database  Database, to iterate through flight.
- * @param instances Query instances that will need to be executed.
  * @param n         Number of query instances that will need to be executed.
+ * @param instances Query instances that will need to be executed.
  *
  * @return A sorted `GArray` of ::__q07_airport_median.
  */
-void *__q07_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q07_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
     (void) instances;
     (void) n;
 
@@ -237,7 +237,8 @@ int __q07_execute(const database_t       *database,
 }
 
 query_type_t *q07_create(void) {
-    return query_type_create(__q07_parse_arguments,
+    return query_type_create(7,
+                             __q07_parse_arguments,
                              __q07_clone_arguments,
                              free,
                              __q07_generate_statistics,

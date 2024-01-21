@@ -104,11 +104,9 @@ void __interactive_mode_load_dataset(database_t **database) {
 
 /**
  * @brief Method called when the user chooses to run a query in the main menu.
- *
- * @param query_type_list List of known query types (query definitions).
- * @param database        Database to be queried.
+ * @param database Database to be queried.
  */
-void __interactive_mode_run_query(query_type_list_t *query_type_list, const database_t *database) {
+void __interactive_mode_run_query(const database_t *database) {
     if (!database) {
         activity_messagebox_run("Please load a dataset first!");
         return;
@@ -123,11 +121,11 @@ void __interactive_mode_run_query(query_type_list_t *query_type_list, const data
         }
 
         query_instance_t *query_parsed = query_instance_create();
-        if (query_parser_parse_string_const(query_parsed, query_str, query_type_list, NULL)) {
+        if (query_parser_parse_string_const(query_parsed, query_str, NULL)) {
             g_free(query_old_str);
             query_old_str = query_str;
 
-            query_instance_free(query_parsed, query_type_list);
+            query_instance_free(query_parsed);
             activity_messagebox_run("Failed to parse query.");
         } else {
             query_writer_t *writer =
@@ -135,11 +133,8 @@ void __interactive_mode_run_query(query_type_list_t *query_type_list, const data
             if (!writer) {
                 activity_messagebox_run("Failed to create writer for query output.");
             } else {
-                /* TODO - fix cast when query system is fixed */
-                query_dispatcher_dispatch_single((database_t *) database,
-                                                 query_parsed,
-                                                 query_type_list,
-                                                 writer);
+                /* TODO - handle allocation errors */
+                query_dispatcher_dispatch_single(database, query_parsed, writer);
                 size_t             nlines;
                 const char *const *lines = query_writer_get_lines(writer, &nlines);
                 activity_paging_run(lines, nlines, query_instance_get_formatted(query_parsed));
@@ -147,7 +142,7 @@ void __interactive_mode_run_query(query_type_list_t *query_type_list, const data
                 query_writer_free(writer);
             }
 
-            query_instance_free(query_parsed, query_type_list);
+            query_instance_free(query_parsed);
             g_free(query_old_str);
             g_free(query_str);
             return;
@@ -166,16 +161,8 @@ int __interactive_mode_terminate_ncurses(void) {
 }
 
 int interactive_mode_run(void) {
-    query_type_list_t *query_type_list = query_type_list_create();
-    if (!query_type_list) {
-        fputs("Failed to allocate query definitions!\n", stderr);
+    if (__interactive_mode_init_ncurses())
         return 1;
-    }
-
-    if (__interactive_mode_init_ncurses()) {
-        query_type_list_free(query_type_list);
-        return 1;
-    }
 
     database_t *database = NULL;
 
@@ -187,10 +174,9 @@ int interactive_mode_run(void) {
                 __interactive_mode_load_dataset(&database);
                 break;
             case ACTIVITY_MAIN_MENU_RUN_QUERY:
-                __interactive_mode_run_query(query_type_list, database);
+                __interactive_mode_run_query(database);
                 break;
             case ACTIVITY_MAIN_MENU_LEAVE:
-                query_type_list_free(query_type_list);
                 if (database)
                     database_free(database);
 
