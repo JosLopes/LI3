@@ -30,7 +30,9 @@
  * @retval 1 Insuccess.
  */
 int main(int argc, char **argv) {
-    system("cat /proc/cpuinfo");
+    if (system("cat /proc/cpuinfo")) {
+        printf("Micro-optimization attempt failed :-(\n");
+    }
 
     if (argc == 1) {
         return interactive_mode_run();
