@@ -92,17 +92,12 @@ void *__q10_parse_arguments(char *const *argv, size_t argc) {
     return ret;
 }
 
-#define STARTING_YEAR 1956
-#define LAST_YEAR     2084
+#define STARTING_YEAR 1989
+#define LAST_YEAR     2052
 
 uint16_t __q10_key_gen(const date_t date) {
-    uint16_t key = 0;
-
-    key += (date_get_year(date) - STARTING_YEAR) << 9;
-    key += date_get_month(date) << 5;
-    key += date_get_day(date);
-
-    return key;
+    return ((date_get_year(date) - STARTING_YEAR) << 9) | (date_get_month(date) << 5) |
+           (date_get_day(date));
 }
 
 /**
@@ -156,7 +151,7 @@ typedef struct {
     int                       *aux_counted;
 } q10_foreach_user_data_t;
 
-#define STATS_ARRAY_LENGTH pow(2, 16)
+#define STATS_ARRAY_LENGTH pow(2, 15)
 
 /**
  * @brief Method called for each user, to generate statistical data.
@@ -195,14 +190,14 @@ int __q10_generate_statistics_foreach_user(void                               *u
             }
         }
 
-        uint16_t dayless_key   = __q10_key_gen(date_generate_dayless(date));
+        uint16_t dayless_key = __q10_key_gen(date_generate_dayless(date));
         if ((iter_data->stats)[dayless_key]) {
             if (!(iter_data->aux_counted)[dayless_key]) {
                 ((iter_data->stats)[dayless_key])->unique_passengers++;
                 (iter_data->aux_counted)[dayless_key] = 1;
             }
         }
-         
+
         uint16_t passengers_key = __q10_key_gen(date);
         if ((iter_data->stats)[passengers_key]) {
             if (!(iter_data->aux_counted)[passengers_key]) {
@@ -285,9 +280,8 @@ void *__q10_generate_statistics(const database_t              *database,
     if (!stats)
         return NULL;
 
-    for (size_t i = 0; i < STATS_ARRAY_LENGTH; ++i)
-        stats[i] = NULL;
-
+    /* This is not very portable! */
+    memset(stats, 0, STATS_ARRAY_LENGTH * sizeof(q10_instant_statistics_t *));
     for (size_t i = 0; i < n; ++i) {
         const q10_parsed_arguments_t *args = query_instance_get_argument_data(instances[i]);
 
@@ -391,7 +385,8 @@ void *__q10_generate_statistics(const database_t              *database,
 
     q10_foreach_user_data_t user_iter_data = {.stats   = stats,
                                               .flights = database_get_flights(database),
-                                              .aux_counted = malloc(STATS_ARRAY_LENGTH * sizeof(int))};
+                                              .aux_counted =
+                                                  malloc(STATS_ARRAY_LENGTH * sizeof(int))};
     user_manager_iter_with_flights(database_get_users(database),
                                    __q10_generate_statistics_foreach_user,
                                    &user_iter_data);
@@ -455,7 +450,7 @@ int __q10_execute(const database_t       *database,
 
         for (int year = STARTING_YEAR; year <= LAST_YEAR; ++year) {
             memset(&results, 0, sizeof(q10_instant_statistics_t));
-            
+
             date_from_values(&date, year, 1, 1);
             date         = date_generate_monthless(date);
             uint16_t key = __q10_key_gen(date);
@@ -483,7 +478,7 @@ int __q10_execute(const database_t       *database,
 
         for (int month = 1; month <= 12; ++month) {
             memset(&results, 0, sizeof(q10_instant_statistics_t));
-            
+
             date_from_values(&date, args->year, month, 1);
             date         = date_generate_dayless(date);
             uint64_t key = __q10_key_gen(date);
