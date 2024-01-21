@@ -131,20 +131,28 @@ int query_parser_parse_string(query_instance_t *output, char *input, GPtrArray *
     void *const argument_data =
         parse_cb(parser_data.args->len, (char *const *) parser_data.args->pdata);
 
-    if (!argument_data) { /* Argument parsing failure */
-        if (!aux)
-            g_ptr_array_free(parser_data.args, TRUE);
-        return 1;
-    }
-    query_instance_set_argument_data(output, argument_data);
+    if (argument_data) {
+        query_instance_set_argument_data(output, argument_data);
 
-    const query_type_free_arguments_callback_t free_cb =
-        query_type_get_free_arguments_callback(query_type);
-    free_cb(argument_data);
+        const query_type_free_arguments_callback_t free_cb =
+            query_type_get_free_arguments_callback(query_type);
+        free_cb(argument_data);
+    }
+
+    /* Restore string */
+    for (ssize_t i = 0; i < parser_data.args->len; ++i) {
+        char *const str = g_ptr_array_index(parser_data.args, i);
+        char *const end = str + strlen(str);
+
+        if (*(str - 1) == '"')
+            *end = '"';
+        else if (i != parser_data.args->len - 1)
+            *end = ' ';
+    }
 
     if (!aux)
-        g_ptr_array_free(parser_data.args, TRUE);
-    return 0;
+        g_ptr_array_unref(parser_data.args);
+    return (argument_data == NULL);
 }
 
 int query_parser_parse_string_const(query_instance_t *output, const char *input, GPtrArray *aux) {

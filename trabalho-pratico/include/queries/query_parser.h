@@ -86,7 +86,9 @@
  * @brief Parses a **MODIFIABLE** string containing a query.
  *
  * @param output Where the parsed query is placed. This **will be modified on failure** too.
- * @param input  String to parse, that **will be modified** as a byproduct of parsing.
+ * @param input  String to parse, that will be modified during parsing, but then restored to its
+ *               original form, assuming none of the ::query_type_parse_arguments_callback_t
+ *               modifies its argument tokens.
  * @param aux    Auxiliary `GPtrArray`, that can be provided to be modified and avoid memory
  *               allocations. If `NULL`, a new array will be instantiated.
  *
