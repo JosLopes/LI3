@@ -156,6 +156,8 @@ typedef struct {
     int                       *aux_counted;
 } q10_foreach_user_data_t;
 
+#define STATS_ARRAY_LENGTH pow(2, 16)
+
 /**
  * @brief Method called for each user, to generate statistical data.
  * @details An auxiliary method for ::__q10_generate_statistics.
@@ -178,12 +180,20 @@ int __q10_generate_statistics_foreach_user(void                               *u
     if ((iter_data->stats)[key])
         ((iter_data->stats)[key])->users++;
 
-    memset(iter_data->aux_counted, 0, sizeof(int));
+    memset(iter_data->aux_counted, 0, STATS_ARRAY_LENGTH * sizeof(int));
     while (passengers) {
         const flight_t *flight =
             flight_manager_get_by_id(iter_data->flights,
                                      single_pool_id_linked_list_get_value(passengers));
         date = date_and_time_get_date(flight_get_schedule_departure_date(flight));
+
+        uint16_t monthless_key = __q10_key_gen(date_generate_monthless(date));
+        if ((iter_data->stats)[monthless_key]) {
+            if (!(iter_data->aux_counted)[monthless_key]) {
+                ((iter_data->stats)[monthless_key])->unique_passengers++;
+                (iter_data->aux_counted)[monthless_key] = 1;
+            }
+        }
 
         uint16_t dayless_key   = __q10_key_gen(date_generate_dayless(date));
         if ((iter_data->stats)[dayless_key]) {
@@ -192,15 +202,7 @@ int __q10_generate_statistics_foreach_user(void                               *u
                 (iter_data->aux_counted)[dayless_key] = 1;
             }
         }
-        
-        uint16_t monthless_key = __q10_key_gen(date_generate_monthless(date));
-        if ((iter_data->stats)[monthless_key]) {
-            if (!(iter_data->stats)[monthless_key]) {
-                ((iter_data->stats)[monthless_key])->unique_passengers++;
-                (iter_data->aux_counted)[monthless_key] = 1;
-            }
-        }
-        
+         
         uint16_t passengers_key = __q10_key_gen(date);
         if ((iter_data->stats)[passengers_key]) {
             if (!(iter_data->aux_counted)[passengers_key]) {
@@ -264,8 +266,6 @@ int __q10_generate_statistics_foreach_reservation(void                *user_data
     return 0;
 }
 
-#define STATS_ARRAY_LENGTH pow(2, 16)
-
 /**
  * @brief Generates statistical data for queries of type 10.
  *
@@ -310,6 +310,8 @@ void *__q10_generate_statistics(const database_t              *database,
 
                             memset(istats, 0, sizeof(q10_instant_statistics_t));
                             stats[key] = istats;
+                        } else {
+                            continue;
                         }
                     }
                 }
@@ -345,6 +347,8 @@ void *__q10_generate_statistics(const database_t              *database,
 
                         memset(istats, 0, sizeof(q10_instant_statistics_t));
                         stats[key] = istats;
+                    } else {
+                        continue;
                     }
                 }
 
@@ -370,7 +374,6 @@ void *__q10_generate_statistics(const database_t              *database,
                 uint16_t key = __q10_key_gen(date);
 
                 if (!stats[key]) {
-                    printf("%d \n", key);
                     q10_instant_statistics_t *istats = malloc(sizeof(q10_instant_statistics_t));
                     if (!istats) {
                         free(stats);
@@ -379,6 +382,8 @@ void *__q10_generate_statistics(const database_t              *database,
 
                     memset(istats, 0, sizeof(q10_instant_statistics_t));
                     stats[key] = istats;
+                } else {
+                    continue;
                 }
             }
         }
@@ -479,6 +484,7 @@ int __q10_execute(const database_t       *database,
         for (int month = 1; month <= 12; ++month) {
             memset(&results, 0, sizeof(q10_instant_statistics_t));
             
+            date_from_values(&date, args->year, month, 1);
             date         = date_generate_dayless(date);
             uint64_t key = __q10_key_gen(date);
             if (stats[key])
