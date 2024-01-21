@@ -24,8 +24,8 @@
 
 #include <glib.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "queries/query_writer.h"
 #include "utils/string_pool.h"
@@ -38,7 +38,7 @@
  *     @brief Where to write query outputs to. May be `NULL` (see ::query_writer::lines in that
  *            case).
  * @var query_writer::formatted
- *     @brief If the output of the query should be formatted (pretty printed).
+ *     @brief Whether the output of the query should be formatted (pretty printed).
  * @var query_writer::is_first_field
  *     @brief Whether the next field to be printed is the first field of the current object.
  * @var query_writer::current_object
@@ -51,7 +51,7 @@
  * @var query_writer::current_line
  *    @brief Current line being printed. Used for outputting non-formatted query results to strings.
  * @var query_writer::current_line_cursor
- *    @brief Position to start writing in ::query_write::current_line.
+ *    @brief Position (in characters) where to start writing to ::query_writer::current_line.
  */
 struct query_writer {
     FILE *stream;
@@ -72,7 +72,7 @@ struct query_writer {
 #define QUERY_WRITER_STRING_POOL_BLOCK_SIZE (1 << 17)
 
 query_writer_t *query_writer_create(const char *out_file_path, int formatted) {
-    query_writer_t *ret = malloc(sizeof(query_writer_t));
+    query_writer_t *const ret = malloc(sizeof(query_writer_t));
     if (!ret)
         return NULL;
 
@@ -116,8 +116,7 @@ void query_writer_write_new_object(query_writer_t *writer) {
         if (writer->current_object != 1) {
             if (writer->formatted) {
                 /* Spacing after last item (don't add spacing to the beginning of the file) */
-                char *empty = string_pool_put(writer->strings, "");
-                g_ptr_array_add(writer->lines, empty);
+                g_ptr_array_add(writer->lines, string_pool_put(writer->strings, ""));
             } else {
                 /* Flush last time (it's invalid for the first object) */
                 g_ptr_array_add(writer->lines,
@@ -163,29 +162,24 @@ void query_writer_write_new_field(query_writer_t *writer,
     } else {
         if (writer->formatted) {
             /* Print line "key: value" */
-            char   line[LINE_MAX];
-            size_t len = snprintf(line, LINE_MAX, "%s: ", key);
+            char         line[LINE_MAX];
+            const size_t len = snprintf(line, LINE_MAX, "%s: ", key);
             vsnprintf(line + len, LINE_MAX - len, format, printf_args);
-
-            char *pool_line = string_pool_put(writer->strings, line);
-            g_ptr_array_add(writer->lines, pool_line);
+            g_ptr_array_add(writer->lines, string_pool_put(writer->strings, line));
         } else {
             /*
              * Print only values, adding semicolons between them. This is done to
              * writer->current_line, which, when completed, is flushed to writer->lines.
              */
 
-            if (!writer->is_first_field) {
-                writer->current_line[writer->current_line_cursor] = ';';
-                writer->current_line_cursor++;
-            }
+            if (!writer->is_first_field)
+                writer->current_line[writer->current_line_cursor++] = ';';
 
             writer->current_line_cursor +=
                 vsnprintf(writer->current_line + writer->current_line_cursor,
                           LINE_MAX - writer->current_line_cursor,
                           format,
                           printf_args);
-
             writer->is_first_field = 0;
         }
     }
@@ -219,6 +213,5 @@ void query_writer_free(query_writer_t *writer) {
         string_pool_free(writer->strings);
         g_ptr_array_unref(writer->lines);
     }
-
     free(writer);
 }

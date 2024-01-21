@@ -21,11 +21,9 @@
  * @anchor query_file_parser_examples
  * ### Examples
  *
- * To parse a file with queries, first create a
- * [list of query types](@ref query_type_list_examples). Then, open the file with `fopen`, and,
- * along with the query type list, pass it to ::query_file_parser_parse. In the end, don't forget to
- * free the resulting ::query_instance_list_t using ::query_instance_list_free. See batch_mode.c
- * for a code example.
+ * To parse a file with queries, open the file with `fopen` and pass it to
+ * ::query_file_parser_parse. In the end, don't forget to close the file and to free the resulting
+ * ::query_instance_list_t using ::query_instance_list_free. See batch_mode.c for a code example.
  */
 
 #ifndef QUERY_FILE_PARSER_H
@@ -36,18 +34,17 @@
 #include "queries/query_instance_list.h"
 
 /**
- * @brief Parses a file containg a query in each line.
+ * @brief   Parses a file containg a query in each line.
+ * @details Queries whose parsing fails will neither appear on the returned list nor be reported be
+ *          as errors.
  *
- * @param input           Input file stream to be read.
- * @param query_type_list List of known queries.
- *
+ * @param  input Input file stream to be read.
  * @return A pointer to a ::query_instance_list_t, that must later be `free`'d by
- *         ::query_instance_list_free, or `NULL` on failure.
+ *         ::query_instance_list_free, or `NULL` on allocation failure.
  *
  * #### Examples
  * See [the header file's documentation](@ref query_file_parser_examples).
  */
-query_instance_list_t *query_file_parser_parse(FILE                    *input,
-                                               const query_type_list_t *query_type_list);
+query_instance_list_t *query_file_parser_parse(FILE *input);
 
 #endif

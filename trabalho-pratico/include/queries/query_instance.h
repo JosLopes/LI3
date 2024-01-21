@@ -21,18 +21,17 @@
  * @anchor query_instance_examples
  * ### Examples
  *
- * A query instance usually originates from a [query parser](@ref queryparser.h). You can also
+ * A query instance usually originates from the [query parser](@ref query_parser.h). You can also
  * create it using ::query_instance_create, followed by calling each one of the following setters:
  *
  * - ::query_instance_set_type;
  * - ::query_instance_set_formatted;
- * - ::query_instance_set_number_in_file (use 1 if not a query in a file);
- * - ::query_instance_set_argument_data (see ::query_type_parse_arguments_callback_t for your query
- *   type).
+ * - ::query_instance_set_line_in_file (use 1 if not a query in a file);
+ * - ::query_instance_set_argument_data (using the ::query_type_parse_arguments_callback_t method
+ *   for your query type).
  *
- * To run the query you created, see ::query_dispatcher_dispatch_single.
- *
- * In the end, don't forget to call ::query_instance_free.
+ * To run the query you created, see ::query_dispatcher_dispatch_single. In the end, don't forget to
+ * call ::query_instance_free.
  */
 
 #ifndef QUERY_INSTANCE_H
@@ -41,7 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Weird structure to do something like C++'s `class Foo;` without adding a dependency */
 /* clang-format off */
 #ifndef query_instance_typedef
     /** @cond FALSE */
@@ -53,100 +51,90 @@
 #endif
 /* clang-format on */
 
-#include "queries/query_type_list.h"
+#include "queries/query_type.h"
 
 /**
- * @brief Create a new query instance.
- * @return A new ::query_instance_t, that should be `free`'d with ::query_instance_free, or `NULL`
- *         on failure.
+ * @brief  Creates a new query instance.
+ * @return A pointer to a new ::query_instance_t, that should be `free`d with ::query_instance_free,
+ *         or `NULL` on failure.
  */
 query_instance_t *query_instance_create(void);
 
 /**
- * @brief Creates a deep copy of a query instance.
- *
- * @param query           Query to be copied.
- * @param query_type_list List of supported queries (to know how to duplicate `argument_data` in @p
- *                        query).
- *
- * @return A pointer to a copy of @p query, that must be deleted with ::query_instance_free, `NULL`
- *         on allocation failure or invalid query type.
+ * @brief  Creates a deep copy of a query instance.
+ * @param  query Query to be copied.
+ * @return A pointer to a copy of @p query, that must be `free`d with ::query_instance_free, `NULL`
+ *         on allocation failure / or invalid query type.
  */
-query_instance_t *query_instance_clone(const query_instance_t  *query,
-                                       const query_type_list_t *query_type_list);
+query_instance_t *query_instance_clone(const query_instance_t *query);
 
 /**
- * @brief Sets the type of a query.
+ * @brief Sets the type of a query instance.
  * @param query Query instance to have its type set.
- * @param type  Type of the query.
+ * @param type  Type of the query instance.
  */
-void query_instance_set_type(query_instance_t *query, size_t type);
+void query_instance_set_type(query_instance_t *query, const query_type_t *type);
 
 /**
- * @brief Sets whether a query's output should be formatted or not.
+ * @brief Sets whether or not a query's output should be formatted.
  * @param query     Query instance to have its formatting flag set.
- * @param formatted If the query's output should be formatted or not.
+ * @param formatted Whether or not the query's output should be formatted.
  */
 void query_instance_set_formatted(query_instance_t *query, int formatted);
 
 /**
- * @brief Sets the number of the line a query was on.
- * @param query          Query instance to have its line number in the file set.
- * @param number_in_file The number of the line @p query was on (in the query file).
+ * @brief Sets the number of the line a query instance was on.
+ * @param query        Query instance to have its line number in the file set.
+ * @param line_in_file The number of the line the query instance was on (in the query file). Leave
+ *                     `1` for an interactive mode query.
  */
-void query_instance_set_number_in_file(query_instance_t *query, size_t number_in_file);
+void query_instance_set_line_in_file(query_instance_t *query, size_t line_in_file);
 
 /**
- * @brief Adds data relating to argument parsing results to a query. Its data type will depend on
- *        the query's type.
+ * @brief   Adds parsed arguments to a query. Its data type will depend on the query's type.
+ * @details For any query instance, ::query_instance_set_type must be called before this setter.
  *
- * @param query           Query instance to have its formatting flag set.
+ * @param query           Query instance to have its arguments set.
  * @param argument_data   Data resulting from parsing the query's arguments.
- * @param query_type_list List of supported queries (to know how to clone @p argument_data)
  *
  * @retval 0 Success.
  * @retval 1 Allocation failure or query type not set.
  */
-int query_instance_set_argument_data(query_instance_t        *query,
-                                     const void              *argument_data,
-                                     const query_type_list_t *query_type_list);
+int query_instance_set_argument_data(query_instance_t *query, const void *argument_data);
 
 /**
- * @brief  Gets the type of a query.
- * @param  query Query to get the type from.
+ * @brief  Gets the type of a query instance.
+ * @param  query Query instance to get the type from.
  * @return The type of @p query.
  */
-size_t query_instance_get_type(const query_instance_t *query);
+const query_type_t *query_instance_get_type(const query_instance_t *query);
 
 /**
- * @brief  Gets whether a query's output should or not be formatted.
- * @param  query Query to get the formatted flag from.
- * @return Whether @p query 's output should or not be formatted.
+ * @brief  Gets whether or not a query's output should be formatted.
+ * @param  query Query instance to get the formatted flag from.
+ * @return Whether or not @p query 's output should be formatted.
  */
 int query_instance_get_formatted(const query_instance_t *query);
 
 /**
- * @brief  Gets the number of the line a query was on.
- * @param  query Query to get the number in file from.
+ * @brief  Gets the number of the line a query instance was on.
+ * @param  query Query instance to get the line number from.
  * @return The number of the line @p query was on.
  */
-size_t query_instance_get_number_in_file(const query_instance_t *query);
+size_t query_instance_get_line_in_file(const query_instance_t *query);
 
 /**
- * @brief  Gets data resulting from parsing the query's arguments.
- * @param  query Query to get argument data from.
+ * @brief  Gets a query instance's parsed arguments.
+ * @param  query Query instance to get parsed arguments from.
  * @return Data resulting from parsing the query's arguments. Its data type will depend on the
  *         query's type.
  */
 const void *query_instance_get_argument_data(const query_instance_t *query);
 
 /**
- * @brief Frees memory used by a query instance, created by ::query_instance_create.
- *
- * @param query           Query instance to be freed.
- * @param query_type_list List of supported queries (to know how to free `argument_data` in @p
- *                        query).
+ * @brief Frees memory used by a query instance.
+ * @param query Query instance to be `free`d.
  */
-void query_instance_free(query_instance_t *query, const query_type_list_t *query_type_list);
+void query_instance_free(query_instance_t *query);
 
 #endif
