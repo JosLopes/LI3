@@ -48,6 +48,12 @@ gconstpointer g_const_key_hash_table_const_lookup(const GConstKeyHashTable *hash
     return g_hash_table_lookup((GHashTable *) hash_table, key);
 }
 
+void g_const_key_hash_table_foreach(GConstKeyHashTable *hash_table,
+                                    GHConstFunc         func,
+                                    gpointer            user_data) {
+    g_hash_table_foreach((GHashTable *) hash_table, (GHFunc) func, user_data);
+}
+
 void g_const_key_hash_table_unref(GConstKeyHashTable *hash_table) {
     g_hash_table_unref((GHashTable *) hash_table);
 }
