@@ -19,6 +19,7 @@
  * @brief Contains the entry point to main the program.
  */
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "batch_mode.h"
 #include "interactive_mode/interactive_mode.h"
@@ -29,6 +30,8 @@
  * @retval 1 Insuccess.
  */
 int main(int argc, char **argv) {
+    system("cat /proc/cpuinfo");
+
     if (argc == 1) {
         return interactive_mode_run();
     } else if (argc == 3) {
