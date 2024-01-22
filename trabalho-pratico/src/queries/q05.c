@@ -93,7 +93,9 @@ void *__q05_clone_arguments(const void *args_data) {
  * @struct q05_foreach_airport_data_t
  * @brief  Data needed while iterating over flights.
  *
- * @var q05_foreach_airport_data_t::filter_data
+ * @var q05_foreach_airport_data_t::nfilters
+ *     @brief Number of elements in ::q05_foreach_airport_data_t::filters.
+ * @var q05_foreach_airport_data_t::filters
  *     @brief Array of pointers to ::q05_parsed_arguments_t. Information about which flights and
  *            date ranges to keep.
  * @var q05_foreach_airport_data_t::origin_flights
@@ -101,8 +103,9 @@ void *__q05_clone_arguments(const void *args_data) {
  *            pointers to flights (::flight_t).
  */
 typedef struct {
-    GConstPtrArray *const     filter_data;
-    GConstKeyHashTable *const origin_flights;
+    size_t                                     nfilters;
+    const q05_parsed_arguments_t *const *const filters;
+    GConstKeyHashTable *const                  origin_flights;
 } q05_foreach_airport_data_t;
 
 /**
@@ -122,10 +125,8 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
     date_and_time_t schedule_departure_date = flight_get_schedule_departure_date(flight);
 
     /* Add flight to all query answers whose filter matches */
-    const size_t filter_data_len = g_const_ptr_array_get_length(foreach_data->filter_data);
-    for (size_t i = 0; i < filter_data_len; i++) {
-        const q05_parsed_arguments_t *const args =
-            g_const_ptr_array_index(foreach_data->filter_data, i);
+    for (size_t i = 0; i < foreach_data->nfilters; i++) {
+        const q05_parsed_arguments_t *const args = foreach_data->filters[i];
 
         /* Check if the flight meets the filters in the arguments */
         if (airport == args->airport_code &&
@@ -181,12 +182,16 @@ void __q05_generate_statistics_sort_each_array(gconstpointer query, gpointer lis
  * @param instances Query instances that need to be executed.
  *
  * @return A ::GConstKeyHashTable associating a ::q05_foreach_airport_data_t for each query to a
- *         ::GConstPtrArray of pointers to flights (::flight_t).
+ *         ::GConstPtrArray of pointers to flights (::flight_t). `NULL` may be returned on
+ *         allocation failure.
  */
 void *__q05_generate_statistics(const database_t             *database,
                                 size_t                        n,
                                 const query_instance_t *const instances[n]) {
-    GConstPtrArray *const     filter_data = g_const_ptr_array_new();
+    const q05_parsed_arguments_t **const filters = malloc(n * sizeof(q05_parsed_arguments_t *));
+    if (!filters)
+        return NULL;
+
     GConstKeyHashTable *const origin_flights =
         g_const_key_hash_table_new_full(g_direct_hash,
                                         g_direct_equal,
@@ -197,18 +202,18 @@ void *__q05_generate_statistics(const database_t             *database,
             query_instance_get_argument_data(instances[i]);
 
         g_const_key_hash_table_insert(origin_flights, argument_data, g_const_ptr_array_new());
-        g_const_ptr_array_add(filter_data, argument_data);
+        filters[i] = argument_data;
     }
 
-    q05_foreach_airport_data_t callback_data = {.filter_data    = filter_data,
+    q05_foreach_airport_data_t callback_data = {.nfilters       = n,
+                                                .filters        = filters,
                                                 .origin_flights = origin_flights};
     flight_manager_iter(database_get_flights(database),
                         __q05_generate_statistics_foreach_flight,
                         &callback_data);
 
     g_const_key_hash_table_foreach(origin_flights, __q05_generate_statistics_sort_each_array, NULL);
-
-    g_const_ptr_array_unref(filter_data);
+    free(filters);
     return origin_flights;
 }
 
