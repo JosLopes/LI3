@@ -19,51 +19,50 @@
  * @brief Implementation of methods in include/queries/q06.h
  */
 
-#include <glib.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "queries/q06.h"
 #include "queries/query_instance.h"
+#include "utils/glib/GConstKeyHashTable.h"
 #include "utils/int_utils.h"
 
 /**
  * @struct q06_parsed_arguments_t
- * @brief A structure to hold the parsed arguments for a query of type 6.
+ * @brief  Parsed arguments for a query of type 6.
  *
- * @var q06_parsed_arguments_t::year
- *     @brief The year to consider.
  * @var q06_parsed_arguments_t::n
  *    @brief The number of airports to display.
+ * @var q06_parsed_arguments_t::year
+ *     @brief The year to consider.
  */
 typedef struct {
-    uint16_t year;
     size_t   n;
+    uint16_t year;
 } q06_parsed_arguments_t;
 
 /**
- * @brief Parses the arguments for a query of type 6.
+ * @brief   Parses the arguments for a query of type 6.
  * @details Asserts that there are exactly two arguments, a year and a number of airports to
  *          display.
  *
- * @param argv List of query arguments.
  * @param argc Number of query arguments.
+ * @param argv List of query arguments.
  *
- * @return A pointer to a ::q06_parsed_arguments_t, or `NULL` on failure.
+ * @return A pointer to a ::q06_parsed_arguments_t, or `NULL` on parsing or allocation failure.
  */
 void *__q06_parse_arguments(size_t argc, char *const argv[argc]) {
     if (argc != 2)
         return NULL;
 
-    q06_parsed_arguments_t *args = malloc(sizeof(q06_parsed_arguments_t));
+    q06_parsed_arguments_t *const args = malloc(sizeof(q06_parsed_arguments_t));
     if (!args)
         return NULL;
 
     /* Parse year */
-    size_t length = strlen(argv[0]);
+    const size_t length = strlen(argv[0]);
     if (length == 4) {
-        uint64_t year;
-        int      retval = int_utils_parse_positive(&year, argv[0]);
+        uint64_t  year;
+        const int retval = int_utils_parse_positive(&year, argv[0]);
 
         if (retval) {
             free(args);
@@ -76,9 +75,9 @@ void *__q06_parse_arguments(size_t argc, char *const argv[argc]) {
         return NULL; /* Invalid year format */
     }
 
-    /* Parse number of flights */
-    uint64_t n;
-    int      retval = int_utils_parse_positive(&n, argv[1]);
+    /* Parse the number of flights */
+    uint64_t  n;
+    const int retval = int_utils_parse_positive(&n, argv[1]);
     if (retval) {
         free(args);
         return NULL; /* Invalid N format */
@@ -88,9 +87,15 @@ void *__q06_parse_arguments(size_t argc, char *const argv[argc]) {
     return args;
 }
 
+/**
+ * @brief  Creates a deep clone of the value returned by ::__q06_parse_arguments.
+ * @param  args_data Non-`NULL` value returned by ::__q06_parse_arguments (a pointer to a
+ *                   ::q06_parsed_arguments_t).
+ * @return A deep copy of @p args_data.
+ */
 void *__q06_clone_arguments(const void *args_data) {
-    const q06_parsed_arguments_t *args  = args_data;
-    q06_parsed_arguments_t       *clone = malloc(sizeof(q06_parsed_arguments_t));
+    const q06_parsed_arguments_t *const args  = args_data;
+    q06_parsed_arguments_t *const       clone = malloc(sizeof(q06_parsed_arguments_t));
     if (!clone)
         return NULL;
 
@@ -103,14 +108,15 @@ void *__q06_clone_arguments(const void *args_data) {
  * @details Auxiliary function for ::__q06_generate_statistics_foreach_flight, itself an auxiliary
  *          method for ::__q06_generate_statistics.
  *
- * @param airport_count  Hash table that associates `airport_code_t`s with numbers of passengers.
+ * @param airport_count  `GHashTable` that associates airports (::airport_code_t) with numbers of
+ *                       passengers.
  * @param airport        Airport to add passengers to.
  * @param num_passengers Number of passengers to be added to @p airport in @p airport_count.
  */
 void __q06_generate_statistics_add_passengers(GHashTable    *airport_count,
                                               airport_code_t airport,
                                               uint16_t       num_passengers) {
-    uint64_t origin_count =
+    const uint64_t origin_count =
         GPOINTER_TO_UINT(g_hash_table_lookup(airport_count, GUINT_TO_POINTER(airport)));
     g_hash_table_insert(airport_count,
                         GUINT_TO_POINTER(airport),
@@ -118,63 +124,60 @@ void __q06_generate_statistics_add_passengers(GHashTable    *airport_count,
 }
 
 /**
- * @brief Method called for each flight, to generate statistical data.
+ * @brief   Method called for each flight, to generate statistical data.
  * @details An auxiliary method for ::__q06_generate_statistics.
  *
  * @param user_data A `GHashTable` that associates a year with another `GHashTable`, that itself
- *                  associates airport codes with integers numbers of passengers.
+ *                  associates airport codes with numbers of passengers (integers).
  * @param flight    The flight to consider.
  *
- * @retval 0 Always successful
+ * @retval 0 Always successful.
  */
 int __q06_generate_statistics_foreach_flight(void *user_data, const flight_t *flight) {
-    GHashTable *years_airport_count = (GHashTable *) user_data;
-
-    uint16_t year =
+    const uint16_t year =
         date_get_year(date_and_time_get_date(flight_get_schedule_departure_date(flight)));
 
     /* Get the airport code -> passenger count mapping */
-    GHashTable *airport_count = g_hash_table_lookup(years_airport_count, GUINT_TO_POINTER(year));
+    GHashTable *const airport_count = g_hash_table_lookup(user_data, GUINT_TO_POINTER(year));
     if (!airport_count)
         return 0; /* Year not asked for in queries */
 
-    airport_code_t origin         = flight_get_origin(flight);
-    airport_code_t destination    = flight_get_destination(flight);
-    uint16_t       num_passengers = flight_get_number_of_passengers(flight);
+    const airport_code_t origin         = flight_get_origin(flight);
+    const airport_code_t destination    = flight_get_destination(flight);
+    const uint16_t       num_passengers = flight_get_number_of_passengers(flight);
 
     __q06_generate_statistics_add_passengers(airport_count, origin, num_passengers);
     __q06_generate_statistics_add_passengers(airport_count, destination, num_passengers);
-
     return 0;
 }
 
 /**
  * @struct q06_array_item_t
- * @brief A structure to hold an item in the array of airport passanger counts.
+ * @brief  A pair formed by an airport and its number of passengers.
  *
  * @var q06_array_item_t::airport
  *     @brief An airport.
  * @var q06_array_item_t::count
- *     @brief The number of passangers.
+ *     @brief The number of passangers of q06_array_item_t::airport.
  */
 typedef struct {
     airport_code_t airport;
-    uint64_t       count;
+    uint32_t       count;
 } q06_array_item_t;
 
 /**
- * @brief   Method called for each airport-passenger count pair in a `GHashTable`, that adds it to a
- *          `GArray`.
- * @details An auxiliary method for ::__q06_execute.
+ * @brief   Method called for each airport-passenger count pair in a `GHashTable`, which is added to
+ *          a `GArray`.
+ * @details An auxiliary method for ::__q06_generate_statistics_foreach_year.
  *
- * @param key       The key in the `GHashTable`, an `airport_code_t`.
+ * @param key       The key in the `GHashTable`, an ::airport_code_t.
  * @param value     The value in the `GHashTable`, an integer (as a pointer).
  * @param user_data The `GArray` of airport + passanger count tuples (::q06_array_item_t).
  */
 void __q06_foreach_airport_count(gpointer key, gpointer value, gpointer user_data) {
-    q06_array_item_t item = {.airport = (airport_code_t) (size_t) key,
-                             .count   = GPOINTER_TO_UINT(value)};
-    g_array_append_val((GArray *) user_data, item);
+    const q06_array_item_t item = {.airport = GPOINTER_TO_UINT(key),
+                                   .count   = GPOINTER_TO_UINT(value)};
+    g_array_append_val(user_data, item);
 }
 
 /**
@@ -182,70 +185,70 @@ void __q06_foreach_airport_count(gpointer key, gpointer value, gpointer user_dat
  * @details Used for array sorting in ::__q06_generate_statistics_foreach_year.
  */
 gint __q06_sort_airports_by_count(gconstpointer a, gconstpointer b) {
-    const q06_array_item_t *item_a = a;
-    const q06_array_item_t *item_b = b;
+    const q06_array_item_t *const item_a = a;
+    const q06_array_item_t *const item_b = b;
 
-    if (item_b->count == item_a->count) {
-        char a_airport_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
-        char b_airport_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
-        airport_code_sprintf(a_airport_str, item_a->airport);
-        airport_code_sprintf(b_airport_str, item_b->airport);
+    const int64_t crit1 = item_b->count - item_a->count;
+    if (crit1)
+        return crit1;
 
-        return strcmp(a_airport_str, b_airport_str);
-    } else {
-        return item_b->count - item_a->count;
-    }
+    char a_airport_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
+    char b_airport_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
+    airport_code_sprintf(a_airport_str, item_a->airport);
+    airport_code_sprintf(b_airport_str, item_b->airport);
+
+    return strcmp(a_airport_str, b_airport_str);
 }
 
 /**
- * @brief   Converts a `GHashTable` to an ordered `GArray` of key-value tuples (::q06_array_item_t).
- * @details Called for every year.
+ * @brief   Converts a `GHashTable` (::airport_code_t -> passenger count) to an ordered `GArray` of
+ *          key-value tuples (::q06_array_item_t).
+ * @details The `GArray` will be inserted into a ::GConstKeyHashTable whose keys are years. This is
+ *          an auxiliary method for ::__q06_generate_statistics.
  *
  * @param key_year            Year being processed (as a pointer).
- * @param value_airport_count `GHashTable` (`airport -> passenger count`) associated to @p key_year.
- * @param user_data           `GHashTable` (`year -> tuple array`) to write the output array to.
+ * @param value_airport_count `GHashTable` (::airport_code_t -> passenger count) associated to
+ *                            @p key_year.
+ * @param user_data           ::GConstKeyHashTable (year -> tuple array) to write the output array
+ *                            to.
  */
 void __q06_generate_statistics_foreach_year(gpointer key_year,
                                             gpointer value_airport_count,
                                             gpointer user_data) {
 
-    int16_t     year          = GPOINTER_TO_UINT(key_year);
-    GHashTable *airport_count = (GHashTable *) value_airport_count;
-
-    GArray *airport_count_array =
+    GHashTable *const airport_count = value_airport_count;
+    GArray *const airport_count_array =
         g_array_sized_new(FALSE, FALSE, sizeof(q06_array_item_t), g_hash_table_size(airport_count));
 
     g_hash_table_foreach(airport_count, __q06_foreach_airport_count, airport_count_array);
     g_array_sort(airport_count_array, __q06_sort_airports_by_count);
 
-    g_hash_table_insert((GHashTable *) user_data, GUINT_TO_POINTER(year), airport_count_array);
+    g_const_key_hash_table_insert(user_data, key_year, airport_count_array);
 }
 
 /**
  * @brief Generates statistical data for queries of type 6.
- * @details Generates a `GHashTable` that associates years with sorted `GArray`s of
- *          ::q06_array_item_t (airport + passenger count tuples).
  *
- * @param database   Database to get data from.
+ * @param database   Database, to iterate through flights.
  * @param n          Number of query instances to be executed.
  * @param instances  Array of query instances to be executed.
  *
- * @return A `GHashTable` that associates years with sorted `GArray`s of ::q06_array_item_t
+ * @return A ::GConstKeyHashTable that associates years with sorted `GArray`s of ::q06_array_item_t
  *         (airport + passenger count tuples).
  */
 void *__q06_generate_statistics(const database_t             *database,
                                 size_t                        n,
                                 const query_instance_t *const instances[n]) {
-    GHashTable *years_airport_count = g_hash_table_new_full(g_direct_hash,
+
+    GHashTable *const years_airport_count = g_hash_table_new_full(g_direct_hash,
                                                             g_direct_equal,
                                                             NULL,
                                                             (GDestroyNotify) g_hash_table_unref);
-
     for (size_t i = 0; i < n; ++i) {
-        int16_t year =
+        const int16_t year =
             ((const q06_parsed_arguments_t *) query_instance_get_argument_data(instances[i]))->year;
 
-        GHashTable *airport_count = g_hash_table_new(g_direct_hash, g_direct_equal);
+        GHashTable *const airport_count = g_hash_table_new(g_direct_hash, g_direct_equal);
         g_hash_table_insert(years_airport_count, GUINT_TO_POINTER(year), airport_count);
     }
 
@@ -254,9 +257,10 @@ void *__q06_generate_statistics(const database_t             *database,
                         years_airport_count);
 
     /* Create a sorted array for each year (instead of a hash table) */
-    GHashTable *years_airport_count_array =
-        g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) g_array_unref);
-
+    GConstKeyHashTable *const years_airport_count_array =
+        g_const_key_hash_table_new_full(g_direct_hash,
+                                        g_direct_equal,
+                                        (GDestroyNotify) g_array_unref);
     g_hash_table_foreach(years_airport_count,
                          __q06_generate_statistics_foreach_year,
                          years_airport_count_array);
@@ -269,12 +273,13 @@ void *__q06_generate_statistics(const database_t             *database,
  * @brief   Executes a query of type 6.
  * @details Prints the top N airports with the most passangers in a given year.
  *
- * @param database   Database to get data from.
+ * @param database   Database to get data from (not used, as all data is collected in
+ *                   ::__q06_generate_statistics).
  * @param statistics Statistics generated by ::__q06_generate_statistics.
  * @param instance   Query instance to be executed.
- * @param output     File to write output to.
+ * @param output     Where to write the query's result to.
  *
- * @retval 0 Always successful
+ * @retval 0 Always successful.
  */
 int __q06_execute(const database_t       *database,
                   const void             *statistics,
@@ -282,25 +287,28 @@ int __q06_execute(const database_t       *database,
                   query_writer_t         *output) {
     (void) database;
 
-    const q06_parsed_arguments_t *args = query_instance_get_argument_data(instance);
+    const q06_parsed_arguments_t *const args = query_instance_get_argument_data(instance);
 
-    GHashTable *years_airport_count_array = (GHashTable *) statistics;
-    GArray     *airport_count =
-        (GArray *) g_hash_table_lookup(years_airport_count_array, GUINT_TO_POINTER(args->year));
+    const GConstKeyHashTable *const years_airport_count_array = statistics;
+    const GArray *const             airport_count =
+        g_const_key_hash_table_const_lookup(years_airport_count_array,
+                                            GUINT_TO_POINTER(args->year));
+
     if (!airport_count) {
         fprintf(stderr, "Bad statistical data in query 6! This should not happen!\n");
         return 1; /* Only if statistics are bad, which shouldn't happen */
     }
 
-    for (size_t i = 0; i < min(args->n, airport_count->len); ++i) {
-        const q06_array_item_t *item = &g_array_index(airport_count, q06_array_item_t, i);
+    const size_t i_max = min(args->n, airport_count->len);
+    for (size_t i = 0; i < i_max; ++i) {
+        const q06_array_item_t *const item = &g_array_index(airport_count, q06_array_item_t, i);
 
         char airport_code_str[AIRPORT_CODE_SPRINTF_MIN_BUFFER_SIZE];
         airport_code_sprintf(airport_code_str, item->airport);
 
         query_writer_write_new_object(output);
         query_writer_write_new_field(output, "name", "%s", airport_code_str);
-        query_writer_write_new_field(output, "passengers", "%" PRIu64, item->count);
+        query_writer_write_new_field(output, "passengers", "%" PRIu32, item->count);
     }
 
     return 0;
