@@ -37,8 +37,8 @@ guint g_const_ptr_array_get_length(const GConstPtrArray *array) {
     return ((const GPtrArray *) array)->len;
 }
 
-void g_const_ptr_array_sort(GConstPtrArray *array, GCompareFunc compare_func) {
-    g_ptr_array_sort((GPtrArray *) array, compare_func);
+void g_const_ptr_array_sort(GConstPtrArray *array, GConstCompareFunc compare_func) {
+    g_ptr_array_sort((GPtrArray *) array, (GCompareFunc) compare_func);
 }
 
 void g_const_ptr_array_unref(GConstPtrArray *array) {

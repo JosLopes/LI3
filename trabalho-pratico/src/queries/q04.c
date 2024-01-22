@@ -90,7 +90,7 @@ int __q04_generate_statistics_foreach_reservation(void                *user_data
  * @details Auxiliary method for ::__q04_generate_statistics_sort_each_array, itself an
  *          auxiliary method for ::__q04_generate_statistics.
  */
-gint __q04_sort_reservations_by_date(gconstpointer a, gconstpointer b) {
+gint __q04_sort_reservations_by_date(const void *const *a, const void *const *b) {
     const reservation_t *const reservation_a = *((const reservation_t *const *) a);
     const reservation_t *const reservation_b = *((const reservation_t *const *) b);
 

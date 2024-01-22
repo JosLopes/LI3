@@ -37,6 +37,15 @@
 typedef struct GConstPtrArray GConstPtrArray;
 
 /**
+ * @brief   A comparsion function for ::g_const_ptr_array_sort.
+ * @details See https://libsoup.org/glib/glib-Doubly-Linked-Lists.html#GCompareFunc. This method
+ *          makes it clear that the arguments are pointers to pointers (unlike `GCompareFunc`) and
+ *          informs the compiler that the values in the array are constant (`GCompareFunc` does not,
+ *          only making the topmost pointer constant: `void *const *`).
+ */
+typedef gint (*GConstCompareFunc)(const void *const *, const void *const *);
+
+/**
  * @brief   Creates a new dynamic array of constant pointers.
  * @details See https://libsoup.org/glib/glib-Pointer-Arrays.html#g-ptr-array-new
  * @return  A pointer to a ::GConstPtrArray.
@@ -78,7 +87,7 @@ guint g_const_ptr_array_get_length(const GConstPtrArray *array);
  * @param array        Array to be sorted.
  * @param compare_func Method used to compare between two given pointers.
  */
-void g_const_ptr_array_sort(GConstPtrArray *array, GCompareFunc compare_func);
+void g_const_ptr_array_sort(GConstPtrArray *array, GConstCompareFunc compare_func);
 
 /**
  * @brief   Decrements the reference count of a dynamic array of constant pointers.

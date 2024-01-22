@@ -217,7 +217,7 @@ void __q06_generate_statistics_foreach_year(gpointer key_year,
                                             gpointer user_data) {
 
     GHashTable *const airport_count = value_airport_count;
-    GArray *const airport_count_array =
+    GArray *const     airport_count_array =
         g_array_sized_new(FALSE, FALSE, sizeof(q06_array_item_t), g_hash_table_size(airport_count));
 
     g_hash_table_foreach(airport_count, __q06_foreach_airport_count, airport_count_array);
@@ -240,10 +240,11 @@ void *__q06_generate_statistics(const database_t             *database,
                                 size_t                        n,
                                 const query_instance_t *const instances[n]) {
 
-    GHashTable *const years_airport_count = g_hash_table_new_full(g_direct_hash,
-                                                            g_direct_equal,
-                                                            NULL,
-                                                            (GDestroyNotify) g_hash_table_unref);
+    GHashTable *const years_airport_count =
+        g_hash_table_new_full(g_direct_hash,
+                              g_direct_equal,
+                              NULL,
+                              (GDestroyNotify) g_hash_table_unref);
     for (size_t i = 0; i < n; ++i) {
         const int16_t year =
             ((const q06_parsed_arguments_t *) query_instance_get_argument_data(instances[i]))->year;
@@ -279,7 +280,8 @@ void *__q06_generate_statistics(const database_t             *database,
  * @param instance   Query instance to be executed.
  * @param output     Where to write the query's result to.
  *
- * @retval 0 Always successful.
+ * @retval 0 Success.
+ * @retval 1 Fatal failure (should, in principle, be unreachable).
  */
 int __q06_execute(const database_t       *database,
                   const void             *statistics,

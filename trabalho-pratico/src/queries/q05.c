@@ -148,7 +148,7 @@ int __q05_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
  * @details Auxiliary method for ::__q05_generate_statistics_sort_each_array, itself an
  *          auxiliary method for ::__q05_generate_statistics.
  */
-gint __q05_flights_date_compare_func(gconstpointer a, gconstpointer b) {
+gint __q05_flights_date_compare_func(const void *const *a, const void *const *b) {
     const flight_t *const flight_a = *((const flight_t *const *) a);
     const flight_t *const flight_b = *((const flight_t *const *) b);
 
