@@ -19,22 +19,19 @@
  * @brief Implementation of methods in include/queries/q09.h
  */
 
-#include <ctype.h>
-#include <glib.h>
 #include <locale.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "queries/q09.h"
 #include "queries/query_instance.h"
+#include "utils/glib/GConstPtrArray.h"
 
 /**
  * @brief   Parses arguments of a query of type 9.
- * @details Asserts there's only one string argument, that is stored.
+ * @details Asserts there's only one string argument.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` for invalid arguments, a copy of the only @p argv on success.
  */
@@ -47,7 +44,7 @@ void *__q09_parse_arguments(size_t argc, char *const argv[argc]) {
 
 /**
  * @struct q09_statistical_data_t
- * @brief Query 9's statistical data.
+ * @brief  Query 9's statistical data.
  *
  * @var q09_statistical_data_t::prefixes
  *     @brief Sorted array of prefixes to compare user names against.
@@ -60,10 +57,10 @@ void *__q09_parse_arguments(size_t argc, char *const argv[argc]) {
  *     @brief Number of elements in every array of this struct.
  */
 typedef struct {
-    const char **prefixes;
-    size_t      *lengths;
-    GPtrArray  **matches;
-    size_t       n;
+    const char     **prefixes;
+    size_t          *lengths;
+    GConstPtrArray **matches;
+    size_t           n;
 } q09_statistical_data_t;
 
 /**
@@ -76,75 +73,73 @@ typedef struct {
  * @retval 0 Always successful.
  */
 int __q09_generate_statistics_iter_callback(void *user_data, const user_t *user) {
-    q09_statistical_data_t *stats = (q09_statistical_data_t *) user_data;
+    q09_statistical_data_t *const stats = user_data;
 
     /* Local copies for slight performance increase */
-    size_t       n        = stats->n;
-    const char **prefixes = stats->prefixes;
-    size_t      *lengths  = stats->lengths;
+    const size_t             n        = stats->n;
+    const char *const *const prefixes = stats->prefixes;
+    const size_t *const      lengths  = stats->lengths;
 
     for (size_t i = 0; i < n; ++i) {
-        int cmp = strncmp(prefixes[i], user_get_const_name(user), lengths[i]);
+        const int cmp = strncmp(prefixes[i], user_get_const_name(user), lengths[i]);
 
-        if (cmp == 0 && user_get_account_status(user) == ACCOUNT_STATUS_ACTIVE) {
-            /* TODO - find a way of not keeping the const */
-            g_ptr_array_add(stats->matches[i], (user_t *) user);
-        } else if (cmp > 0) {
+        if (cmp == 0 && user_get_account_status(user) == ACCOUNT_STATUS_ACTIVE)
+            g_const_ptr_array_add(stats->matches[i], user);
+        else if (cmp > 0)
             break;
-        }
     }
-
     return 0;
 }
 
-/** @brief User comparison function for user ordering for final output. */
-gint __q09_sort_compare_callback(gconstpointer a, gconstpointer b) {
-    const user_t *user_a = *(const user_t *const *) a;
-    const user_t *user_b = *(const user_t *const *) b;
+/**
+ * @brief   User comparison function for user ordering for final output.
+ * @details Auxiliary method for ::__q09_generate_statistics.
+ */
+gint __q09_sort_compare_callback(const void *const *a, const void *const *b) {
+    const user_t *const user_a = *(const user_t *const *) a;
+    const user_t *const user_b = *(const user_t *const *) b;
 
-    gint crit1 = strcoll(user_get_const_name(user_a), user_get_const_name(user_b));
+    const int crit1 = strcoll(user_get_const_name(user_a), user_get_const_name(user_b));
     if (crit1)
         return crit1;
 
-    gint crit2 = strcoll(user_get_const_id(user_a), user_get_const_id(user_b));
+    const int crit2 = strcoll(user_get_const_id(user_a), user_get_const_id(user_b));
     return crit2;
 }
 
 /**
  * @brief   Comparison function for sorting arrays of strings.
- * @details Used in ::__q09_generate_statistics to sort ::q09_statistical_data_t::prefixes.
+ * @details Auxiliary method for ::__q09_generate_statistics.
  */
 int __q09_sort_prefixes_callback(const void *a, const void *b) {
-    const char *ap = *(const char *const *) a;
-    const char *bp = *(const char *const *) b;
-    return strcmp(ap, bp);
+    return strcmp(*(const char *const *) a, *(const char *const *) b);
 }
 
 /**
  * @brief Generates statistical data for queries of type 9.
  *
  * @param database  Database, to iterate through users.
- * @param n         Number of query instances that will need to be executed.
- * @param instances Query instances that will need to be executed.
+ * @param n         Number of query instances to be executed.
+ * @param instances Query instances to be executed.
  *
- * @return A pointer to a ::q09_statistical_data_t.
+ * @return A pointer to a ::q09_statistical_data_t, or `NULL` on allocation failure.
  */
 void *__q09_generate_statistics(const database_t             *database,
                                 size_t                        n,
                                 const query_instance_t *const instances[n]) {
 
     /* Set locale for sorting and restore older locale later */
-    char *old_locale = strdup(setlocale(LC_COLLATE, NULL));
+    char *const old_locale = strdup(setlocale(LC_COLLATE, NULL));
     setlocale(LC_COLLATE, "en_US.UTF-8");
 
     /* Allocate and initialize statistics */
-    q09_statistical_data_t *stats = malloc(sizeof(q09_statistical_data_t));
+    q09_statistical_data_t *const stats = malloc(sizeof(q09_statistical_data_t));
     if (!stats)
         return NULL;
 
     stats->prefixes = malloc(sizeof(const char *) * n);
     stats->lengths  = malloc(sizeof(size_t) * n);
-    stats->matches  = malloc(sizeof(GPtrArray **) * n);
+    stats->matches  = malloc(sizeof(GConstPtrArray **) * n);
     stats->n        = n;
 
     if (!stats->prefixes || !stats->lengths || !stats->matches) {
@@ -161,7 +156,7 @@ void *__q09_generate_statistics(const database_t             *database,
 
     size_t count = 0;
     for (size_t i = 0; i < n; ++i) {
-        const char *prefix = query_instance_get_argument_data(instances[i]);
+        const char *const prefix = query_instance_get_argument_data(instances[i]);
 
         int found = 0;
         for (size_t j = 0; j < count; ++j) {
@@ -177,20 +172,18 @@ void *__q09_generate_statistics(const database_t             *database,
         }
     }
     stats->n = count;
-
     qsort(stats->prefixes, count, sizeof(const char *), __q09_sort_prefixes_callback);
 
     for (size_t i = 0; i < stats->n; ++i) {
         stats->lengths[i] = strlen(stats->prefixes[i]);
-        stats->matches[i] = g_ptr_array_new();
+        stats->matches[i] = g_const_ptr_array_new();
     }
 
     /* Fill matches in statistical data */
     user_manager_iter(database_get_users(database), __q09_generate_statistics_iter_callback, stats);
 
-    for (size_t i = 0; i < stats->n; ++i) {
-        g_ptr_array_sort(stats->matches[i], __q09_sort_compare_callback);
-    }
+    for (size_t i = 0; i < stats->n; ++i)
+        g_const_ptr_array_sort(stats->matches[i], __q09_sort_compare_callback);
 
     if (old_locale) {
         setlocale(LC_COLLATE, old_locale);
@@ -201,15 +194,15 @@ void *__q09_generate_statistics(const database_t             *database,
 
 /**
  * @brief Frees statistical data generated by ::__q09_generate_statistics.
- * @param statistical_data Value returned by ::__q09_generate_statistics.
+ * @param statistical_data Non-`NULL` value returned by ::__q09_generate_statistics.
  */
 void __q09_free_statistics(void *statistical_data) {
-    q09_statistical_data_t *stats = (q09_statistical_data_t *) statistical_data;
+    q09_statistical_data_t *const stats = statistical_data;
     free(stats->prefixes);
     free(stats->lengths);
 
     for (size_t i = 0; i < stats->n; ++i)
-        g_ptr_array_unref(stats->matches[i]);
+        g_const_ptr_array_unref(stats->matches[i]);
     free(stats->matches);
 
     free(stats);
@@ -218,13 +211,14 @@ void __q09_free_statistics(void *statistical_data) {
 /**
  * @brief Executes a query of type 9.
  *
- * @param database   Ignored database (all data is gathered in ::__q09_generate_statistics).
+ * @param database   Database to get data from (not used, as all data is collected in
+ *                   ::__q09_generate_statistics).
  * @param statistics A pointer to a ::q09_statistical_data_t.
  * @param instance   Query instance to be executed.
  * @param output     Where to write the query's output to.
  *
- * @retval 0 Always succcessful.
- * @retval 1 Bad statistical data (should not happen, please raise an issue if it does).
+ * @retval 0 Success.
+ * @retval 1 Fatal failure (should, in principle, be unreachable).
  */
 int __q09_execute(const database_t       *database,
                   const void             *statistics,
@@ -232,15 +226,16 @@ int __q09_execute(const database_t       *database,
                   query_writer_t         *output) {
     (void) database;
 
-    const char             *prefix = query_instance_get_argument_data(instance);
-    q09_statistical_data_t *stats  = (q09_statistical_data_t *) statistics;
+    const char *const                   prefix = query_instance_get_argument_data(instance);
+    const q09_statistical_data_t *const stats  = statistics;
 
     for (size_t i = 0; i < stats->n; ++i) {
         if (strcmp(stats->prefixes[i], prefix) == 0) {
 
-            GPtrArray *matches = stats->matches[i];
-            for (size_t j = 0; j < matches->len; ++j) {
-                const user_t *user = g_ptr_array_index(matches, j);
+            const GConstPtrArray *const matches     = stats->matches[i];
+            const size_t                matches_len = g_const_ptr_array_get_length(matches);
+            for (size_t j = 0; j < matches_len; ++j) {
+                const user_t *const user = g_const_ptr_array_index(matches, j);
                 query_writer_write_new_object(output);
                 query_writer_write_new_field(output, "id", "%s", user_get_const_id(user));
                 query_writer_write_new_field(output, "name", "%s", user_get_const_name(user));

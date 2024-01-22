@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    q09.h
- * @brief   A query to look up a user by a prefix of its identifier.
+ * @file  q09.h
+ * @brief A query to look up a user by a prefix of its name.
  *
  * ### Examples
  *
@@ -38,9 +38,10 @@
 #include "queries/query_type.h"
 
 /**
- * @brief   Initializes the definition of query 9.
- * @details This is done automatically in ::query_type_list_create.
- * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
+ * @brief   Initializes the definition of queries of type 9.
+ * @details This is done automatically in [query_type_list](@ref query_type_list.c).
+ * @return  On success, a pointer to a ::query_type_t that must be deleted with ::query_type_free,
+ *          or `NULL` allocation on failure.
  */
 query_type_t *q09_create(void);
 
