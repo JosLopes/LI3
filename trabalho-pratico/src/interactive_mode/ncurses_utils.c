@@ -88,7 +88,12 @@ size_t ncurses_measure_string(const char *str) {
     size_t width = 0;
     while (*str) {
         width += ncurses_measure_character(g_utf8_get_char(str));
+
+        /* Pragmas to fix bad const in glib's macro */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
         str = g_utf8_next_char(str);
+#pragma GCC diagnostic pop
     }
     return width;
 }
