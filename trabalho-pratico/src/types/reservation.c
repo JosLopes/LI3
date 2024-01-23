@@ -150,7 +150,7 @@ int reservation_set_hotel_name(string_pool_no_duplicates_t *allocator,
 
     if (reservation->owns_hotel_name)
         /* Purposely remove const. We know it was allocated by this module */
-        free((char *) reservation->hotel_name);
+        free((char *) (size_t) reservation->hotel_name);
     reservation->owns_hotel_name = allocator == NULL;
 
     reservation->hotel_name = new_hotel_name;
@@ -289,7 +289,7 @@ void reservation_free(reservation_t *reservation) {
 
     if (reservation->owns_hotel_name)
         /* Purposely remove const. We know it was allocated by this module */
-        free((char *) reservation->hotel_name);
+        free((char *) (size_t) reservation->hotel_name);
 
     if (reservation->owns_itself)
         free(reservation);

@@ -21,6 +21,7 @@
 
 #include <glib.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "queries/q10.h"
@@ -45,12 +46,12 @@ typedef struct {
  * @brief   Parses arguments of a query of type 10.
  * @details Asserts there are 0 to 2 arguments, a year and a month, respectively.
  *
- * @param argv Values of the arguments.
  * @param argc Number of arguments.
+ * @param argv Values of the arguments.
  *
  * @return `NULL` for invalid arguments, a copy of the only @p argv on success.
  */
-void *__q10_parse_arguments(char *const *argv, size_t argc) {
+void *__q10_parse_arguments(size_t argc, char *const argv[argc]) {
     q10_parsed_arguments_t *ret = malloc(sizeof(q10_parsed_arguments_t));
     if (!ret)
         return NULL;
@@ -191,7 +192,7 @@ int __q10_generate_statistics_foreach_user(void                               *u
     q10_foreach_user_data_t *iter_data = user_data;
 
     q10_instant_statistics_t *instants[3];
-    date_t                    date = user_get_account_creation_date(user);
+    date_t                    date = date_and_time_get_date(user_get_account_creation_date(user));
     if (__q10_fill_instants(iter_data->stats, instants, date))
         return 1;
 
@@ -285,15 +286,15 @@ int __q10_generate_statistics_foreach_reservation(void                *user_data
  * @brief Generates statistical data for queries of type 10.
  *
  * @param database  Database, to iterate through users.
- * @param instances Query instances that will need to be executed.
  * @param n         Number of query instances that will need to be executed.
+ * @param instances Query instances that will need to be executed.
  *
  * @return A `GHashTable` that associates dates (also dayless and monthless dates) to pointers to
  *         ::q10_instant_statistics_t (`NULL` on failure).
  */
-void *__q10_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q10_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
     GHashTable *stats =
         g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free);
 
@@ -426,7 +427,7 @@ int __q10_execute(const database_t       *database,
 
     /* TODO - fix const */
     const q10_parsed_arguments_t *args  = query_instance_get_argument_data(instance);
-    GHashTable                   *stats = (GHashTable *) statistics;
+    GHashTable                   *stats = (GHashTable *) (size_t) statistics;
 
     if (args->year == -1) {
         date_t date;
@@ -472,7 +473,8 @@ int __q10_execute(const database_t       *database,
 }
 
 query_type_t *q10_create(void) {
-    return query_type_create(__q10_parse_arguments,
+    return query_type_create(10,
+                             __q10_parse_arguments,
                              __q10_clone_arguments,
                              free,
                              __q10_generate_statistics,

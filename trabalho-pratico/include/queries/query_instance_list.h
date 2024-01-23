@@ -37,15 +37,13 @@
  * ```
  *
  * - Add query instances to it, using ::query_instance_list_add.
- *
- * - When done using the list, free it with ::query_instance_list_free, in case you also own the
- *   queries you added to list, or using ::query_instance_list_free_no_internals if you don't.
+ * - When done using the list, free it with ::query_instance_list_free.
  *
  * There are two types of list iterations. Before any of these iterations, the list will be sorted
  * by query type order.
  *
- * - Query by query iteration using ::query_instance_list_iter. This is trivial, though an example
- *   can be found in batch_mode.c, to open all files to write query outputs in.
+ * - Query by query iteration using ::query_instance_list_iter. An example of this can be found in
+ *   batch_mode.c, to open all files to write query outputs in.
  *
  * - Iteration by query type using ::query_instance_list_iter_types, where a callback is called
  *   for each set of queries of the same type. Here's an example. Suppose we have the following
@@ -78,7 +76,7 @@
 
 #include "queries/query_instance.h"
 
-/** @brief A list of ::query_instance_t. */
+/** @brief A list of ::query_instance_t, sorted by query type. */
 typedef struct query_instance_list query_instance_list_t;
 
 /**
@@ -87,15 +85,15 @@ typedef struct query_instance_list query_instance_list_t;
  *
  * @param user_data Pointer, kept from call to call, so that this callback can modify the program's
  *                  state.
- * @param instances All query instances of the same type.
  * @param n         Number of instances in @p instances. It's guaranteed that there'll be no empty
  *                  sets.
+ * @param instances All query instances of the same type.
  *
  * @return `0` on success, another value for immediate termination of iteration.
  */
-typedef int (*query_instance_list_iter_types_callback)(void                          *user_data,
-                                                       const query_instance_t *const *instances,
-                                                       size_t                         n);
+typedef int (*query_instance_list_iter_types_callback)(void                         *user_data,
+                                                       size_t                        n,
+                                                       const query_instance_t *const instances[n]);
 
 /**
  * @brief Method called for every query in a query list, used by ::query_instance_list_iter.
@@ -109,9 +107,9 @@ typedef int (*query_instance_list_iter_types_callback)(void                     
 typedef int (*query_instance_list_iter_callback)(void *user_data, const query_instance_t *instance);
 
 /**
- * @brief   Creates an empty list of ::query_instance_t.
- * @details This value must be `free`'d with ::query_instance_list_free.
- * @return  A new ::query_instance_list_t, or `NULL` on failure.
+ * @brief  Creates an empty list of ::query_instance_t.
+ * @return A pointer to a new ::query_instance_list_t that must be `free`d with
+ *         ::query_instance_list_free, or `NULL` on allocation failure.
  *
  * #### Examples
  * See [the header file's documentation](@ref query_instance_list_examples).
@@ -119,35 +117,33 @@ typedef int (*query_instance_list_iter_callback)(void *user_data, const query_in
 query_instance_list_t *query_instance_list_create(void);
 
 /**
- * @brief Creates a deep copy of a list of query instances.
- *
- * @param list            List to be cloned.
- * @param query_type_list List of supported queries (to know how to duplicate `argument_data` in
- *                        queries in @p list).
+ * @brief  Creates a deep copy of a list of query instances.
+ * @param  list List to be cloned.
+ * @return A pointer to a new ::query_instance_list_t that must be `free`d with
+ *         ::query_instance_list_free, or `NULL` on allocation failure.
  */
-query_instance_list_t *query_instance_list_clone(const query_instance_list_t *list,
-                                                 const query_type_list_t     *query_type_list);
+query_instance_list_t *query_instance_list_clone(const query_instance_list_t *list);
 
 /**
  * @brief Copies a query instance into a list of query instances.
  *
- * @param list            List of query instances to add @p query to.
- * @param query           Query instance to be added to @p list.
- * @param query_type_list List of supported queries (to know how to duplicate `argument_data` in @p
- *                        query).
+ * @param list  List of query instances to add @p query to.
+ * @param query Query instance to be added to @p list.
+ *
+ * @retval 0 Success.
+ * @retval 1 Allocation failure or invalid @p query.
  */
-void query_instance_list_add(query_instance_list_t   *list,
-                             const query_instance_t  *query,
-                             const query_type_list_t *query_type_list);
+int query_instance_list_add(query_instance_list_t *list, const query_instance_t *query);
 
 /**
- * @brief Iterates over every set of queries of each type.
+ * @brief Iterates over every set of queries of each type in a query instance list.
  *
- * @param list      List of query instances. Cannot be constant, as sorting may occur.
+ * @param list      List of query instances. Cannot be constant, as internal sorting may occur.
  * @param callback  Callback called for every set of queries of each type.
  * @param user_data Value passed to @p callback, so that it can modify the program's state.
  *
- * @return The last value returned by @p callback (will always be `0` on success).
+ * @return The last value returned by @p callback (will always be `0` on success, meaning iteration
+ *         reached the end).
  *
  * #### Examples
  * See [the header file's documentation](@ref query_instance_list_examples).
@@ -159,11 +155,15 @@ int query_instance_list_iter_types(query_instance_list_t                  *list,
 /**
  * @brief Iterates over every query in a query instance list.
  *
- * @param list      List of query instances. Cannot be constant, as sorting may occur.
- * @param callback  Callback called for every set of queries of each type.
+ * @param list      List of query instances. Cannot be constant, as internal sorting may occur.
+ * @param callback  Callback called for every query in @p list.
  * @param user_data Value passed to @p callback, so that it can modify the program's state.
  *
- * @return The last value returned by @p callback (will always be `0` on success).
+ * @return The last value returned by @p callback (will always be `0` on success, meaning iteration
+ *         reached the end).
+ *
+ * #### Examples
+ * See [the header file's documentation](@ref query_instance_list_examples).
  */
 int query_instance_list_iter(query_instance_list_t            *list,
                              query_instance_list_iter_callback callback,
@@ -171,19 +171,15 @@ int query_instance_list_iter(query_instance_list_t            *list,
 
 /**
  * @brief  Gets the length of a ::query_instance_list_t.
- * @param  list List to get the length from.
+ * @param  list List to get the length of.
  * @return The length of @p list.
  */
 size_t query_instance_list_get_length(const query_instance_list_t *list);
 
 /**
- * @brief Frees memory allocated by ::query_instance_list_create.
- *
- * @param list List allocated by ::query_instance_list_create.
- * @param query_type_list List of supported queries (to know how to free `argument_data` in each
- *                        query instance in the list).
+ * @brief Frees memory in a ::query_instance_list_t.
+ * @param list List to be deleted.
  */
-void query_instance_list_free(query_instance_list_t   *list,
-                              const query_type_list_t *query_type_list);
+void query_instance_list_free(query_instance_list_t *list);
 
 #endif

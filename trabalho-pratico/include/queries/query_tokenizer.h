@@ -83,17 +83,13 @@
  */
 int query_tokenizer_tokenize(char *input, tokenize_iter_callback_t callback, void *user_data);
 
-/**
- * @brief Value returned by ::query_tokenizer_tokenize_const when `malloc` fails.
- */
+/** @brief Value returned by ::query_tokenizer_tokenize_const when `malloc` fails. */
 #define QUERY_TOKENIZER_TOKENIZE_CONST_RET_FAILED_MALLOC -1
 
 /**
- * @brief See ::query_tokenizer_tokenize_const, but this method applies to `const` strings.
- *
- * @details The current implementation allocates a writeable buffer and copies over the string
- *          before calling ::query_tokenizer_tokenize, so **it's very inefficient** and should not
- *          be used for large strings.
+ * @brief   See ::query_tokenizer_tokenize_const, but this method applies to `const` strings.
+ * @details The current implementation copies the provided string to a temporary buffer. Keep that
+ *          in mind for performance reasons.
  *
  * @param input     String to tokenize.
  * @param callback  Function called for every token read.

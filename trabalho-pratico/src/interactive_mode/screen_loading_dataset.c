@@ -35,7 +35,6 @@ void screen_loading_dataset_render(void) {
     int window_width, window_height;
     getmaxyx(stdscr, window_height, window_width);
 
-    /* TODO - test dimensions */
     if (window_width < 5 || window_height < 7) { /* Don't attempt rendering on small windows */
         g_free(message);
         return;

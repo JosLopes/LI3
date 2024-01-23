@@ -99,11 +99,9 @@ void __interactive_mode_load_dataset(database_t **database) {
 
 /**
  * @brief Method called when the user chooses to run a query in the main menu.
- * @param query_type_list List of known query types (query definitions).
- * @param database        Database to be queried.
+ * @param database Database to be queried.
  */
-void __interactive_mode_run_query(const query_type_list_t *query_type_list,
-                                  const database_t        *database) {
+void __interactive_mode_run_query(const database_t *database) {
     if (!database) {
         activity_messagebox_run("Please load a dataset first!");
         return;
@@ -132,11 +130,11 @@ void __interactive_mode_run_query(const query_type_list_t *query_type_list,
             return;
         }
 
-        if (query_parser_parse_string_const(query_parsed, query_str, query_type_list, NULL)) {
+        if (query_parser_parse_string_const(query_parsed, query_str, NULL)) {
             free(query_old_str);
             query_old_str = query_str;
 
-            query_instance_free(query_parsed, query_type_list);
+            query_instance_free(query_parsed);
             activity_messagebox_run("Failed to parse query.");
         } else {
             query_writer_t *const writer =
@@ -144,19 +142,21 @@ void __interactive_mode_run_query(const query_type_list_t *query_type_list,
             if (!writer) {
                 activity_messagebox_run("Failed to create writer for query output.");
             } else {
-                query_dispatcher_dispatch_single(database, query_parsed, query_type_list, writer);
-
-                size_t                   nlines;
-                const char *const *const lines = query_writer_get_lines(writer, &nlines);
-                activity_paging_run(nlines,
-                                    lines,
-                                    query_instance_get_formatted(query_parsed),
-                                    "QUERY OUTPUT");
+                if (query_dispatcher_dispatch_single(database, query_parsed, writer)) {
+                    activity_messagebox_run("Failed to run query: out of memory!");
+                } else {
+                    size_t                   nlines;
+                    const char *const *const lines = query_writer_get_lines(writer, &nlines);
+                    activity_paging_run(nlines,
+                                        lines,
+                                        query_instance_get_formatted(query_parsed),
+                                        "QUERY OUTPUT");
+                }
 
                 query_writer_free(writer);
             }
 
-            query_instance_free(query_parsed, query_type_list);
+            query_instance_free(query_parsed);
             free(query_old_str);
             free(query_str);
             return;
@@ -165,15 +165,8 @@ void __interactive_mode_run_query(const query_type_list_t *query_type_list,
 }
 
 int interactive_mode_run(void) {
-    query_type_list_t *const query_type_list = query_type_list_create();
-    if (!query_type_list) {
-        fputs("Failed to allocate query definitions!\n", stderr);
-        return 1;
-    }
-
     if (__interactive_mode_init_ncurses()) {
         fputs("Failed to initialized ncurses!\n", stderr);
-        query_type_list_free(query_type_list);
         return 1;
     }
 
@@ -186,13 +179,12 @@ int interactive_mode_run(void) {
                 __interactive_mode_load_dataset(&database);
                 break;
             case ACTIVITY_MAIN_MENU_RUN_QUERY:
-                __interactive_mode_run_query(query_type_list, database);
+                __interactive_mode_run_query(database);
                 break;
             case ACTIVITY_MAIN_MENU_LICENSE:
                 activity_license_run();
                 break;
             case ACTIVITY_MAIN_MENU_LEAVE:
-                query_type_list_free(query_type_list);
                 if (database)
                     database_free(database);
                 return endwin() == ERR;
