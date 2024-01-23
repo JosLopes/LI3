@@ -16,7 +16,7 @@
 
 /**
  * @file  activity_menu.h
- * @brief A menu that takes a set of options.
+ * @brief A menu where the user chooses between a given set of options.
  *
  * @anchor activity_menu_examples
  * ### Examples
@@ -43,16 +43,14 @@
 #ifndef ACTIVITY_MENU_H
 #define ACTIVITY_MENU_H
 
-#include <glib.h>
-
-#include "interactive_mode/activity.h"
+#include <sys/types.h>
 
 /**
  * @brief Runs a TUI activity for a menu.
  *
- * @param title             The title of the menu that will be shown on the screen.
- * @param screen_options    The set of options available to a user in the menu.
- * @param number_of_options The number of options (strings) in @p screen_options.
+ * @param title          The title of the, menu that will be shown on the screen.
+ * @param n              The number of options (strings) in @p screen_options.
+ * @param screen_options The set of options available to a user in the menu.
  *
  * @return The index of the user selected option. `-1` in case the user escaped the menu by using
  *         Escape, or if an error occurred.
@@ -60,6 +58,6 @@
  * #### Examples
  * See [the header file's documentation](@ref activity_menu_examples).
  */
-ssize_t activity_menu_run(const char *title, const char **screen_options, size_t number_of_options);
+ssize_t activity_menu_run(const char *title, size_t n, const char *const screen_options[n]);
 
 #endif

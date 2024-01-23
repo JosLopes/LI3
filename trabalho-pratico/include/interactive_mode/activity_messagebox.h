@@ -36,8 +36,6 @@
 #ifndef ACTIVITY_MESSAGEBOX_H
 #define ACTIVITY_MESSAGEBOX_H
 
-#include "interactive_mode/activity.h"
-
 /**
  * @brief Runs a TUI activity for a message box.
  *

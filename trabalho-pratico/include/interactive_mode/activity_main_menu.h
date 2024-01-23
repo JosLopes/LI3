@@ -44,6 +44,7 @@
 typedef enum {
     ACTIVITY_MAIN_MENU_LOAD_DATASET, /**< Load a dataset. */
     ACTIVITY_MAIN_MENU_RUN_QUERY,    /**< Run a query. */
+    ACTIVITY_MAIN_MENU_LICENSE,      /**< Read the application's license. */
     ACTIVITY_MAIN_MENU_LEAVE         /**< Leave the application. */
 } activity_main_menu_chosen_option_t;
 
