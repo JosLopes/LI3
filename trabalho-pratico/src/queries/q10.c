@@ -98,6 +98,9 @@ int __q10_instant_exists(int16_t year, int8_t month, q10_instant_statistics_t *i
     if (year == istats->year && month == istats->month)
         return 31;
 
+    if (istats->year == -1 && istats->month == -1)
+        return 1;
+
     return 0;
 }
 
@@ -105,6 +108,16 @@ int __q10_instant_exists(int16_t year, int8_t month, q10_instant_statistics_t *i
 #define Q10_EXECUTE_YEAR_RANGE_START 1970
 /** @brief End of the range of years to look for in ::__q10_execute. */
 #define Q10_EXECUTE_YEAR_RANGE_END   2100
+
+void __q10_add_passenger(GHashTable *table, date_t key, q10_instant_statistics_t *istats) {
+    if (!g_hash_table_lookup(table, GUINT_TO_POINTER(key))) {
+        istats->unique_passengers++;
+
+        g_hash_table_insert(table, GUINT_TO_POINTER(key), GUINT_TO_POINTER(1));
+    }
+
+    istats->passengers++;
+}
 
 int __q10_generate_statistics_foreach_user(void                               *user_data,
                                            const user_t                       *user,
@@ -117,15 +130,13 @@ int __q10_generate_statistics_foreach_user(void                               *u
     uint8_t  day   = date_get_day(date);
 
     for (size_t i = 0; i < iter_data->stats_length; ++i) {
-        if (((iter_data->stats_data)[i])->year == -1 && ((iter_data->stats_data)[i])->month == -1) {
+        int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
+        if (retval == 31)
+            ((iter_data->stats_data)[i][day]).users++;
+        else if (retval == 12)
+            ((iter_data->stats_data)[i][month]).users++;
+        else if (retval == 1)
             ((iter_data->stats_data)[i][year - Q10_EXECUTE_YEAR_RANGE_START + 1]).users++;
-        } else {
-            int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
-            if (retval == 31)
-                ((iter_data->stats_data)[i][day]).users++;
-            else if (retval == 12)
-                ((iter_data->stats_data)[i][month]).users++;
-        }
     }
 
     g_hash_table_remove_all(iter_data->aux_counted);
@@ -141,50 +152,19 @@ int __q10_generate_statistics_foreach_user(void                               *u
         for (size_t i = 0; i < iter_data->stats_length; ++i) {
             int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
 
-            if (((iter_data->stats_data)[i])->year == -1 &&
-                ((iter_data->stats_data)[i])->month == -1) {
-                date_t key = date_generate_monthless(date);
-
-                if (!g_hash_table_lookup(iter_data->aux_counted, GUINT_TO_POINTER(key))) {
-                    ((iter_data->stats_data)[i][year - Q10_EXECUTE_YEAR_RANGE_START + 1])
-                        .unique_passengers++;
-
-                    g_hash_table_insert(iter_data->aux_counted,
-                                        GUINT_TO_POINTER(key),
-                                        GUINT_TO_POINTER(1));
-                }
-
-                ((iter_data->stats_data)[i][year - Q10_EXECUTE_YEAR_RANGE_START + 1]).passengers++;
+            if (retval == 1) {
+                __q10_add_passenger(
+                    iter_data->aux_counted,
+                    date_generate_monthless(date),
+                    &((iter_data->stats_data)[i][year - Q10_EXECUTE_YEAR_RANGE_START + 1]));
             } else if (retval == 31) {
-                date_t key;
-                date_from_values(&key,
-                                 ((iter_data->stats_data)[i])->year,
-                                 ((iter_data->stats_data)[i])->month,
-                                 day);
-
-                if (!g_hash_table_lookup(iter_data->aux_counted, GUINT_TO_POINTER(key))) {
-                    ((iter_data->stats_data)[i][day]).unique_passengers++;
-
-                    g_hash_table_insert(iter_data->aux_counted,
-                                        GUINT_TO_POINTER(key),
-                                        GUINT_TO_POINTER(1));
-                }
-
-                ((iter_data->stats_data)[i][day]).passengers++;
+                __q10_add_passenger(iter_data->aux_counted,
+                                    date,
+                                    &((iter_data->stats_data)[i][day]));
             } else if (retval == 12) {
-                date_t key;
-                date_from_values(&key, ((iter_data->stats_data)[i])->year, month, 1);
-                key = date_generate_dayless(key);
-
-                if (!g_hash_table_lookup(iter_data->aux_counted, GUINT_TO_POINTER(key))) {
-                    ((iter_data->stats_data)[i][month]).unique_passengers++;
-
-                    g_hash_table_insert(iter_data->aux_counted,
-                                        GUINT_TO_POINTER(key),
-                                        GUINT_TO_POINTER(1));
-                }
-
-                ((iter_data->stats_data)[i][month]).passengers++;
+                __q10_add_passenger(iter_data->aux_counted,
+                                    date_generate_dayless(date),
+                                    &((iter_data->stats_data)[i][month]));
             }
         }
 
@@ -208,15 +188,13 @@ int __q10_generate_statistics_foreach_flight(void *user_data, const flight_t *fl
     uint8_t  day   = date_get_day(date);
 
     for (size_t i = 0; i < iter_data->stats_length; ++i) {
-        if (((iter_data->stats_data)[i])->year == -1 && ((iter_data->stats_data)[i])->month == -1) {
+        int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
+        if (retval == 31)
+            ((iter_data->stats_data)[i][day]).flights++;
+        else if (retval == 12)
+            ((iter_data->stats_data)[i][month]).flights++;
+        else if (retval == 1)
             ((iter_data->stats_data)[i][year - Q10_EXECUTE_YEAR_RANGE_START + 1]).flights++;
-        } else {
-            int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
-            if (retval == 31)
-                ((iter_data->stats_data)[i][day]).flights++;
-            else if (retval == 12)
-                ((iter_data->stats_data)[i][month]).flights++;
-        }
     }
 
     return 0;
@@ -232,18 +210,29 @@ int __q10_generate_statistics_foreach_reservation(void                *user_data
     uint8_t  day   = date_get_day(date);
 
     for (size_t i = 0; i < iter_data->stats_length; ++i) {
-        if (((iter_data->stats_data)[i])->year == -1 && ((iter_data->stats_data)[i])->month == -1) {
+        int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
+        if (retval == 31)
+            ((iter_data->stats_data)[i][day]).reservations++;
+        else if (retval == 12)
+            ((iter_data->stats_data)[i][month]).reservations++;
+        else if (retval == 1)
             ((iter_data->stats_data)[i][year - Q10_EXECUTE_YEAR_RANGE_START + 1]).reservations++;
-        } else {
-            int retval = __q10_instant_exists(year, month, (iter_data->stats_data)[i]);
-            if (retval == 31)
-                ((iter_data->stats_data)[i][day]).reservations++;
-            else if (retval == 12)
-                ((iter_data->stats_data)[i][month]).reservations++;
-        }
     }
 
     return 0;
+}
+
+q10_instant_statistics_t *
+    __q10_allocate_instant_stats_array(size_t size, int16_t year, int8_t month) {
+    q10_instant_statistics_t *new = malloc(size * sizeof(q10_instant_statistics_t));
+    if (!new)
+        return NULL;
+
+    memset(new, 0, size * sizeof(q10_instant_statistics_t));
+    new->year  = year;
+    new->month = month;
+
+    return new;
 }
 
 void *__q10_generate_statistics(const database_t              *database,
@@ -266,31 +255,20 @@ void *__q10_generate_statistics(const database_t              *database,
         }
 
         if (args->year != -1 && args->month == -1) {
-            stats_data[i] = malloc(13 * sizeof(q10_instant_statistics_t));
+            stats_data[i] = __q10_allocate_instant_stats_array(13, args->year, -1);
             if (!stats_data[i])
                 return NULL;
-            memset(stats_data[i], 0, 13 * sizeof(q10_instant_statistics_t));
-
-            (stats_data[i])->year  = args->year;
-            (stats_data[i])->month = -1;
-
         } else if (args->month != -1) {
-            stats_data[i] = malloc(32 * sizeof(q10_instant_statistics_t));
+            stats_data[i] = __q10_allocate_instant_stats_array(32, args->year, args->month);
             if (!stats_data[i])
                 return NULL;
-            memset(stats_data[i], 0, 32 * sizeof(q10_instant_statistics_t));
-
-            (stats_data[i])->year  = args->year;
-            (stats_data[i])->month = args->month;
         } else if (args->year == -1 && args->month == -1) {
-            stats_data[i] = malloc((Q10_EXECUTE_YEAR_RANGE_END - Q10_EXECUTE_YEAR_RANGE_START + 1) *
-                                   sizeof(q10_instant_statistics_t));
+            stats_data[i] = __q10_allocate_instant_stats_array(Q10_EXECUTE_YEAR_RANGE_END -
+                                                                   Q10_EXECUTE_YEAR_RANGE_START + 1,
+                                                               -1,
+                                                               -1);
             if (!stats_data[i])
                 return NULL;
-
-            memset(stats_data[i], 0, (Q10_EXECUTE_YEAR_RANGE_END - Q10_EXECUTE_YEAR_RANGE_START + 1) * sizeof(q10_instant_statistics_t));
-            (stats_data[i])->year  = -1;
-            (stats_data[i])->month = -1;
         }
     }
 
@@ -349,8 +327,18 @@ int __q10_for_display(int16_t year, int8_t month, q10_instant_statistics_t *ista
 
     if (year == -1 && month == -1 && istats->year == -1 && istats->month == -1)
         return 1;
-    
+
     return 0;
+}
+
+int __q10_instant_statistics_has_events(const q10_instant_statistics_t *istats) {
+    if (!istats) {
+        fprintf(stderr, "Bad statistical data in query 10! This should not happen!\n");
+        return 0;
+    }
+
+    return istats->users || istats->flights || istats->passengers || istats->unique_passengers ||
+           istats->reservations;
 }
 
 int __q10_execute(const database_t       *database,
@@ -366,26 +354,25 @@ int __q10_execute(const database_t       *database,
         int retval = __q10_for_display(args->year, args->month, (stats->stats_data)[i]);
         if (retval == 31) {
             for (int j = 1; j <= retval; ++j) {
-                q10_instant_statistics_t *istats = stats->stats_data[i];
-                if (istats[j].users || istats[j].flights || istats[j].passengers ||
-                    istats[j].unique_passengers || istats[j].reservations)
+                const q10_instant_statistics_t *istats = stats->stats_data[i];
+                if (__q10_instant_statistics_has_events(&(istats[j])))
                     __q10_instant_statistics_write(&istats[j], output, "day", j);
             }
         } else if (retval == 12) {
             for (int j = 1; j <= retval; ++j) {
-                q10_instant_statistics_t *istats = stats->stats_data[i];
-                if (istats[j].users || istats[j].flights || istats[j].passengers ||
-                    istats[j].unique_passengers || istats[j].reservations)
+                const q10_instant_statistics_t *istats = stats->stats_data[i];
+                if (__q10_instant_statistics_has_events(&(istats[j])))
                     __q10_instant_statistics_write(&istats[j], output, "month", j);
             }
         } else if (retval == 1) {
             for (int j = 1; j <= Q10_EXECUTE_YEAR_RANGE_END - Q10_EXECUTE_YEAR_RANGE_START; ++j) {
-                q10_instant_statistics_t *istats = stats->stats_data[i];
-                if (istats[j].users || istats[j].flights || istats[j].passengers ||
-                    istats[j].unique_passengers || istats[j].reservations)
-                    __q10_instant_statistics_write(&istats[j], output, "year", j + Q10_EXECUTE_YEAR_RANGE_START - 1);
+                const q10_instant_statistics_t *istats = stats->stats_data[i];
+                if (__q10_instant_statistics_has_events(&(istats[j])))
+                    __q10_instant_statistics_write(&istats[j],
+                                                   output,
+                                                   "year",
+                                                   j + Q10_EXECUTE_YEAR_RANGE_START - 1);
             }
-
         }
     }
 
