@@ -142,15 +142,16 @@ void __interactive_mode_run_query(const database_t *database) {
             if (!writer) {
                 activity_messagebox_run("Failed to create writer for query output.");
             } else {
-                /* TODO - handle allocation errors */
-                query_dispatcher_dispatch_single(database, query_parsed, writer);
-
-                size_t                   nlines;
-                const char *const *const lines = query_writer_get_lines(writer, &nlines);
-                activity_paging_run(nlines,
-                                    lines,
-                                    query_instance_get_formatted(query_parsed),
-                                    "QUERY OUTPUT");
+                if (query_dispatcher_dispatch_single(database, query_parsed, writer)) {
+                    activity_messagebox_run("Failed to run query: out of memory!");
+                } else {
+                    size_t                   nlines;
+                    const char *const *const lines = query_writer_get_lines(writer, &nlines);
+                    activity_paging_run(nlines,
+                                        lines,
+                                        query_instance_get_formatted(query_parsed),
+                                        "QUERY OUTPUT");
+                }
 
                 query_writer_free(writer);
             }

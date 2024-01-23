@@ -54,7 +54,6 @@ query_instance_list_t *query_instance_list_create(void) {
 
 /** @brief `GCopyFunc` to copy a ::query_instance_t. */
 gpointer __query_instance_list_copy_query_instance(gconstpointer instance, gpointer user_data) {
-    /* TODO - check if this works */
     (void) user_data;
     return query_instance_clone(instance);
 }
