@@ -9,8 +9,12 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{float}
 \usepackage{footnote}
+\usepackage{chngpage}
 
 \chardef\_=`_
+
+\onehalfspacing
+\makesavenoteenv{tabular}
 
 \title{\textbf{LI3 - Relatório da Fase II - Grupo 12}}
 \author{
@@ -20,40 +24,37 @@
 }
 \date{janeiro de 2024}
 
-\makesavenoteenv{tabular}
 \begin{document}
 
 \maketitle
-\onehalfspacing
 \setlength{\parskip}{\baselineskip}
 \setlength{\parindent}{0pt}
 
-\pagebreak
 \begin{abstract}
     Após a entrega da primeira fase deste trabalho, procurámos implementar as funcionalidades em
     falta para a conclusão do desenvolvimento desta aplicação: as restantes quatro \emph{queries},
     um modo de uso interativo (uma interface TUI), testes funcionais e de desempenho, e suporte
     para um \emph{dataset} de maior dimensão, mantendo um desempenho aceitável. Adicionalmente,
-    procurámos também melhorar o encapsulamento e a modularidade no nosso projeto.
+    procurámos também corrigir alguns aspetos do encapsulamento e da modularidade no nosso projeto.
 \end{abstract}
 
 \section{Estrutura do trabalho}
 
 Nesta secção, procuramos descrever as diferenças entre a nossa arquitetura atual e a que tínhamos
 na primeira fase do projeto. Devido ao elevado número de módulos, dividimos a aplicação em
-subsistemas, que são descritos e esquematizados um a um. Nesses esquemas, para reduzir a
-complexidade visual, não incluímos todas as relações de dependência, mas apenas as mais relevantes.
-Segue-se a nossa convenção gráfica:
+subsistemas, que são descritos e esquematizados um a um, apresentados apenas com as relações de
+dependência mais relevantes. Segue-se a nossa convenção gráfica:
 
 \begin{itemize}
-    \item Um retângulo com cantos arredondados representa uma estrutura de dados (entidades,
-          gestores, \ldots);
+    \item Um retângulo com cantos arredondados representa uma estrutura de dados (entidade,
+          gestor, alocador, \ldots);
     \item Um retângulo sem cantos arredondados representa um módulo cuja tarefa principal é a
           execução de código. Mesmo assim, alguns destes módulos podem conter estruturas de dados
           auxiliares (por exemplo, uma gramática definida no módulo de um \emph{parser});
     \item $A \rightarrow B$ significa que o módulo $A$ depende do módulo $B$.
-    \item Qualquer módulo ou relação de dependência representado(a) a {\color{ForestGreen}verde}
-          indica que o(a) mesmo(a) é uma adição nesta segunda fase, ausente na entrega anterior.
+    \item Nos subsistemas já existentes na primeira fase, um módulo ou relação de dependência
+          representado(a) a {\color{ForestGreen}verde} indica que o(a) mesmo(a) estava ausente na
+          entrega anterior.
 \end{itemize}
 
 \subsection{\emph{Parsing}}
@@ -61,7 +62,7 @@ Segue-se a nossa convenção gráfica:
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[scale=0.17]{res-fase2/parsing.png}
+    \includegraphics[scale=0.16]{res-fase2/parsing.png}
     \caption{Diagrama de dependências do subsistema de \emph{parsing}}
     \label{fig:parsing}
 \end{figure}
@@ -75,18 +76,17 @@ este módulo apenas gere duas estruturas de dados formadas por \emph{handles} de
 \subsection{Entidades}
 \label{sec:entities}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
-    \includegraphics[scale=0.2]{res-fase2/entities.png}
+    \includegraphics[scale=0.16]{res-fase2/entities.png}
     \caption{Diagrama de dependências das entidades da aplicação}
     \label{fig:entities}
 \end{figure}
 
-Nas entidades, criámos módulos para os identificadores de voos, reservas e hotéis. Estes são
-armazenados como inteiros, logo exigindo \emph{parsing} e uma forma de serem apresentados
-textualmente, código que antes se encontrava em duplicado em vários locais da aplicação. Ademais,
-passaram a ser os \emph{setters} das entidades a validar se os valores providenciados para os seus
-campos são válidos. Anteriormente, este era o trabalho dos módulos \texttt{*\_loader}, sendo
+Nas entidades, criámos módulos para os identificadores de voos, reservas e hotéis, de modo a remover
+código de \emph{parsing} e \emph{display} previamente duplicado em vários locais da \emph{codebase}.
+Ademais, passaram a ser os \emph{setters} das entidades a validar se os valores providenciados para
+os seus campos são válidos. Anteriormente, este era o trabalho dos módulos \texttt{*\_loader}, sendo
 possível ao programador, usando \emph{setters}, criar uma entidade inválida.
 
 \subsection{Catálogos}
@@ -113,7 +113,7 @@ passam a depender dos alocadores, por motivos explicados em
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[scale=0.17]{res-fase2/queries.png}
+    \includegraphics[scale=0.15]{res-fase2/queries.png}
     \caption{Diagrama de dependências do subsistema de \emph{queries}}
     \label{fig:queries}
 \end{figure}
@@ -129,34 +129,30 @@ mudanças significativas:
                          única iteração pelos voos para todas as \emph{queries} deste tipo,
                          verifica-se se cada voo cumpre as condições para ser parte da resposta
                          a uma \emph{query}. Em caso afirmativo, adiciona-se esse voo a um
-                         \emph{array}, associado à \emph{query} através de uma tabela de
-                         \emph{hash}. A execução de cada \emph{query} passa apenas pela ordenação e
-                         apresentação do seu \emph{array} correspondente.
+                         \emph{array} associado à \emph{query}. A execução de cada \emph{query}
+                         passa apenas pela ordenação e apresentação do seu \emph{array}
+                         correspondente.
 
     \item \textbf{Q07} - Listagem dos aeroportos com maior mediana de atrasos. Com uma única
                          iteração pelos voos para todas as \emph{queries} deste tipo, gera-se uma
                          tabela de \emph{hash} que associa aeroportos a \emph{arrays} de atrasos.
-                         Depois, calcula-se a mediana para cada \emph{array} (ordenação seguida do
-                         ponto médio), gerando-se outra tabela de \emph{hash}, entre aeroportos e
-                         medianas de atrasos. Executar cada \emph{query} consiste na consulta direta
-                         desta tabela.
+                         Depois, calcula-se a mediana para cada \emph{array}, gerando-se outra
+                         \emph{hash table}, entre aeroportos e medianas. Executar cada \emph{query}
+                         consiste na consulta direta desta tabela.
 
     \item \textbf{Q08} - Cálculo da receita de um hotel entre duas datas. Com uma única iteração
                          pelas reservas para todas as \emph{queries} deste tipo, gera-se uma tabela
-                         de \emph{hash} que associa pares hotel + intervalo de datas às suas
-                         receitas. Interseta-se, para cada reserva, o intervalo de noites dormidas
-                         com o pedido na \emph{query}, para o cálculo do número de noites e da
-                         receita total. Executar cada \emph{query} consiste simplesmente na consulta
-                         da tabela gerada.
+                         de \emph{hash} que associa \emph{queries} a receitas. Interseta-se, para
+                         cada reserva, o intervalo de noites dormidas com o intervalo pedido em cada
+                         \emph{query}, para o cálculo do número de noites e da receita total.
+                         Executar cada \emph{query} consiste simplesmente na consulta da tabela
+                         gerada.
 
     \item \textbf{Q09} - Listagem de todos os utilizadores cujo nome comece com um dado prefixo. A
                          nova implementação desta \emph{query} é muito semelhante à da \textbf{Q05},
                          mas iterando pelos utilizadores em vez dos voos. Esta solução é
                          significativamente mais veloz que a anterior, que fazia uma iteração pelos
-                         utilizadores por \emph{query}. Considerámos a possibilidade
-                         de gerar um índice de pesquisa usando \emph{tries}, mas optámos por não
-                         tornar o nosso código muito complexo para otimizar algo responsável por uma
-                         fração mínima do tempo total do programa.
+                         utilizadores por \emph{query}.
 
     \item \textbf{Q10} - {\color{red}Ainda tenho de otimizar isto}
 \end{itemize}
@@ -164,25 +160,21 @@ mudanças significativas:
 \subsection{Modo interativo}
 \label{sec:interactive-mode}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
-    \includegraphics[scale=0.17]{res-fase2/interactive.png}
+    \includegraphics[scale=0.16]{res-fase2/interactive.png}
     \caption{Diagrama de dependências do modo interativo}
     \label{fig:interactive}
 \end{figure}
 
-O modo interativo revolve à volta do conceito de atividade (\texttt{activity}), que gere o
-\emph{loop} de eventos de uma interface \texttt{curses}, chamando os \emph{callbacks} com os quais
-é definida para responder a esses eventos. Imagens das atividades implementadas podem ser
-encontradas em \nameref{sec:interactive-screenshots}. \texttt{screen\_loading\_dataset} não responde
-a eventos, mas desenha no ecrã que a aplicação se encontra a ler um \emph{dataset}. O módulo
-\texttt{interactive\_mode} é responsável por controlar a troca entre atividades, formando a
-aplicação final.
-
-Para maior facilidade de uso, incluímos instruções em todas as interfaces, e desenvolvemos um
-navegador de ficheiros para o utilizador não ter de digitar o caminho para um \emph{dataset}.
-Ademais, temos excelente suporte para Unicode, que tem em conta que diferentes caracteres podem ter
-diferentes dimensões (para o \emph{layout} de interfaces).
+O modo interativo revolve à volta do conceito de atividade (\texttt{activity}), uma estrutura
+polimórfica que gere o \emph{loop} de eventos de uma interface \texttt{curses}. Imagens das
+atividades implementadas podem ser encontradas em \nameref{sec:interactive-screenshots}.
+\texttt{screen\_loading\_dataset} não responde a eventos, mas desenha no ecrã que a aplicação se
+encontra a ler um \emph{dataset}. O módulo \texttt{interactive\_mode} é responsável por controlar a
+troca entre atividades, formando a aplicação final. Neste subsistema, destaca-se a facilidade de
+uso (instruções em todas as interfaces, explorador de ficheiros para escolher um \emph{dataset},
+\dots) e o suporte para Unicode no \emph{layout} das atividades.
 
 \subsection{Subsistema de testes}
 \label{sec:testing-subsystem}
@@ -197,14 +189,14 @@ diferentes dimensões (para o \emph{layout} de interfaces).
 Os testes de desempenho baseiam-se num \texttt{performance\_event}, uma medição do tempo e da
 diferença do uso de memória entre dois instantes. \texttt{performance\_metrics} são um conjunto de
 eventos de desempenho, produzidos ao longo do decorrer da aplicação, e mostrados ao utilizador no
-final da sua execução (\texttt{performance\_metrics\_output}). Este módulo apresentada várias
-tabelas (\texttt{table}), relativas ao uso de recursos computacionais na leitura de cada parte do
-\emph{dataset} e na execução de cada \emph{query} (tempo individual, estatístico e amortizado).
+final da sua execução (\texttt{performance\_metrics\_output}). Este módulo apresenta várias tabelas
+(\texttt{table}), relativas ao uso de recursos computacionais na leitura de cada parte do
+\emph{dataset} e na execução de cada \emph{query}.
 
 Os testes funcionais são implementados por \texttt{test\_diff}, que calcula as diferenças entre
-duas diretorias (ficheiros em falta, em excesso, e diferenças entre ficheiros), que são depois
-apresentadas ao utilizador por \texttt{test\_diff\_output}. Imagens dos resultados de ambos os tipos
-de teste encontram-se em \nameref{sec:testing-screenshots}.
+duas diretorias (resultados esperados \emph{vs} obtidos), que são depois apresentadas ao utilizador
+por \texttt{test\_diff\_output}. Imagens dos resultados de ambos os tipos de teste encontram-se
+em \nameref{sec:testing-screenshots}.
 
 \section{Modularidade e encapsulamento}
 \label{sec:modularity-and-encapsulation}
@@ -212,10 +204,10 @@ de teste encontram-se em \nameref{sec:testing-screenshots}.
 \subsection{Modularidade}
 \label{sec:modularity}
 
-No relatório da primeira fase, afirmámos estar satisfeitos com o nível de modularidade conseguido.
-No entanto, tínhamos noção de que havia alguns aspetos a melhorar: separar os módulos de I/O e os
-identificadores das entidades. Não só corrigimos estes problemas, como planeámos as novas partes da
-aplicação tendo em conta as anteriores falhas na estrutura do programa.
+Nesta fase, no âmbito da modularidade, procurámos separar os módulos de I/O e reduzir a duplicação
+de código relativa aos identificadores das entidades. Ademais, escrevemos um \emph{script} que
+automaticamente gera um grafo de dependências com todos os módulos. Este permitiu-nos corrigir erros
+nos diagramas nos relatórios, e encontrar dependências circulares, que prontamente resolvemos.
 
 \subsection{Encapsulamento}
 \label{sec:encapsulation}
@@ -243,14 +235,14 @@ interfaces dos módulos com encapsulamento em mente, não precisámos de gastar 
 \label{sec:allocator-conciliation}
 
 As únicas estruturas de dados que expõem memória do seu interior são os alocadores \texttt{pool} e
-\texttt{string\_pool}. Não encaramos isto como um problema no encapsulamento, pois é algo que
+\texttt{string\_pool}. Não encaramos isto como um problema para o encapsulamento, pois é algo que
 qualquer alocador tem de fazer (por exemplo, o método \texttt{malloc} expõe memória da arena com
 que é implementado).
 
 Previamente, durante uma inserção na base de dados, as entidades e os seus campos eram alocados
-pelos \emph{managers} nas \emph{pools}, e não pelas entidades em si. Resolvemos este problema no
-encapsulamento usando uma estratégia semelhante à utilizada na linguagem Zig: se um método precisa
-de alocar memória na \emph{heap}, então leva um alocador como argumento:
+pelos \emph{managers} nas \emph{pools}, e não pelas entidades em si. Resolvemos este problema usando
+uma estratégia semelhante à utilizada na linguagem Zig: se um método precisa de alocar memória,
+então leva um alocador como argumento:
 
 \begin{center}
     \texttt{fn validate(allocator: Allocator, s: []const u8) Allocator.Error!bool}
@@ -260,29 +252,32 @@ Este método de Zig valida texto JSON, levando também como argumento um alocado
 C, é dada a possibilidade de se usar uma \emph{pool}, ou de se passar o valor \texttt{NULL} ao
 argumento do alocador, para o uso de \texttt{malloc}:
 
-\begin{center}
-    \begin{tabular}{rl}
-        \texttt{user\_t *user\_clone(}&\hspace{-3mm}\texttt{pool\_t *allocator,} \\
-        &\hspace{-3mm}\texttt{string\_pool\_t *string\_allocator,} \\
-        &\hspace{-3mm}\texttt{const user\_t *user);}
-    \end{tabular}
-\end{center}
+\bgroup
+    \setlength\tabcolsep{0.5mm}
+    \begin{center}
+        \begin{tabular}{rll}
+            \texttt{user\_t *user\_clone\char"0028} & \texttt{pool\_t} & \texttt{*allocator,} \\
+            & \texttt{string\_pool\_t} \hspace{1mm} & \texttt{*string\_allocator,} \\
+            & \texttt{const user\_t} & \texttt{*user\char"0029;}
+        \end{tabular}
+    \end{center}
+\egroup
 
 \subsubsection{Conciliação com a \texttt{glib}}
 \label{sec:glib-conciliation}
 
-O uso de \emph{const} é um contrato de que um módulo não irá modificar um objeto. A documentação das
-estruturas genéricas da \texttt{glib} assegura isto.\footnote{Há algumas exceções (como uma função
-\texttt{GDestroyNotify} ser providenciada), mas garantimos que a nossa solução para este problema
-não permite nenhuma destas.} No entanto, estas utilizam \texttt{void *} sem \texttt{const}, dado
-que os programadores podem querer utilizá-las para armazenar dados não constantes.
+O uso de \emph{const} trata-se de um contrato de que um método não irá modificar um objeto. A
+documentação das estruturas genéricas da \texttt{glib} assegura isto.\footnote{Há algumas exceções
+(como uma função \texttt{GDestroyNotify} ser providenciada), mas garantimos que a nossa solução para
+este problema não permite nenhuma destas.} No entanto, estas utilizam \texttt{void *} sem o
+\emph{qualifier} \texttt{const}, dado que os programadores podem querer usá-las para armazenar dados
+mutáveis. A documentação da \texttt{glib} incentiva os programadores a usarem apontadores constantes
+nas suas estruturas, desde que usem o tipo correto quando os reivindiquem.
 
-Para podermos usar a \texttt{glib} para armazenar apontadores constantes, criámos \emph{wrappers}
-que os aceitam e lhes tiram o \emph{modifier const} antes de interagirem com uma estrutura da
-\texttt{glib}, algo que podemos que podemos fazer com o aval da documentação. Estes \emph{wrappers}
-são preferíveis a usar as estruturas da \texttt{glib} diretamente e fazer \emph{casts} quando
-necessário, pois reduzimos o potencial de erro do programador a pequenos excertos de código, em
-vez de toda a aplicação, de um modo semelhante a conceito de \texttt{unsafe} em Rust.
+No entanto, isto é altamente suscetível a erros, pelo que criámos \emph{wrappers} das estruturas da
+\texttt{glib} para apontadores constantes, que lhes retiram o \emph{qualifier} nas inserções, e o
+reinserem nas consultas. Isto reduz o potencial de erro do programa todo para pequenos métodos
+facilmente validáveis, de um modo semelhante a conceito de \texttt{unsafe} em Rust.
 
 \section{Desempenho}
 \label{sec:performance}
@@ -290,73 +285,93 @@ vez de toda a aplicação, de um modo semelhante a conceito de \texttt{unsafe} e
 \subsection{Melhorias}
 \label{sec:performance-improvements}
 
-Apesar do desempenho excelente que a nossa aplicação apresentou quando os \emph{datasets} de maior
-dimensão foram adicionados à plataforma de testes, procurámos mesmo assim continuar a otimizar o
-nosso programa.
+Quando os \emph{datasets} de maior dimensão foram adicionados à plataforma de testes, já a nossa
+aplicação apresentava um desempenho excelente. Mesmo assim, procurámos continuar a otimizar o nosso
+programa.
 
 Para reduzir ainda mais o uso de memória, introduzimos a \texttt{string\_pool\_no\_duplicates}, que
 evita armazenar \emph{strings} repetidas. Ademais, reordenamos os campos nas estruturas de dados das
 entidades, de modo a reduzir o \emph{padding} e o número de \emph{bytes} ocupados por cada uma.
 
 A maioria do tempo de execução é gasto no \emph{parsing} do \emph{dataset}, onde apenas conseguimos
-alcançar micro-otimizações nos métodos mais chamados, determinados com recurso ao
-\texttt{callgrind}. A única melhoria significativa que obtivemos resultou da substituição do
-\texttt{strsep} por um novo método, que considera apenas um delimitador.
+alcançar micro-otimizações nos métodos mais chamados (\texttt{strsep} e
+\texttt{int\_utils\_parse\_positive}), determinados com recurso ao \texttt{callgrind}. As
+\emph{queries} são praticamente instantâneas para um utilizador do modo interativo, e responsáveis
+por apenas uma pequena fração do tempo de execução da aplicação. Logo, procurámos simplificar
+as suas implementações, em vez de nos focarmos no seu desempenho.
 
-Ademais, como a execução das \emph{queries} já era muito veloz, o nosso foco foi o de simplificar
-o código, e não o de o otimizar com melhores estruturas de dados. Várias vezes as estruturas simples
-se provaram mais rápidas do que outras mais complexas, uma lembrança de que a complexidade
-algorítmica é assintótica. Foi importante garantir que os catálogos usavam as
-melhores estruturas para acelerar as \emph{queries}, mas tal não se provou tão relevante para dados
-auxiliares usados durante a execução das mesmas.
+\hspace{1cm}\parbox{15cm}{\small
+    The real problem is that programmers have spent far too much time worrying about efficiency in
+    the wrong places and at the wrong times; premature optimization is the root of all evil (or at
+    least most of it) in programming.
+
+    \begin{flushright}
+        Knuth, D. E. (1974). Computer programming as an art. \\
+        \emph{Association for Computing Machinery (ACM), 17}(12), 671. \\
+        \url{https://doi.org/10.1145/361604.361612}
+    \end{flushright}
+}
+
+Várias vezes se verificou um melhor desempenho utilizando estruturas de dados mais simples, com pior
+complexidade assintótica, mas melhor localidade de memória. Foi importante garantir que os
+catálogos, onde o número de entidades é muito elevado, usavam as estruturas com melhor comportamento
+assintótico, mas tal não se provou tão relevante para dados auxiliares durante a execução das
+\emph{queries}.
 
 \subsection{\emph{Benchmarking}}
 \label{sec:benchmarking}
 
-Para testar o desempenho do programa, corremos, nos seguintes sistemas, 500 \emph{queries} no
-\emph{dataset} grande com erros:
+Para testar o desempenho do programa, utilizámos a versão mais recente da aplicação nos seguintes
+sistemas:
+
+\begin{adjustwidth}{-1.5cm}{-1.5cm}
+    \begin{center}
+        \begin{tabular}{|l|c|c|c|c|}
+            \hline
+            & Desktop & Laptop & Mac & Tablet \\
+            \hline
+            CPU & Intel i3-7100 & Ryzen 7 5800H & Apple M1 Pro & Mediatek Helio P22T \\
+            \hline
+            Frequência\footnote{Em sistemas heterogéneos, a frequência do \emph{cluster} de maior
+                                desempenho, dado que o nosso programa apenas usa um núcleo.} &
+            3.9 GHz & 4.4 GHz & 3.2 GHz & 2.3 GHz \\
+            \hline
+            Memória & DDR4 2400 MT/s & DDR4 3200 MT/s & LPDDR5 6400 MT/s & LPDDR4X 4266 MT/s \\
+            \hline
+            Linux & 6.6.11 (chroot) & 5.15.91 & 5.15.73 (VM) & 4.9.190 \\
+            \hline
+            Compilador & GCC 12.2.0 & GCC 9.4.0 & GCC 11.4.0 & Clang 17.0.6 \\
+            \hline
+        \end{tabular}
+    \end{center}
+\end{adjustwidth}
+
+O número de variáveis entre sistemas é elevadíssimo, pelo que apenas estamos interessados em
+procurar padrões no desempenho do nosso programa comuns a todos os computadores, e não faremos
+comparações entre eles.
+
+A aplicação foi executada 10 vezes, com 500 \emph{queries} no \emph{dataset} grande com erros. As
+execuções mais rápida e a mais lenta foram removidas. A partir das 8 restantes, calculam-se as
+seguintes médias de tempo e uso de memória:
 
 \begin{center}
     \begin{tabular}{|l|c|c|c|c|}
         \hline
         & Desktop & Laptop & Mac & Tablet \\
         \hline
-        CPU & Intel i3-7100 & Ryzen 7 5800H & M1 & Mediatek Helio P22T \\
+        Utilizadores (s) & ? & ? & ? & ? \\
         \hline
-        Frequência\footnote{Em sistemas heterogéneos, a frequência do \emph{cluster} de maior
-                            desempenho, dado que o nosso programa apenas usa um núcleo.} &
-        3.9 GHz & 4.4 GHz & ? & 2.3 GHz \\
+        Voos (s) & ? & ? & ? & ? \\
         \hline
-        Memória & DDR4 2400 MT/s & DDR4 3200 MT/s & ? & LPDDR4X 4266 MT/s \\
+        Reservas (s) & ? & ? & ? & ? \\
         \hline
-        Linux & 6.6.11 (chroot) & 5.15.91 & ? & 4.9.190 \\
+        Passageiros (s) & ? & ? & ? & ? \\
         \hline
-        Compilador & GCC 12.2.0 & GCC 9.4.0 & ? & Clang 17.0.6 \\
+        \emph{Queries} (s) & ? & ? & ? & ? \\
         \hline
-    \end{tabular}
-\end{center}
-
-A aplicação foi executada 10 vezes, com as execuções mais rápida e a mais lenta removidas. A partir
-das 8 restantes, calculam-se as seguintes médias de tempo, em segundos:
-
-\begin{center}
-    \begin{tabular}{|l|c|c|c|c|}
+        Tempo total (s) & ? & ? & ? & ? \\
         \hline
-        & Desktop & Laptop & Mac & Tablet \\
-        \hline
-        Utilizadores & ? & ? & ? & ? \\
-        \hline
-        Voos & ? & ? & ? & ? \\
-        \hline
-        Reservas & ? & ? & ? & ? \\
-        \hline
-        Passageiros & ? & ? & ? & ? \\
-        \hline
-        Q10 & ? & ? & ? & ? \\
-        \hline
-        Restantes \emph{queries} & ? & ? & ? & ? \\
-        \hline
-        Total & ? & ? & ? & ? \\
+        Pico de memória (MiB) & ? & ? & ? & ? \\
         \hline
     \end{tabular}
 \end{center}
@@ -367,11 +382,11 @@ das 8 restantes, calculam-se as seguintes médias de tempo, em segundos:
 \subsection{Possíveis melhorias}
 \label{sec:possible-performance-improvements}
 
-A parte mais lenta do nosso programa é a leitura de um dataset. Como as estruturas de dados
-presentes nos catálogos apresentam tempo de inserção amortizado $\Theta(1)$ e já otimizámos a
-localidade de memória o mais que pudemos (alocadores customizados), não vemos mais otimizações que
-não sacrifiquem a modularidade e encapsulamento que não a paralelização da leitura do
-\emph{dataset}:
+Como mencionado acima, não vemos as \emph{queries} como um potencial local onde procurar
+otimizações. A parte mais lenta do nosso programa é a leitura de um \emph{dataset}, onde já
+otimizámos a localidade de memória e a complexidade algorítmica de inserção o mais que fomos
+capazes. Sem sacrifício da modularidade e do encapsulamento, não vemos mais otimizações viáveis
+que não a paralelização da leitura do \emph{dataset}:
 
 \begin{figure}[h]
     \centering
@@ -381,25 +396,11 @@ não sacrifiquem a modularidade e encapsulamento que não a paralelização da l
     \label{fig:threading}
 \end{figure}
 
-Usando a distribuição de tarefas acima, que garante a condição das reservas e passageiros serem
-lidos após os utilizadores, conseguimos reduzir o tempo de \emph{parsing} de 16 s para um mínimo
-teórico 8.6 s! A única dependência de dados que encontrámos, um alocador, é facilmente resolúvel
-com o uso de dois alocadores distintos para as relações utilizador -- voo / reserva.
-
-Acreditamos que o desempenho das \emph{query} 10 ainda pode ser melhorado. Quanto às restantes,
-não vemos muito interesse na sua otimização, mesmo que possível, dado que constituem uma fração de
-tempo muito pequena no modo \emph{batch} e são quase instantâneas para um utilizador do modo
-interativo.
-
-\hspace{1cm}\parbox{15cm}{\small
-    The real problem is that programmers have spent far too much time worrying about efficiency in
-    the wrong places and at the wrong times; premature optimization is the root of all evil (or at
-    least most of it) in programming.
-
-    \begin{flushright}
-        -- Donald Knuth, Computer Programming as an Art, p. 671
-    \end{flushright}
-}
+A distribuição de tarefas acima cumpre as condições necessárias para assegurar as relações de
+dependência de dados (reservas depois dos utilizadores, passageiros depois dos utilizadores e dos
+voos) e consegue reduzir o tempo de \emph{parsing} de 16 s para um mínimo teórico de 8.6 s! A única
+dependência de dados que encontrámos, um alocador, é facilmente resolúvel com o uso de dois
+alocadores distintos para as relações utilizador -- voo / reserva.
 
 \section{Conclusão}
 \label{sec:conclusion}
