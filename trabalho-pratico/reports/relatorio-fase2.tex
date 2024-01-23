@@ -321,17 +321,17 @@ Para testar o desempenho do programa, corremos, nos seguintes sistemas, 500 \emp
         \hline
         & Desktop & Laptop & Mac & Tablet \\
         \hline
-        CPU & Intel i3-7100 & Ryzen & M1 & Mediatek Helio P22T \\
+        CPU & Intel i3-7100 & Ryzen 7 5800H & M1 & Mediatek Helio P22T \\
         \hline
         Frequência\footnote{Em sistemas heterogéneos, a frequência do \emph{cluster} de maior
                             desempenho, dado que o nosso programa apenas usa um núcleo.} &
-        3.9 GHz & ? & ? & 2.3 GHz \\
+        3.9 GHz & 4.4 GHz & ? & 2.3 GHz \\
         \hline
-        Memória & DDR4 2400 MT/s & ? & ? & LPDDR4X 4266 MT/s \\
+        Memória & DDR4 2400 MT/s & DDR4 3200 MT/s & ? & LPDDR4X 4266 MT/s \\
         \hline
-        Linux & 6.6.11 (chroot) & ? & ? & ? \\
+        Linux & 6.6.11 (chroot) & 5.15.91 & ? & 4.9.190 \\
         \hline
-        Compilador & gcc 12.2.0 & ? & ? & ? \\
+        Compilador & GCC 12.2.0 & GCC 9.4.0 & ? & Clang 17.0.6 \\
         \hline
     \end{tabular}
 \end{center}
@@ -453,7 +453,7 @@ interativo.
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.25]{res-fase2/interactive_screenshots/license.png}
-	\caption{Licença da aplicação (\texttt{activity\_license})}
+    \caption{Licença da aplicação (\texttt{activity\_license})}
     \label{fig:license}
 \end{figure}
 
