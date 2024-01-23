@@ -128,7 +128,7 @@ int flight_set_airline(string_pool_no_duplicates_t *allocator,
 
     if (flight->owns_airline)
         /* Purposely remove const. We know it was allocated by this module */
-        free((char *) flight->airline);
+        free((char *) (size_t) flight->airline);
     flight->owns_airline = allocator == NULL;
 
     flight->airline = new_airline;
@@ -148,7 +148,7 @@ int flight_set_plane_model(string_pool_no_duplicates_t *allocator,
 
     if (flight->owns_plane_model)
         /* Purposely remove const. We know it was allocated by this module */
-        free((char *) flight->plane_model);
+        free((char *) (size_t) flight->plane_model);
     flight->owns_plane_model = allocator == NULL;
 
     flight->plane_model = new_plane_model;
@@ -268,11 +268,11 @@ void flight_invalidate(flight_t *flight) {
 void flight_free(flight_t *flight) {
     if (flight->owns_airline)
         /* Purposely remove const. We know it was allocated by this module */
-        free((char *) flight->airline);
+        free((char *) (size_t) flight->airline);
 
     if (flight->owns_plane_model)
         /* Purposely remove const. We know it was allocated by this module */
-        free((char *) flight->plane_model);
+        free((char *) (size_t) flight->plane_model);
 
     if (flight->owns_itself)
         free(flight);

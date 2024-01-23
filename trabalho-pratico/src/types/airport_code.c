@@ -41,9 +41,9 @@ int airport_code_from_string(airport_code_t *output, const char *input) {
              * Why do this? Because I have a test about vectorization tomorrow and want to study.
              */
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-            *output = (*(int32_t *) input) & 0x5f5f5f00;
+            *output = (*(const int32_t *) input) & 0x5f5f5f00;
 #else
-            *output = (*(int32_t *) input) & 0x005f5f5f;
+            *output = (*(const int32_t *) input) & 0x005f5f5f;
 #endif
             return 0;
         }

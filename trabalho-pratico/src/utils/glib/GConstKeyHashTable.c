@@ -36,7 +36,7 @@ GConstKeyHashTable *g_const_key_hash_table_new_full(GHashFunc      hash_func,
 gboolean g_const_key_hash_table_insert(GConstKeyHashTable *hash_table,
                                        gconstpointer       key,
                                        gpointer            value) {
-    return g_hash_table_insert((GHashTable *) hash_table, (gpointer) key, value);
+    return g_hash_table_insert((GHashTable *) hash_table, (gpointer) (size_t) key, value);
 }
 
 gpointer g_const_key_hash_table_lookup(GConstKeyHashTable *hash_table, gconstpointer key) {
@@ -45,7 +45,7 @@ gpointer g_const_key_hash_table_lookup(GConstKeyHashTable *hash_table, gconstpoi
 
 gconstpointer g_const_key_hash_table_const_lookup(const GConstKeyHashTable *hash_table,
                                                   gconstpointer             key) {
-    return g_hash_table_lookup((GHashTable *) hash_table, key);
+    return g_hash_table_lookup((GHashTable *) (size_t) hash_table, key);
 }
 
 void g_const_key_hash_table_foreach(GConstKeyHashTable *hash_table,

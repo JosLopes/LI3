@@ -49,7 +49,7 @@ void *__q03_parse_arguments(size_t argc, char *const argv[argc]) {
  * @return A deep copy of @p args_data.
  */
 void *__q03_clone_arguments(const void *args_data) {
-    return (void *) args_data; /* Const cast acceptable - it's an just an integer */
+    return (void *) (size_t) args_data; /* Const cast acceptable - it's an just an integer */
 }
 
 /**

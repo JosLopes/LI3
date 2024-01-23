@@ -26,11 +26,11 @@ GConstPtrArray *g_const_ptr_array_new(void) {
 }
 
 void g_const_ptr_array_add(GConstPtrArray *array, gconstpointer data) {
-    g_ptr_array_add((GPtrArray *) array, (gpointer) data);
+    g_ptr_array_add((GPtrArray *) array, (gpointer) (size_t) data);
 }
 
 gconstpointer g_const_ptr_array_index(const GConstPtrArray *array, guint index) {
-    return g_ptr_array_index((GPtrArray *) array, index);
+    return g_ptr_array_index((GPtrArray *) (size_t) array, index);
 }
 
 guint g_const_ptr_array_get_length(const GConstPtrArray *array) {

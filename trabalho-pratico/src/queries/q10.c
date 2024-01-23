@@ -192,7 +192,7 @@ int __q10_generate_statistics_foreach_user(void                               *u
     q10_foreach_user_data_t *iter_data = user_data;
 
     q10_instant_statistics_t *instants[3];
-    date_t                    date = user_get_account_creation_date(user);
+    date_t                    date = date_and_time_get_date(user_get_account_creation_date(user));
     if (__q10_fill_instants(iter_data->stats, instants, date))
         return 1;
 
@@ -427,7 +427,7 @@ int __q10_execute(const database_t       *database,
 
     /* TODO - fix const */
     const q10_parsed_arguments_t *args  = query_instance_get_argument_data(instance);
-    GHashTable                   *stats = (GHashTable *) statistics;
+    GHashTable                   *stats = (GHashTable *) (size_t) statistics;
 
     if (args->year == -1) {
         date_t date;
