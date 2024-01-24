@@ -18,12 +18,11 @@
  * @file  query_type_list.c
  * @brief Implementation of methods in include/queries/query_type_list.h
  *
- * #### Examples
- * See [the header file's documentation](@ref query_type_list_examples).
+ * ### Examples
+ * See [the header file's documentation](@ref query_type_list_example).
  */
 
-#include <stddef.h>
-#include <stdlib.h>
+#include "queries/query_type_list.h"
 
 #include "queries/q01.h"
 #include "queries/q02.h"
@@ -35,77 +34,45 @@
 #include "queries/q08.h"
 #include "queries/q09.h"
 #include "queries/q10.h"
-#include "queries/query_type_list.h"
 
 /**
- * @struct query_type_list
- * @brief Container structure for the list of all supported queries.
+ * @brief   List of all known queries.
+ * @details Shall not be modified apart from its creation. It's not constant because it requires
+ *          run-time initialization. This global variable is justified for the following reasons:
  *
- * @var query_type_list::list
- *     @brief List of all supported queries.
+ *          -# It's not modified (no mutable global state);
+ *          -# It's not directly exposed to other modules (very limited scope);
+ *          -# It's a list of `vtable`s (dispatch tables). In other languages (such as C++), it'd be
+ *             global;
+ *          -# It'd be very inefficient for every polymorphic object to have its own copy of its
+ *             `vtable`.
  */
-struct query_type_list {
-    query_type_t *list[QUERY_TYPE_LIST_COUNT];
-};
+query_type_t *__query_type_list[QUERY_TYPE_LIST_COUNT];
 
-query_type_list_t *query_type_list_create(void) {
-    query_type_list_t *list = malloc(sizeof(struct query_type_list));
-    if (!list)
-        return NULL;
-
-    query_type_t *(*constructors[QUERY_TYPE_LIST_COUNT])(void) = {q01_create,
-                                                                  q02_create,
-                                                                  q03_create,
-                                                                  q04_create,
-                                                                  q05_create,
-                                                                  q06_create,
-                                                                  q07_create,
-                                                                  q08_create,
-                                                                  q09_create,
-                                                                  q10_create};
-
-    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
-        list->list[i] = constructors[i]();
-
-        if (!list->list[i]) { /* Allocation failure */
-            for (size_t j = 0; j < i; ++j)
-                query_type_free(list->list[j]);
-            free(list);
-            return NULL;
-        }
-    }
-
-    return list;
-}
-
-query_type_list_t *query_type_list_clone(const query_type_list_t *query_type_list) {
-    query_type_list_t *clone = malloc(sizeof(query_type_list_t));
-    if (!clone)
-        return NULL;
-
-    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i) {
-        clone->list[i] = query_type_clone(query_type_list->list[i]);
-
-        if (!clone->list[i]) { /* Allocation failure */
-            for (size_t j = 0; j < i; ++j)
-                query_type_free(clone->list[j]);
-            free(clone);
-            return NULL;
-        }
-    }
-
-    return clone;
-}
-
-const query_type_t *query_type_list_get_by_index(const query_type_list_t *query_type_list,
-                                                 size_t                   index) {
-    if (1 <= index && index <= QUERY_TYPE_LIST_COUNT)
-        return query_type_list->list[index - 1];
-    return NULL;
-}
-
-void query_type_list_free(query_type_list_t *query_type_list) {
+/** @brief Automatically initializes ::__query_type_list when the program starts. */
+void __attribute__((constructor)) __query_type_list_create(void) {
+    query_type_t *(*const constructors[QUERY_TYPE_LIST_COUNT])(void) = {q01_create,
+                                                                        q02_create,
+                                                                        q03_create,
+                                                                        q04_create,
+                                                                        q05_create,
+                                                                        q06_create,
+                                                                        q07_create,
+                                                                        q08_create,
+                                                                        q09_create,
+                                                                        q10_create};
     for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
-        query_type_free(query_type_list->list[i]);
-    free(query_type_list);
+        __query_type_list[i] = constructors[i]();
+}
+
+/** @brief Automatically `free`s ::__query_type_list when the program terminates. */
+void __attribute__((destructor)) __query_type_list_free(void) {
+    for (size_t i = 0; i < QUERY_TYPE_LIST_COUNT; ++i)
+        query_type_free(__query_type_list[i]);
+}
+
+const query_type_t *query_type_list_get_by_index(size_t index) {
+    if (1 <= index && index <= QUERY_TYPE_LIST_COUNT)
+        return __query_type_list[index - 1];
+    return NULL;
 }

@@ -16,32 +16,27 @@
 
 /**
  * @file  activity.c
- * @brief Implementation of methods in activity.h
+ * @brief Implementation of methods in include/interactive_mode/activity.h
  *
  * ### Examples
  * See [the header file's documentation](@ref activity_examples).
  */
 
-/** @cond FALSE */
-#define _XOPEN_SOURCE_EXTENDED
-/** @endcond */
-
 #include <ncurses.h>
 #include <stdlib.h>
-#include <wchar.h>
 
 #include "interactive_mode/activity.h"
 
 /**
  * @struct activity
- * @brief A definition of a polymorphic TUI activity (through callbacks)
+ * @brief  A definition of a polymorphic TUI activity (through callbacks).
  *
  * @var activity::keypress_callback
  *     @brief Callback called when the user presses a key.
  * @var activity::render_callback
- *     @brief Callback called to render the activity to the curses' screen.
+ *     @brief Callback called to render the activity to the `ncurses`' screen.
  * @var activity::free_data_callback
- *     @brief Callback called from ::activity_free, to clean memory used by activity::data.
+ *     @brief Callback called from ::activity_free, to clean memory used by ::activity::data.
  * @var activity::data
  *     @brief Data passed to all callbacks, whose type is defined by the type of this activity.
  */
@@ -58,7 +53,7 @@ activity_t *activity_create(activity_keypress_callback_t  keypress_callback,
                             activity_free_data_callback_t free_data_callback,
                             void                         *activity_data) {
 
-    activity_t *activity = malloc(sizeof(struct activity));
+    activity_t *const activity = malloc(sizeof(struct activity));
     if (!activity)
         return NULL;
 
@@ -70,18 +65,16 @@ activity_t *activity_create(activity_keypress_callback_t  keypress_callback,
     return activity;
 }
 
-void *activity_run(activity_t *activity) {
-    int cb_retval;
-
+const void *activity_run(activity_t *activity) {
     clear();
-    cb_retval = activity->render_callback(activity->data);
+    int cb_retval = activity->render_callback(activity->data);
     if (cb_retval)
         return activity->data;
     refresh();
 
     wint_t input;
     while (1) {
-        int is_key_code = get_wch(&input);
+        const int is_key_code = get_wch(&input);
         if (is_key_code == ERR)
             break;
 

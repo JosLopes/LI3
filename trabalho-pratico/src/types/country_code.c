@@ -40,7 +40,7 @@ int country_code_from_string(country_code_t *output, const char *input) {
              *
              * Why do this? Because I have a test about vectorization tomorrow and want to study.
              */
-            *output = *(country_code_t *) input & 0x5f5f;
+            *output = *(const country_code_t *) input & 0x5f5f;
             return 0;
         }
     }

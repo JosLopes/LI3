@@ -15,9 +15,9 @@
  */
 
 /**
- * @file  screen_loading_dataset.h
- * @brief An ncurses screen that shows that a dataset is loading and the program may become
- *        unresponsive.
+ * @file    screen_loading_dataset.h
+ * @brief   An `ncurses` screen that shows that a dataset is being loaded and that the program may
+ *          become unresponsive.
  * @details Its appearance on screen will be the following:
  *
  * ```text
@@ -30,7 +30,7 @@
  */
 
 /**
- * @brief Render a ncurses screen that shows that a dataset is loading and the program may become
- *        unresponsive.
+ * @brief Renders an `ncurses`'s screen that shows that a dataset is being loaded and that the
+ *        program may become unresponsive.
  */
 void screen_loading_dataset_render(void);

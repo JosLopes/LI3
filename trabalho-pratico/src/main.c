@@ -19,6 +19,7 @@
  * @brief Contains the entry point to main the program.
  */
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "batch_mode.h"
 #include "interactive_mode/interactive_mode.h"

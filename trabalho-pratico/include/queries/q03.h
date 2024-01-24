@@ -15,8 +15,8 @@
  */
 
 /**
- * @file    q03.h
- * @brief   A query to present the averate rating of an hotel, given its identifier.
+ * @file  q03.h
+ * @brief A query that outputs the averate rating of an hotel, given its identifier.
  *
  * ### Examples
  *
@@ -36,9 +36,10 @@
 #include "queries/query_type.h"
 
 /**
- * @brief   Initializes the definition of the third query.
- * @details This is done automatically in ::query_type_list_create.
- * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
+ * @brief   Initializes the definition of queries of type 3.
+ * @details This is done automatically in [query_type_list](@ref query_type_list.c).
+ * @return  On success, a pointer to a ::query_type_t that must be deleted with ::query_type_free,
+ *          or `NULL` allocation on failure.
  */
 query_type_t *q03_create(void);
 

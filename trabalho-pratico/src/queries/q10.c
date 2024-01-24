@@ -16,6 +16,7 @@
 
 #include <glib.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "queries/q10.h"
@@ -27,7 +28,7 @@ typedef struct {
     int8_t  month;
 } q10_parsed_arguments_t;
 
-void *__q10_parse_arguments(char *const *argv, size_t argc) {
+void *__q10_parse_arguments(size_t argc, char *const argv[argc]) {
     q10_parsed_arguments_t *ret = malloc(sizeof(q10_parsed_arguments_t));
     if (!ret)
         return NULL;
@@ -237,9 +238,9 @@ q10_instant_statistics_t *
     return new;
 }
 
-void *__q10_generate_statistics(const database_t              *database,
-                                const query_instance_t *const *instances,
-                                size_t                         n) {
+void *__q10_generate_statistics(const database_t             *database,
+                                size_t                        n,
+                                const query_instance_t *const instances[n]) {
 
     q10_instant_statistics_t **stats_data  = malloc(n * sizeof(q10_instant_statistics_t *));
     int                      **aux_counted = malloc(n * sizeof(int *));
@@ -417,7 +418,8 @@ void __q10_free_statistics(void *statistics) {
 }
 
 query_type_t *q10_create(void) {
-    return query_type_create(__q10_parse_arguments,
+    return query_type_create(10,
+                             __q10_parse_arguments,
                              __q10_clone_arguments,
                              free,
                              __q10_generate_statistics,

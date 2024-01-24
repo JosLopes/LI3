@@ -22,7 +22,11 @@
  * See [the header file's documentation](@ref table_examples).
  */
 
+#include <limits.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/string_pool.h"
@@ -33,9 +37,9 @@
  * @brief  A table of information to be displayed to the user.
  *
  * @var table::strings
- *     @brief Allocator for the strings to be present in the table.
+ *     @brief Allocator for the strings present in a table.
  * @var table::positions
- *     @brief   A matrix that associates positions to strings to be displayed.
+ *     @brief   A matrix that associates cell positions to strings to be displayed.
  *     @details Position `(x, y)` can be accessed like `positions[width * y + x]`.
  * @var table::height
  *     @brief Height of the table (also the height of the matrix ::table::positions).
@@ -55,14 +59,14 @@ struct table {
     size_t *column_widths;
 };
 
-/** @brief Size of each pool block, to store strings that will be displayed on a table. */
+/** @brief Size of each pool block in ::table::strings. */
 #define TABLE_STRING_POOL_BLOCK_SIZE 2048
 
 table_t *table_create(size_t width, size_t height) {
     if (height < 2 || width < 2)
         return NULL;
 
-    table_t *table = malloc(sizeof(table_t));
+    table_t *const table = malloc(sizeof(table_t));
     if (!table)
         return NULL;
 
@@ -97,18 +101,18 @@ table_t *table_create(size_t width, size_t height) {
 }
 
 table_t *table_clone(const table_t *table) {
-    table_t *clone = table_create(table->width, table->height);
+    table_t *const clone = table_create(table->width, table->height);
     if (!clone)
         return NULL;
     memcpy(clone->column_widths, table->column_widths, sizeof(char *) * table->width);
 
     size_t line_start = 0;
     for (size_t i = 0; i < table->height; ++i) {
-        for (size_t j = 0; i < table->width; ++i) {
-            const char *val = table->positions[line_start + j];
+        for (size_t j = 0; i < table->width; ++j) {
+            const char *const val = table->positions[line_start + j];
             if (val) {
-                const char *alloc = string_pool_put(clone->strings, val);
-                if (val) {
+                const char *const alloc = string_pool_put(clone->strings, val);
+                if (alloc) {
                     clone->positions[line_start + j] = alloc;
                 } else {
                     /* Allocation failure */
@@ -137,14 +141,13 @@ int table_insert_format(table_t *table, size_t x, size_t y, const char *format, 
     if (width > table->column_widths[x])
         table->column_widths[x] = width;
 
-    const char *pool_alloc = string_pool_put(table->strings, cell);
+    const char *const pool_alloc = string_pool_put(table->strings, cell);
     if (!pool_alloc) {
         va_end(printf_args);
         return 1;
     }
 
     table->positions[y * table->width + x] = pool_alloc;
-
     va_end(printf_args);
     return 0;
 }
@@ -206,7 +209,7 @@ void __table_draw_line(FILE          *output,
  * @param y      Vertical position of the cell.
  */
 void __table_draw_cell_text(FILE *output, const table_t *table, size_t x, size_t y) {
-    const char *cell = table->positions[y * table->width + x];
+    const char *const cell = table->positions[y * table->width + x];
     if (cell) {
         fprintf(output, "| %*s ", (int) table->column_widths[x] - 2, cell);
     } else {

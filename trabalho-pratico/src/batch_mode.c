@@ -54,7 +54,7 @@ int __batch_mode_init_file_callback(void *user_data, const query_instance_t *ins
 
     /* Parent directory creation is assured by error file output while loading the dataset */
     char path[PATH_MAX];
-    sprintf(path, "Resultados/command%zu_output.txt", query_instance_get_number_in_file(instance));
+    sprintf(path, "Resultados/command%zu_output.txt", query_instance_get_line_in_file(instance));
 
     iter_data->outputs[iter_data->i] =
         query_writer_create(path, query_instance_get_formatted(instance));
@@ -76,13 +76,6 @@ int batch_mode_run(const char            *dataset_dir,
 
     int retval = 0;
 
-    query_type_list_t *const query_type_list = query_type_list_create();
-    if (!query_type_list) {
-        retval = 1;
-        fputs("Failed to allocate query definitions!\n", stderr);
-        goto DEFER_0;
-    }
-
     FILE *const query_file = fopen(query_file_path, "r");
     if (!query_file) {
         retval = 1;
@@ -90,8 +83,7 @@ int batch_mode_run(const char            *dataset_dir,
         goto DEFER_1;
     }
 
-    query_instance_list_t *const query_instance_list =
-        query_file_parser_parse(query_file, query_type_list);
+    query_instance_list_t *const query_instance_list = query_file_parser_parse(query_file);
     if (!query_instance_list) {
         retval = 1;
         fputs("Failed to allocate list of queries!\n", stderr);
@@ -128,11 +120,7 @@ int batch_mode_run(const char            *dataset_dir,
         goto DEFER_5;
     }
 
-    query_dispatcher_dispatch_list(database,
-                                   query_instance_list,
-                                   query_type_list,
-                                   query_outputs,
-                                   metrics);
+    query_dispatcher_dispatch_list(database, query_instance_list, query_outputs, metrics);
 
     for (size_t i = 0; i < query_instance_list_get_length(query_instance_list); ++i)
         query_writer_free(query_outputs[i]);
@@ -142,11 +130,9 @@ DEFER_5:
 DEFER_4:
     database_free(database);
 DEFER_3:
-    query_instance_list_free(query_instance_list, query_type_list);
+    query_instance_list_free(query_instance_list);
 DEFER_2:
     fclose(query_file);
 DEFER_1:
-    query_type_list_free(query_type_list);
-DEFER_0:
     return retval;
 }

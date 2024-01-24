@@ -23,7 +23,7 @@
  * ### Example
  *
  * See test.c to know how to perform this test and how to print its results using
- * test_diff_output.h.
+ * [test_diff_output](@ref test_diff_output.h).
  */
 
 #ifndef TEST_DIFF_H
@@ -38,7 +38,8 @@ typedef struct test_diff test_diff_t;
  * @param results  Directory where the program's output was placed into.
  * @param expected Directory containing expected program results.
  *
- * @return A valid pointer to a ::test_diff_t, or `NULL` in case of either allocation or IO error.
+ * @return A valid pointer to a ::test_diff_t, that must be `free`d with ::test_diff_free, or
+ *         `NULL` in case of either an allocation or IO error.
  *
  * #### Examples
  * See [the header file's documentation](@ref test_diff_example).
@@ -46,8 +47,10 @@ typedef struct test_diff test_diff_t;
 test_diff_t *test_diff_create(const char *results, const char *expected);
 
 /**
- * @brief Creates a deep clone of @p diff.
- * @param diff Difference test results to be cloned.
+ * @brief  Creates a deep clone of @p diff.
+ * @param  diff Difference test results to be cloned.
+ * @return A valid pointer to a ::test_diff_t, that must be `free`d with ::test_diff_free, or
+ *         `NULL` in case of an allocation error.
  */
 test_diff_t *test_diff_clone(const test_diff_t *diff);
 
@@ -73,13 +76,13 @@ const char *const *test_diff_get_missing_files(const test_diff_t *diff, size_t *
  * @param diff         Test results to get the files and errors from.
  * @param common_files Where to output the list of files to.
  * @param errors       First line where a difference was found for each file. `0` means no error and
- *                     `-1` means an IO occurred.
+ *                     `-1` means an IO error occurred.
  *
  * @return The number of values in both @p common_files and @p errors.
  */
 size_t test_diff_get_common_file_errors(const test_diff_t  *diff,
                                         const char *const **common_files,
-                                        ssize_t const     **errors);
+                                        const ssize_t     **errors);
 
 /**
  * @brief Frees memory allocated by ::test_diff_create.

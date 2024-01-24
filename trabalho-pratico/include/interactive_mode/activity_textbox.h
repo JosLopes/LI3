@@ -16,7 +16,7 @@
 
 /**
  * @file  activity_textbox.h
- * @brief A textbox that can be used for textual user input.
+ * @brief A textbox used for textual user input.
  *
  * @anchor activity_textbox_examples
  * ### Examples
@@ -44,28 +44,23 @@
 #ifndef ACTIVITY_TEXTBOX_H
 #define ACTIVITY_TEXTBOX_H
 
-#include <glib.h>
-
-#include "interactive_mode/activity.h"
-
 /**
  * @brief Runs a TUI activity for a textbox.
  *
  * @param title            The title of the textbox that will be shown on the screen.
  * @param initial_value    Initial text in the textbox.
  * @param text_field_width Width of the textbox's text field. In smaller terminals, the final width
- *                         may be less than the value provided in smaller terminals. Also, this
- *                         won't stop the user from inputting longer texts: the text input will
- *                         simply be scrolled.
+ *                         may be less than the value provided. Also, this won't stop the user from
+ *                         inputting longer texts: the text input will simply be scrolled.
  *
- * @return The text inputted by the user in case they pressed return (a UTF-8 string normalized with
- *         `G_NORMALIZE_DEFAULT_COMPOSE`), or `NULL` in case the user cancelled the action (they
- *         pressed escape). In the first case, this result must be deleted using `g_free`. `NULL`
- *         may also be returned on allocation failure.
+ * @return If the user confirmed the text input action (pressed Return), this will be a UTF-8 string
+ *         (normalized with `G_NORMALIZE_DEFAULT_COMPOSE`) that must be later `free`d. `NULL` can be
+ *         returned if the user cancelled the action by pressing Escape or if an allocation error
+ *         occurred.
  *
  * #### Examples
  * See [the header file's documentation](@ref activity_textbox_examples).
  */
-gchar *activity_textbox_run(const char *title, const char *initial_value, size_t text_field_width);
+char *activity_textbox_run(const char *title, const char *initial_value, size_t text_field_width);
 
 #endif

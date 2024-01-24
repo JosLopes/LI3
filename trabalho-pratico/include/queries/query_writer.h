@@ -21,8 +21,8 @@
  * @anchor query_writer_examples
  * ### Example
  *
- * The following example creates a query writer that will output unformatted objects to strings.
- * Five objects with the fields `value` and `double` are outputted.
+ * The following example creates a query writer that will output unformatted objects to a list of
+ * strings. Five objects with the fields `value` and `double` are outputted.
  *
  * ```c
  * query_writer_t *writer = query_writer_create(NULL, 0);
@@ -36,7 +36,7 @@
  * }
  * ```
  *
- * The, we can print what was outputted and delete the strings:
+ * Then, we can print what was outputted and delete the writer:
  *
  * ```c
  * size_t             nlines;
@@ -82,27 +82,25 @@
  * double: 8
  * ```
  *
- * Alternatively, we can provide a output file directly to ::query_writer_create, but
+ * Alternatively, we can provide an output file directly to ::query_writer_create, but
  * ::query_writer_get_lines wouldn't work.
  */
 
 #ifndef QUERY_WRITER_H
 #define QUERY_WRITER_H
 
-#include <stdio.h>
-
 /** @brief Information about where to output query results to. */
 typedef struct query_writer query_writer_t;
 
 /**
- * @brief Creates a new place where to output query results to.
+ * @brief Creates a place where to output query results to.
  *
  * @param out_file_path Path to file to try to open for writing. Can be `NULL`, so that query
- *                      results are outputted to internal strings.
- * @param formatted     If the output of the query should be formatted (pretty printed).
+ *                      results are outputted an internal list of strings.
+ * @param formatted     Whether the output of the query should be formatted (pretty printed).
  *
- * @return A ::query_writer_t that must be deleted with ::query_writer_free. `NULL` will be returned
- *         on both IO and allocation failures.
+ * @return A pointer to a ::query_writer_t that must be deleted with ::query_writer_free. `NULL`
+ *         will be returned on both IO and allocation failures.
  *
  * #### Examples
  * See [the header file's documentation](@ref query_writer_examples).
@@ -111,7 +109,7 @@ query_writer_t *query_writer_create(const char *out_file_path, int formatted);
 
 /**
  * @brief Marks that a new object will start to be written (a new flight, a new user, ...).
- * @param writer Where to write the query output to.
+ * @param writer Where to write a query's output to.
  *
  * #### Examples
  * See [the header file's documentation](@ref query_writer_examples).
@@ -119,9 +117,9 @@ query_writer_t *query_writer_create(const char *out_file_path, int formatted);
 void query_writer_write_new_object(query_writer_t *writer);
 
 /**
- * @brief Writes a field of an object to the query output.
+ * @brief Writes a field of an object to a query writer.
  *
- * @param writer Where to write the query output to.
+ * @param writer Where to write the query's output to.
  * @param key    Name of the field being outputted.
  * @param format How to format the output (`printf` format string).
  * @param ...    Objects to be formatted accoring to @p format.
@@ -133,10 +131,10 @@ void query_writer_write_new_field(query_writer_t *writer, const char *key, const
     __attribute__((format(printf, 3, 4)));
 
 /**
- * @brief   Gets the lines outputted by @p writer.
+ * @brief   Gets the lines outputted by a query writer.
  * @details Will only work if `NULL` was provided as a file path to ::query_writer_create.
  *
- * @param writer Where the query output has been written to. Cannot be `const`, as some internal
+ * @param writer Where a query's output has been written to. Cannot be `const`, as some internal
  *               buffers may need to be flushed before returning this value.
  * @param out_n  Where to output the number of lines to.
  *
@@ -149,7 +147,7 @@ const char *const *query_writer_get_lines(query_writer_t *writer, size_t *out_n)
 
 /**
  * @brief Frees memory allocated by ::query_writer_create.
- * @param Non-`NULL` value returned by ::query_writer_create.
+ * @param writer Non-`NULL` value returned by ::query_writer_create.
  *
  * #### Examples
  * See [the header file's documentation](@ref query_writer_examples).

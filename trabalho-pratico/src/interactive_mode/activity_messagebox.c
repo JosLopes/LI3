@@ -16,45 +16,44 @@
 
 /**
  * @file  activity_messagebox.c
- * @brief Implementation of methods in activity_messagebox.h
+ * @brief Implementation of methods in include/interactive_mode/activity_messagebox.h
  *
  * ### Examples
  * See [the header file's documentation](@ref activity_messagebox_examples).
  */
 
-/** @cond FALSE */
-#define _XOPEN_SOURCE_EXTENDED
-/** @endcond */
-
+#include <glib.h>
 #include <ncurses.h>
 #include <stdlib.h>
-#include <string.h>
 
+#include "interactive_mode/activity.h"
 #include "interactive_mode/activity_messagebox.h"
 #include "interactive_mode/ncurses_utils.h"
 #include "utils/int_utils.h"
 
 /**
  * @struct activity_messagebox_data_t
- * @brief Data for the messagebox TUI activity.
+ * @brief  Data for the messagebox TUI activity.
  *
  * @var activity_messagebox_data_t::message
  *    @brief Null-terminated UTF-32 string for the message to display.
  * @var activity_messagebox_data_t::text_width
- *    @brief Desired width of the text in the messagebox. The real size may be smaller on smaller
+ *    @brief Desired width of the text in the messagebox. Its real size may be smaller on smaller
  *           terminals.
  */
 typedef struct {
-    gunichar *message;
-    size_t    text_width;
+    unichar_t *message;
+    size_t     text_width;
 } activity_messagebox_data_t;
 
 /**
- * @brief Handles keypresses for the message box activity.
+ * @brief   Responds to user input in a messagebox activity.
+ * @details Determines whether or not the user desires to leave the messagebox.
  *
- * @param activity_data Pointer to a ::activity_messagebox_data_t struct.
- * @param key           The key that was pressed. May be an ncurses `KEY_*` value.
- * @param is_key_code   If the pressed key is not a character, but an ncurses `KEY_*` value.
+ * @param activity_data Pointer to an ::activity_messagebox_data_t.
+ * @param key           The key that was pressed. May be an `ncurses`' `KEY_*` value.
+ * @param is_key_code   Whether the pressed key is an `ncurses`' `KEY_*` value, as opposed to a text
+ *                      character.
  *
  * @retval 0 The user didn't quit the message box; continue.
  * @retval 1 The user quit the messagebox.
@@ -68,12 +67,12 @@ int __activity_messagebox_keypress(void *activity_data, wint_t key, int is_key_c
 }
 
 /**
- * @brief Renders the messagebox activity.
- * @param activity_data Ponter to a ::activity_messagebox_data_t struct.
- * @retval 0 Always.
+ * @brief  Renders a messagebox activity.
+ * @param  activity_data Ponter to an ::activity_messagebox_data_t struct.
+ * @retval 0 Always, to continue running this activity.
  */
 int __activity_messagebox_render(void *activity_data) {
-    activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) activity_data;
+    const activity_messagebox_data_t *const messagebox = activity_data;
 
     int window_width, window_height;
     getmaxyx(stdscr, window_height, window_width);
@@ -83,22 +82,21 @@ int __activity_messagebox_render(void *activity_data) {
 
     /* Reference diagram for positions and sizes: see header file */
 
-    int messagebox_width  = min((size_t) window_width - 4, messagebox->text_width + 2);
-    int messagebox_height = 3;
-
-    int messagebox_x = (window_width - messagebox_width) / 2;
-    int messagebox_y = (window_height - messagebox_height) / 2;
+    const int messagebox_width  = min((size_t) window_width - 4, messagebox->text_width + 2);
+    const int messagebox_height = 3;
+    const int messagebox_x      = (window_width - messagebox_width) / 2;
+    const int messagebox_y      = (window_height - messagebox_height) / 2;
 
     /* Render box and message */
     ncurses_render_rectangle(messagebox_x, messagebox_y, messagebox_width, messagebox_height);
 
-    size_t message_width,
-        message_max_chars = ncurses_prefix_from_maximum_length(messagebox->message,
-                                                               max(messagebox_width - 3, 0),
-                                                               &message_width);
-
+    size_t       message_width;
+    const size_t message_max_chars =
+        ncurses_prefix_from_maximum_length(messagebox->message,
+                                           max(messagebox_width - 3, 0),
+                                           &message_width);
     move(messagebox_y + 1, messagebox_x + 1);
-    addnwstr((wchar_t *) messagebox->message, message_max_chars);
+    ncurses_put_wide_string(messagebox->message, message_max_chars);
 
     return 0;
 }
@@ -108,7 +106,7 @@ int __activity_messagebox_render(void *activity_data) {
  * @param activity_data Pointer to a ::activity_messagebox_data_t struct.
  */
 void __activity_messagebox_free_data(void *activity_data) {
-    activity_messagebox_data_t *messagebox = (activity_messagebox_data_t *) activity_data;
+    activity_messagebox_data_t *const messagebox = activity_data;
     g_free(messagebox->message);
     free(messagebox);
 }
@@ -117,21 +115,26 @@ void __activity_messagebox_free_data(void *activity_data) {
  * @brief Creates a message box activity.
  * @param message The message that will be shown on the screen. Must be a single line of text.
  *
- * @return An ::activity_t for a message box, that must be freed with ::activity_free. `NULL` on
- *        allocation error.
+ * @return An ::activity_t for a message box, that must be freed with ::activity_free, or `NULL` on
+ *         allocation error.
  */
 activity_t *__activity_messagebox_create(const char *message) {
-    activity_messagebox_data_t *activity_data = malloc(sizeof(activity_messagebox_data_t));
+    activity_messagebox_data_t *const activity_data = malloc(sizeof(activity_messagebox_data_t));
     if (!activity_data)
         return NULL;
 
     activity_data->message    = g_utf8_to_ucs4_fast(message, -1, NULL);
     activity_data->text_width = ncurses_measure_unicode_string(activity_data->message);
 
-    return activity_create(__activity_messagebox_keypress,
-                           __activity_messagebox_render,
-                           __activity_messagebox_free_data,
-                           activity_data);
+    activity_t *const ret = activity_create(__activity_messagebox_keypress,
+                                            __activity_messagebox_render,
+                                            __activity_messagebox_free_data,
+                                            activity_data);
+    if (!ret) {
+        __activity_messagebox_free_data(activity_data);
+        return NULL;
+    }
+    return ret;
 }
 
 int activity_messagebox_run(const char *message) {
@@ -140,7 +143,6 @@ int activity_messagebox_run(const char *message) {
         return 1;
 
     activity_run(activity);
-
     activity_free(activity);
     return 0;
 }

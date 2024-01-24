@@ -30,7 +30,7 @@
 
 /**
  * @struct query_tokenizer_data_t
- * @brief Contains the tokenizer's state.
+ * @brief  Contains the tokenizer's state.
  *
  * @var query_tokenizer_data_t::user_data
  *     @brief `user_data` parameter in ::query_tokenizer_tokenize.
@@ -48,14 +48,14 @@ typedef struct {
 } query_tokenizer_data_t;
 
 /**
- * @brief Handles space-separated tokens from a string.
+ * @brief   Handles space-separated tokens from a string.
  * @details Auxiliary method for ::query_tokenizer_tokenize.
  *
  * @param tokenizer_data A pointer to a ::query_tokenizer_data_t.
  * @param token          Space-separated token to process (take quotes into account).
  */
 int __query_tokenizer_handle_space_split(void *tokenizer_data, char *token) {
-    query_tokenizer_data_t *tokenizer = (query_tokenizer_data_t *) tokenizer_data;
+    query_tokenizer_data_t *const tokenizer = tokenizer_data;
 
     if (*token == '\0') /* Skip empty tokens */
         return 0;
@@ -64,11 +64,11 @@ int __query_tokenizer_handle_space_split(void *tokenizer_data, char *token) {
         tokenizer->quote_token = token + 1;
 
     if (tokenizer->quote_token) {
-        size_t token_length = strlen(token);
+        const size_t token_length = strlen(token);
         if (token[token_length - 1] == '"') {
 
             token[token_length - 1] = '\0';
-            int cb_result = tokenizer->callback(tokenizer->user_data, tokenizer->quote_token);
+            const int cb_result = tokenizer->callback(tokenizer->user_data, tokenizer->quote_token);
 
             token[token_length - 1] = '"'; /* Restore string */
             tokenizer->quote_token  = NULL;
@@ -77,7 +77,7 @@ int __query_tokenizer_handle_space_split(void *tokenizer_data, char *token) {
                 return cb_result;
         }
     } else {
-        int cb_result = tokenizer->callback(tokenizer->user_data, token);
+        const int cb_result = tokenizer->callback(tokenizer->user_data, token);
         if (cb_result)
             return cb_result;
     }
@@ -89,25 +89,22 @@ int query_tokenizer_tokenize(char *input, tokenize_iter_callback_t callback, voi
     query_tokenizer_data_t tokenizer_data = {.user_data   = user_data,
                                              .callback    = callback,
                                              .quote_token = NULL};
-
-    int retval = string_tokenize(input, ' ', __query_tokenizer_handle_space_split, &tokenizer_data);
+    const int              retval =
+        string_tokenize(input, ' ', __query_tokenizer_handle_space_split, &tokenizer_data);
     if (retval)
         return retval;
 
-    (void) callback;
-    (void) user_data;
     return 0;
 }
 
 int query_tokenizer_tokenize_const(const char              *input,
                                    tokenize_iter_callback_t callback,
                                    void                    *user_data) {
-    char *buffer = strdup(input);
+    char *const buffer = strdup(input);
     if (!buffer)
         return QUERY_TOKENIZER_TOKENIZE_CONST_RET_FAILED_MALLOC;
 
-    int retval = query_tokenizer_tokenize(buffer, callback, user_data);
-
+    const int retval = query_tokenizer_tokenize(buffer, callback, user_data);
     free(buffer);
     return retval;
 }
