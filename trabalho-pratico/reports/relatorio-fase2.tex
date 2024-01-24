@@ -118,11 +118,12 @@ passam a depender dos alocadores, por motivos explicados em
     \label{fig:queries}
 \end{figure}
 
-Como todas as \emph{queries} apresentam a mesma formatação de \emph{output}, adicionámos a estrutura
-\texttt{query\_writer}, que formata o \emph{output} de uma \emph{query} automaticamente, e o
-escreve para um ficheiro (modo \emph{batch}) ou para um conjunto de linhas em memória (modo
-interativo). Segue-se a descrição do funcionamento das \emph{queries} novas e das que sofreram
-mudanças significativas:
+Como todas as \emph{queries} apresentam a mesma formatação de \emph{output}, adicionámos o
+\texttt{query\_writer}, uma estrutura que formata o \emph{output} de uma \emph{query}
+automaticamente, e o escreve para um ficheiro (modo \emph{batch}) ou para um conjunto de linhas em
+memória (modo interativo). Os módulos \texttt{GConstPtrArray} e \texttt{GConstKeyHashTable} são
+explicados em \nameref{sec:glib-conciliation}. Segue-se a descrição do funcionamento das
+\emph{queries} novas e das que sofreram mudanças significativas:
 
 \begin{itemize}
     \item \textbf{Q05} - Listagem dos voos com origem num dado aeroporto entre duas datas. Com uma
@@ -220,10 +221,10 @@ estruturas de dados, estávamos cientes da ausência de encapsulamento, pois vá
 devolviam apontadores mutáveis para dados no interior das estruturas. Como nunca escrevíamos para
 estes apontadores, torná-los constantes provou-se a melhor solução para o encapsulamento.
 
-Este processo de aplicar a \emph{keyword const} aos argumentos dos métodos e aos seus valores
-devolvidos provou-se moroso: a cada \emph{const} adicionado, vários módulos deixavam de compilar
-devido a erros de tipos, causando uma reação em cadeia de mudanças necessárias. No processo de
-encapsulamento, adicionámos também métodos de cópia profunda (semelhantes aos \emph{copy
+Este processo de aplicar a \emph{keyword} \texttt{const} aos argumentos dos métodos e aos seus
+valores devolvidos provou-se moroso: a cada \texttt{const} adicionado, vários módulos deixavam de
+compilar devido a erros de tipos, causando uma reação em cadeia de mudanças necessárias. No processo
+de encapsulamento, adicionámos também métodos de cópia profunda (semelhantes aos \emph{copy
 constructors} de C++) à maioria das estruturas de dados da aplicação. \footnote{Com exceção de
 alocadores (\emph{pools}) e estruturas que contêm \texttt{FILE *}.}
 
@@ -266,7 +267,7 @@ argumento do alocador, para o uso de \texttt{malloc}:
 \subsubsection{Conciliação com a \texttt{glib}}
 \label{sec:glib-conciliation}
 
-O uso de \emph{const} trata-se de um contrato de que um método não irá modificar um objeto. A
+O uso de \texttt{const} trata-se de um contrato de que um método não irá modificar um objeto. A
 documentação das estruturas genéricas da \texttt{glib} assegura isto.\footnote{Há algumas exceções
 (como uma função \texttt{GDestroyNotify} ser providenciada), mas garantimos que a nossa solução para
 este problema não permite nenhuma destas.} No entanto, estas utilizam \texttt{void *} sem o
