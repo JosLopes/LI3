@@ -46,7 +46,7 @@ typedef struct {
 /**
  * @brief Called for each query, to create the writer to which the query output will be written to.
  *
- * @param user_data A pointer to a ::batch_mode_iter_data.
+ * @param user_data A pointer to a ::batch_mode_iter_data_t.
  * @param instance  Query query instance, whose output should be outputted.
  */
 int __batch_mode_init_file_callback(void *user_data, const query_instance_t *instance) {

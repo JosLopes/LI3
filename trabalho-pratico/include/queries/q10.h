@@ -17,6 +17,17 @@
 /**
  * @file  q10.h
  * @brief A query to generate general metrics data.
+ *
+ * ### Examples
+ *
+ * ```text
+ * 10
+ * 10 2023
+ * 10 2023 03
+ * 10F
+ * 10F 2023
+ * 10F 2023 03
+ * ```
  */
 
 #ifndef Q10_H
@@ -25,9 +36,10 @@
 #include "queries/query_type.h"
 
 /**
- * @brief   Initializes the definition of this query.
- * @details This is done automatically in ::query_type_list_init.
- * @return  A pointer to a `malloc`-allocated ::query_type_t on success, or `NULL` on failure.
+ * @brief   Initializes the definition of queries of type 10.
+ * @details This is done automatically in [query_type_list](@ref query_type_list.c).
+ * @return  On success, a pointer to a ::query_type_t that must be deleted with ::query_type_free,
+ *          or `NULL` allocation on failure.
  */
 query_type_t *q10_create(void);
 

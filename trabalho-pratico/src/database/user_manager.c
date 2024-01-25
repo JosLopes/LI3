@@ -295,7 +295,7 @@ typedef struct {
  * @brief Intermediate callback for ::user_manager_iter_with_flights.
  *
  * @param iter_data Real callback and original user data (::user_manager_iter_with_flights_data_t).
- * @param user_data A pointer to a ::user_and_data_t.
+ * @param user_data A pointer to a ::user_manager_user_and_data_t.
  *
  * @return The value of the original callback called.
  */
