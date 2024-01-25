@@ -70,7 +70,7 @@ dependência mais relevantes. Segue-se a nossa convenção gráfica:
 Nesta fase do projeto, separámos em diferentes módulos as funcionalidades de \emph{input} de dados
 e \emph{output} de erros num \emph{dataset}, antes concentradas no \texttt{dataset\_loader}. Agora,
 este módulo apenas gere duas estruturas de dados formadas por \emph{handles} de ficheiros,
-\texttt{dataset\_input} e \texttt{dataset\_error\_output}. Ademais, adicionámos o módulo
+\texttt{dataset\_input} e \texttt{dataset\_error\_output}. Além disso, adicionámos o módulo
 \texttt{path\_utils}, para manipulação de caminhos para ficheiros.
 
 \subsection{Entidades}
@@ -86,8 +86,8 @@ este módulo apenas gere duas estruturas de dados formadas por \emph{handles} de
 Nas entidades, criámos módulos para os identificadores de voos, reservas e hotéis, de modo a remover
 código de \emph{parsing} e \emph{display} previamente duplicado em vários locais da \emph{codebase}.
 Ademais, passaram a ser os \emph{setters} das entidades a validar se os valores providenciados para
-os seus campos são válidos. Anteriormente, este era o trabalho dos módulos \texttt{*\_loader}, sendo
-possível ao programador, usando \emph{setters}, criar uma entidade inválida.
+os seus campos são válidos. Este antes era o trabalho dos módulos \texttt{*\_loader}, sendo possível
+ao programador, usando \emph{setters}, criar uma entidade inválida.
 
 \subsection{Catálogos}
 \label{sec:catalogs}
@@ -104,8 +104,8 @@ um novo alocador que armazena apenas uma vez \emph{strings} sujeitas a repetiç�
 hotéis e de companhias aéreas.
 
 Quanto às novas relações de dependência, removemos muito código duplicado ao adaptar a
-\texttt{pool}, para com ela ser possível implementar a \texttt{string\_pool}. Ademais, as entidades
-passam a depender dos alocadores, por motivos explicados em
+\texttt{pool}, para com ela ser possível implementar a \texttt{string\_pool}. Por último, as
+entidades passam a depender dos alocadores, por motivos explicados em
 \nameref{sec:allocator-conciliation}.
 
 \subsection{\emph{Queries}}
@@ -155,7 +155,13 @@ explicados em \nameref{sec:glib-conciliation}. Segue-se a descrição do funcion
                          significativamente mais veloz que a anterior, que fazia uma iteração pelos
                          utilizadores por \emph{query}.
 
-    \item \textbf{Q10} - {\color{red}Ainda tenho de otimizar isto}
+    \item \textbf{Q10} - Cálculo de várias métricas gerais da aplicação. Com uma única iteração pela
+                         totalidade dos catálogos para todas as \emph{queries} deste tipo,
+                         verifica-se se cada entidade deve ou não ser contada para a resposta a cada
+                         \emph{query}. Como o acesso aos passageiros é feito utilizador a
+                         utilizador, torna-se possível, usando uma \emph{bitmask}, facilmente
+                         discernir os passageiros únicos. A execução de cada \emph{query} torna-se
+                         uma simples pesquisa pelas respostas previamente geradas.
 \end{itemize}
 
 \subsection{Modo interativo}
@@ -222,7 +228,7 @@ nos diagramas nos relatórios, e encontrar dependências circulares, que prontam
     \centering
     \includegraphics[scale=0.09]{res-fase2/global_dependencies.png}
     \caption{Grafo de dependências de toda a aplicação. Foi gerado automaticamente e não há
-	         distinção entre tipos de módulos.}
+             distinção entre tipos de módulos.}
     \label{fig:global-dependencies}
 \end{figure}
 
