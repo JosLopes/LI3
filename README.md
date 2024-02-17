@@ -3,6 +3,13 @@
 Project for our LI3 class. See [Requirements.pdf](Requirements.pdf) (in Portuguese) to see the
 project's requirements.
 
+### Grade
+
+**Final grade**: 20 / 20 🤩
+
+ - 1st phase: 20.0 / 20.0
+ - 2nd phase: 19.6 / 20.0
+
 ## Building
 
 ### Dependencies
