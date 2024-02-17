@@ -82,6 +82,7 @@ void __interactive_mode_load_dataset(database_t **database) {
 
     *database = database_create();
     if (!*database) {
+        *database = NULL;
         activity_messagebox_run("Failed to allocate new database!");
         free(path);
         return;
@@ -90,6 +91,8 @@ void __interactive_mode_load_dataset(database_t **database) {
     /* Load new dataset */
     if (dataset_loader_load(*database, path, NULL, NULL)) {
         activity_messagebox_run("Failed to load dataset! Old data has been discarded.");
+        database_free(*database);
+        *database = NULL;
     } else {
         activity_messagebox_run("Dataset loaded successfully!");
     }

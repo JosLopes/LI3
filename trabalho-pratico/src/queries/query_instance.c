@@ -123,7 +123,7 @@ const void *query_instance_get_argument_data(const query_instance_t *query) {
 }
 
 void query_instance_free(query_instance_t *query) {
-    if (query->type) {
+    if (query->type && query->argument_data) {
         const query_type_free_arguments_callback_t free_cb =
             query_type_get_free_arguments_callback(query->type);
         free_cb(query->argument_data);
